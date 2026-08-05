@@ -66,15 +66,17 @@ A Chrome/Brave browser extension that completely bypasses Brave Browser detectio
 ### Option 1: Download Release (Recommended)
 
 1. Download the latest `.ZIP` file from [Releases](https://github.com/Nikhil-Sonawane87612/braveshield-anti-detection-extension/releases/latest)
-2. Extract the ZIP file to a folder on your computer
+2. **Extract the ZIP file** to a folder on your computer (right-click → Extract All, or use 7-Zip)
 3. Open Brave Browser and navigate to:
    ```
    brave://extensions
    ```
    (or `chrome://extensions` for Chrome)
 4. Toggle **Developer mode** in the top-right corner
-5. Click **Load unpacked** and select the **`additional featured extension`** folder from the extracted ZIP
+5. Click **Load unpacked** and select the **extracted folder** (the one containing `manifest.json`)
 6. The extension icon appears in your toolbar - you're done!
+
+> **Note:** Do NOT drag-and-drop the zip file directly. Chrome requires you to extract the zip first, then use "Load unpacked" on the extracted folder.
 
 ### Option 2: Clone Repository
 
@@ -85,7 +87,7 @@ A Chrome/Brave browser extension that completely bypasses Brave Browser detectio
 2. Open Brave/Chrome and navigate to `brave://extensions`
 3. Enable **Developer mode**
 4. Click **Load unpacked** and select the `additional featured extension` folder
-5. Done - all 25 modules are active by default
+5. Done - all 28 modules are active by default
 
 ### Verify It Works
 

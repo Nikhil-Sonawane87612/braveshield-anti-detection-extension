@@ -16,7 +16,7 @@ A Chrome/Brave browser extension that completely bypasses Brave Browser detectio
 
 ### Auto-Bypass Features (Modules 7-12)
 - **Link Shortener Auto-Bypass** - 50+ services (ouo.io, bc.vc, sh.st, linkvertise, etc.)
-- **15-20s Timer/Countdown Bypass** - Accelerates countdowns, auto-clicks download buttons
+- **15-20s Timer/Countdown Bypass** - Speeds up countdowns (15-20s → 50ms), no auto-click
 - **Cookie Consent Auto-Dismiss** - 20+ consent frameworks auto-dismissed
 - **Smart Auto-Scroll** - Auto-scrolls pages requiring scroll
 - **Redirect Chain Follower** - Follows meta refresh and click-through redirects
@@ -41,12 +41,21 @@ A Chrome/Brave browser extension that completely bypasses Brave Browser detectio
 - **Font Fingerprint Spoofing** - Consistent `document.fonts.check()` results
 - **Screen/Viewport Consistency** - Realistic screen dimensions
 
+### Adblock Detection Bypass (Module 27)
+- **Adblock Detection Bypass** - Bypasses hispanoads, Admiral, BlockAdBlock, FuckAdBlock
+- **Detection Variable Override** - Returns false for `adBlockDetected`, `canRunAds`, etc.
+- **Detection Function Override** - `checkAdBlock()` → returns false
+- **Class Constructor Override** - BlockAdBlock/FuckAdBlock no-ops
+- **Ad-Bait Request Faking** - Fake 200 OK for ad-bait fetch/XHR probes
+- **Modal/Overlay Removal** - Auto-hides "Ad Blocker Detected" modals
+- **CSS Visibility Overrides** - Prevents ad-bait element hiding
+
 ---
 
 ## How It Works
 
 1. **MAIN-World Injection at `document_start`** - Runs before any website script executes
-2. **25 Stealth Modules** neutralize every detection vector simultaneously
+2. **27 Stealth Modules** neutralize every detection vector simultaneously
 3. **Network Layer** strips Brave-identifying HTTP headers
 4. **Content Script Bridge** injects CSS to unhide falsely blocked elements
 

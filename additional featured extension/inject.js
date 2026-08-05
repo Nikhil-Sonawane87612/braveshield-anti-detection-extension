@@ -1076,48 +1076,7 @@
       return origXHRSend.call(this, body);
     };
 
-    // Pattern 7: Override common ad detection bait CSS selectors
-    // Some sites inject hidden elements and check if they remain visible
-    const style = document.createElement('style');
-    style.id = 'brave-shield-adblock-bypass';
-    style.textContent = `
-      /* Override display:none applied by adblock cosmetic filters */
-      [id*="adblock" i]:not([data-brave-shield]),
-      [class*="adblock" i]:not([data-brave-shield]),
-      [id*="google_ads" i]:not([data-brave-shield]),
-      [class*="google_ads" i]:not([data-brave-shield]),
-      [id*="adsbygoogle" i]:not([data-brave-shield]),
-      [class*="adsbygoogle" i]:not([data-brave-shield]),
-      [id*="ad-banner" i]:not([data-brave-shield]),
-      [class*="ad-banner" i]:not([data-brave-shield]),
-      [id*="ad-unit" i]:not([data-brave-shield]),
-      [class*="ad-unit" i]:not([data-brave-shield]),
-      [id*="ad-container" i]:not([data-brave-shield]),
-      [class*="ad-container" i]:not([data-brave-shield]),
-      [id*="sponsor" i]:not([data-brave-shield]),
-      [class*="sponsor" i]:not([data-brave-shield]),
-      [id*="taboola" i]:not([data-brave-shield]),
-      [class*="taboola" i]:not([data-brave-shield]),
-      [id*="outbrain" i]:not([data-brave-shield]),
-      [class*="outbrain" i]:not([data-brave-shield]),
-      [id*="admiral" i]:not([data-brave-shield]),
-      [class*="admiral" i]:not([data-brave-shield]),
-      [id*="fuckadblock" i]:not([data-brave-shield]),
-      [class*="fuckadblock" i]:not([data-brave-shield]),
-      [id*="blockadblock" i]:not([data-brave-shield]),
-      [class*="blockadblock" i]:not([data-brave-shield])
-      {
-        display: block !important;
-        visibility: visible !important;
-        opacity: 1 !important;
-        height: auto !important;
-        width: auto !important;
-        position: static !important;
-      }
-    `;
-    (document.head || document.documentElement).appendChild(style);
-
-    // Pattern 8: Override common anti-adblock modal/overlay detection
+    // Pattern 7: Override common anti-adblock modal/overlay detection
     // Some sites show a modal when adblock is detected
     const MODAL_SELECTORS = [
       '[class*="adblock-modal"]', '[id*="adblock-modal"]',
@@ -1153,13 +1112,13 @@
       modalObserver.observe(document.body, { childList: true, subtree: true });
     }
 
-    // Pattern 9: Override common adblock detection APIs
+    // Pattern 8: Override common adblock detection APIs
     // Some sites use specific APIs to detect adblock
     if (window.adsense) {
       Object.defineProperty(window, 'adsense', { get: function() { return { loaded: true }; } });
     }
 
-    // Pattern 10: Override document.domain checks used by adblock detectors
+    // Pattern 9: Override document.domain checks used by adblock detectors
     const origDomain = Object.getOwnPropertyDescriptor(document, 'domain');
     if (origDomain) {
       Object.defineProperty(document, 'domain', {

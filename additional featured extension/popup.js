@@ -33,8 +33,9 @@ document.addEventListener('DOMContentLoaded', () => {
     popunder: 'interceptPopunders', braveleak: 'fixBraveLeak',
     storageleak: 'fixStorageLeak', audio: 'normalizeAudio',
     canvas: 'normalizeCanvas', webrtc: 'preventWebRTC',
-    permissions: 'autoDenyPermissions', bait: 'fakeNetworkBait',
-    navigator: 'spoofNavigator'
+    permissions: 'autoDenyPermissions',     bait: 'fakeNetworkBait',
+    navigator: 'spoofNavigator',
+    adblock: 'bypassAdblockDetection'
   };
 
   // User Agent selector

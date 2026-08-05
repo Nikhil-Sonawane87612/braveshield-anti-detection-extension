@@ -251,20 +251,20 @@
   }
 
   // ==========================================
-  // 8. COUNTDOWN TIMER BYPASS (MODERATE SPEEDUP + BUTTON WATCHER)
+  // 8. COUNTDOWN TIMER BYPASS (3x SPEEDUP + BUTTON WATCHER)
   // ==========================================
-  // Gently speeds up countdown timers (5x faster) and auto-clicks
+  // Gently speeds up countdown timers (3x faster) and auto-clicks
   // download buttons when they appear.
   function bypassCountdownTimers() {
     const COUNTDOWN_KEYWORDS = /countdown|timer|second|wait|delay|interval|tick|progress|clock|remaining|time/i;
 
-    // Pattern 1: Gently speed up setInterval (5x faster)
+    // Pattern 1: Gently speed up setInterval (3x faster)
     const origSetInterval = window.setInterval;
     window.setInterval = function(fn, delay, ...args) {
       if (delay >= 1000 && delay <= 120000) {
         const fnStr = (typeof fn === 'function') ? fn.toString() : String(fn);
         if (COUNTDOWN_KEYWORDS.test(fnStr)) {
-          const newDelay = Math.max(200, Math.floor(delay / 5));
+          const newDelay = Math.max(333, Math.floor(delay / 3));
           console.log('[BraveShield Bypass] Speeding interval: ' + delay + 'ms -> ' + newDelay + 'ms');
           return origSetInterval.call(this, fn, newDelay, ...args);
         }
@@ -272,13 +272,13 @@
       return origSetInterval.call(this, fn, delay, ...args);
     };
 
-    // Pattern 2: Gently speed up setTimeout (5x faster)
+    // Pattern 2: Gently speed up setTimeout (3x faster)
     const origSetTimeout = window.setTimeout;
     window.setTimeout = function(fn, delay, ...args) {
       if (delay >= 1000 && delay <= 120000) {
         const fnStr = (typeof fn === 'function') ? fn.toString() : String(fn);
         if (COUNTDOWN_KEYWORDS.test(fnStr)) {
-          const newDelay = Math.max(200, Math.floor(delay / 5));
+          const newDelay = Math.max(333, Math.floor(delay / 3));
           console.log('[BraveShield Bypass] Speeding timeout: ' + delay + 'ms -> ' + newDelay + 'ms');
           return origSetTimeout.call(this, fn, newDelay, ...args);
         }
@@ -1141,6 +1141,93 @@
   }
 
   // ==========================================
+  // 28. CLICK IMAGE WAIT PATTERN BYPASS
+  // ==========================================
+  // Handles "CLICK IMAGE WAIT 10 SECOND" patterns where ads appear
+  // after clicking an image and can only be removed after 10-15 seconds.
+  function bypassClickImageWait() {
+    // Detect "click image" / "wait 10 seconds" text patterns
+    const WAIT_PATTERNS = /click\s+(?:the\s+)?image|wait\s+\d+\s*sec|click\s+(?:on\s+)?(?:the\s+)?(?:image|photo|picture|ad)|wait\s+(?:for\s+)?\d+|despues\s+de\s+\d+|espera\s+\d+/i;
+
+    function detectClickImageWait() {
+      const bodyText = document.body ? document.body.innerText : '';
+      return WAIT_PATTERNS.test(bodyText);
+    }
+
+    // Common ad/banner selectors that appear after clicking
+    const AD_SELECTORS = [
+      '[class*="banner"]', '[id*="banner"]',
+      '[class*="popup"]', '[id*="popup"]',
+      '[class*="modal"]', '[id*="modal"]',
+      '[class*="overlay"]', '[id*="overlay"]',
+      '[class*="interstitial"]', '[id*="interstitial"]',
+      '[class*="ad-wrapper"]', '[class*="ad-container"]',
+      '[class*="ad-block"]', '[id*="ad-block"]',
+      '[class*="广告"]', '[id*="广告"]',
+      'iframe[src*="ad"]', 'iframe[src*="banner"]',
+      'iframe[src*="pop"]', 'iframe[src*="click"]',
+      '[style*="position: fixed"]',
+      '[style*="position:fixed"]',
+      'div[style*="z-index: 999"]',
+      'div[style*="z-index:999"]',
+      'div[style*="z-index: 9999"]',
+      'div[style*="z-index:9999"]',
+      'div[style*="z-index: 99999"]',
+      'div[style*="z-index:99999"]'
+    ];
+
+    function hideClickImageAds() {
+      AD_SELECTORS.forEach(sel => {
+        try {
+          document.querySelectorAll(sel).forEach(el => {
+            const style = window.getComputedStyle(el);
+            const zIndex = parseInt(style.zIndex) || 0;
+            const pos = style.position;
+            // Only remove if it's a fixed/absolute overlay with high z-index
+            if ((pos === 'fixed' || pos === 'absolute') && zIndex > 100) {
+              el.style.display = 'none';
+              el.style.visibility = 'hidden';
+              el.remove();
+            }
+          });
+        } catch(e) {}
+      });
+
+      // Also remove iframes that look like ads
+      document.querySelectorAll('iframe').forEach(iframe => {
+        const src = (iframe.src || '').toLowerCase();
+        const cls = (iframe.className || '').toLowerCase();
+        if (/ad|banner|pop|click|interstitial/i.test(src + ' ' + cls)) {
+          const style = window.getComputedStyle(iframe);
+          const zIndex = parseInt(style.zIndex) || 0;
+          if (zIndex > 100 || style.position === 'fixed') {
+            iframe.remove();
+          }
+        }
+      });
+    }
+
+    // Watch for dynamically injected ads
+    const adObserver = new MutationObserver(() => {
+      hideClickImageAds();
+    });
+
+    if (document.body) {
+      adObserver.observe(document.body, { childList: true, subtree: true });
+    }
+
+    // Initial cleanup
+    hideClickImageAds();
+    setTimeout(hideClickImageAds, 1000);
+    setTimeout(hideClickImageAds, 3000);
+    setTimeout(hideClickImageAds, 5000);
+
+    if (detectClickImageWait()) {
+      console.log('[BraveShield Bypass] Click Image Wait pattern detected - hiding ads');
+    }
+  }
+
+  // ==========================================
   // RUN ALL MODULES
   // ==========================================
   const modules = [
@@ -1170,7 +1257,8 @@
     ['Module 24: Font Fingerprint', spoofFontFingerprint],
     ['Module 25: Screen Consistency', ensureScreenConsistency],
     ['Module 26: User Agent Spoofing', spoofUserAgent],
-    ['Module 27: Adblock Detection Bypass', bypassAdblockDetection]
+    ['Module 27: Adblock Detection Bypass', bypassAdblockDetection],
+    ['Module 28: Click Image Wait Bypass', bypassClickImageWait]
   ];
 
   modules.forEach(([name, fn]) => {

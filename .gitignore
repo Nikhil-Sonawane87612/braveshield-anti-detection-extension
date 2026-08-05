@@ -1,7 +1,9 @@
 # Build artifacts
 _metadata/
 *.crx
-*.zip
+
+# Allow release zip
+!BraveShield-Bypass-Pro-*.zip
 
 # OS files
 .DS_Store

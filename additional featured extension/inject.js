@@ -253,52 +253,53 @@
   // ==========================================
   // 8. COUNTDOWN TIMER BYPASS
   // ==========================================
-  // Does NOT speed up timers (causes "bad request" on many sites).
-  // Just watches for "Get Link" / "Download" button to appear
-  // after the real timer finishes, then auto-clicks it.
-  // Safe for all sites — zero interference with page JS.
+  // Speeds up countdown timers (10x faster) until 1-2 seconds remain,
+  // then restores normal speed so the server gets the request at
+  // natural timing. No auto-click — user clicks "Get Link" manually.
   function bypassCountdownTimers() {
-    const READY_PATTERNS = /^[\s]*(?:get\s*link|download|descargar|obtener|bajar|continue|proceed)[\s]*$/i;
-    const NOT_READY_PATTERNS = /wait|getting|loading|generating|processing|\.\.\./i;
+    const COUNTDOWN_KEYWORDS = /countdown|timer|second|wait|delay|interval|tick|progress|clock|remaining|time/i;
 
-    function findAndClickGetLink() {
-      const allElements = document.querySelectorAll('a, button');
+    // === Speed up setInterval ===
+    const origSetInterval = window.setInterval;
+    window.setInterval = function(fn, delay, ...args) {
+      if (delay >= 1000 && delay <= 120000) {
+        const fnStr = (typeof fn === 'function') ? fn.toString() : String(fn);
+        if (COUNTDOWN_KEYWORDS.test(fnStr)) {
+          const newDelay = Math.max(100, Math.floor(delay / 10));
+          console.log('[BraveShield Bypass] Speeding interval: ' + delay + 'ms -> ' + newDelay + 'ms');
 
-      for (const el of allElements) {
-        if (el.offsetParent === null || el.offsetWidth === 0 || el.offsetHeight === 0) continue;
-        if (el.hasAttribute('disabled')) continue;
-        const cls = (el.className || '').toLowerCase();
-        if (/disabled|waiting/i.test(cls)) continue;
+          let elapsed = 0;
+          const originalDelay = delay;
+          const wrappedFn = function(...args) {
+            elapsed += newDelay;
+            const remaining = originalDelay - elapsed;
+            if (remaining <= 2000 && remaining > 0) {
+              return;
+            }
+            return fn.apply(this, args);
+          };
 
-        const text = (el.textContent || '').trim();
-        const href = el.getAttribute('href') || '';
-
-        if (NOT_READY_PATTERNS.test(text)) continue;
-        if (!href || href === '#' || href === 'javascript:void(0)') continue;
-
-        if (READY_PATTERNS.test(text)) {
-          console.log('[BraveShield Bypass] Clicking Get Link: ' + text);
-          el.click();
-          return true;
+          return origSetInterval.call(this, wrappedFn, newDelay, ...args);
         }
       }
-      return false;
-    }
+      return origSetInterval.call(this, fn, delay, ...args);
+    };
 
-    // Watch for DOM changes (button text changing)
-    const observer = new MutationObserver(() => {
-      setTimeout(findAndClickGetLink, 300);
-    });
+    // === Speed up setTimeout ===
+    const origSetTimeout = window.setTimeout;
+    window.setTimeout = function(fn, delay, ...args) {
+      if (delay >= 1000 && delay <= 120000) {
+        const fnStr = (typeof fn === 'function') ? fn.toString() : String(fn);
+        if (COUNTDOWN_KEYWORDS.test(fnStr)) {
+          const newDelay = Math.max(100, Math.floor(delay / 10));
+          console.log('[BraveShield Bypass] Speeding timeout: ' + delay + 'ms -> ' + newDelay + 'ms');
+          return origSetTimeout.call(this, fn, newDelay, ...args);
+        }
+      }
+      return origSetTimeout.call(this, fn, delay, ...args);
+    };
 
-    if (document.body) {
-      observer.observe(document.body, { childList: true, subtree: true, characterData: true });
-    }
-
-    // Periodic check every 1 second, stop after 120s
-    const interval = setInterval(findAndClickGetLink, 1000);
-    setTimeout(() => clearInterval(interval), 120000);
-
-    console.log('[BraveShield Bypass] Timer bypass active (auto-click Get Link when ready)');
+    console.log('[BraveShield Bypass] Timer bypass active (10x speedup, normal at 2s remaining)');
   }
 
   // ==========================================
@@ -1195,6 +1196,211 @@
   }
 
   // ==========================================
+  // 29. YOUTUBE AD BLOCKING + SPONSOR BLOCKING
+  // ==========================================
+  // Blocks YouTube video ads, display ads, and skips sponsored segments
+  // using SponsorBlock API for crowd-sourced sponsor timestamps.
+  function blockYouTubeAds() {
+    if (!window.location.hostname.includes('youtube.com')) return;
+
+    // === PART A: Block video ads by intercepting player API ===
+    function hookYouTubePlayer() {
+      // Override ytInitialPlayerResponse to remove ad info
+      if (window.ytInitialPlayerResponse) {
+        removeAdsFromPlayerResponse(window.ytInitialPlayerResponse);
+      }
+
+      // Hook into page to catch player updates
+      const origDefineProperty = Object.defineProperty;
+      const playerHooks = new Set();
+
+      Object.defineProperty = function(obj, prop, descriptor) {
+        if (obj === window && prop === 'ytInitialPlayerResponse') {
+          const origSet = descriptor.set;
+          descriptor.set = function(val) {
+            if (val) removeAdsFromPlayerResponse(val);
+            if (origSet) origSet.call(this, val);
+          };
+        }
+        return origDefineProperty.call(this, obj, prop, descriptor);
+      };
+    }
+
+    function removeAdsFromPlayerResponse(resp) {
+      try {
+        // Remove ad breaks
+        if (resp.adPlacements) delete resp.adPlacements;
+        if (resp.playerAds) delete resp.playerAds;
+        if (resp.adSlots) delete resp.adSlots;
+
+        // Remove ad-related fields from video details
+        if (resp.videoDetails) {
+          delete resp.videoDetails.isLiveContent;
+        }
+
+        // Clean up streaming data ads
+        if (resp.streamingData) {
+          delete resp.streamingData.serverAbrStreamingUrl;
+        }
+      } catch(e) {}
+    }
+
+    // === PART B: Auto-skip video ads ===
+    function skipVideoAds() {
+      // Skip ad by clicking skip button
+      const skipBtn = document.querySelector(
+        '.ytp-skip-ad-button, .ytp-ad-skip-button, .ytp-ad-skip-button-modern, ' +
+        'button.ytp-ad-skip-button, button.ytp-ad-skip-button-modern, ' +
+        '[class*="skip-ad"], [class*="ad-skip"], .skip-button'
+      );
+      if (skipBtn) {
+        skipBtn.click();
+        console.log('[BraveShield Bypass] Skipped YouTube ad');
+      }
+
+      // Close non-skippable ads by playing through
+      const video = document.querySelector('video');
+      if (video && video.duration && video.duration < 30) {
+        // Check if we're in an ad
+        const adContainer = document.querySelector(
+          '.ad-container, .ytp-ad-player-overlay, .video-ads, ' +
+          '[class*="ad-showing"], .ytp-ad-overlay-container'
+        );
+        if (adContainer && adContainer.offsetHeight > 0) {
+          video.currentTime = video.duration;
+          video.play();
+        }
+      }
+
+      // Remove ad overlays
+      document.querySelectorAll(
+        '.ytp-ad-overlay-container, .ytp-ad-text-overlay, ' +
+        '.ytp-ad-image-overlay, .video-ads, .ytp-ad-player-overlay, ' +
+        'div[id*="player-ads"], .ytp-ad-module'
+      ).forEach(el => {
+        el.remove();
+      });
+
+      // Hide ad elements in sidebar
+      document.querySelectorAll(
+        'ytd-display-ad-renderer, ytd-promoted-sparkles-web-renderer, ' +
+        'ytd-ad-slot-renderer, ytd-in-feed-ad-layout-renderer, ' +
+        '[class*="ad-unit"], [class*="promoted"]'
+      ).forEach(el => {
+        el.style.display = 'none';
+      });
+    }
+
+    // === PART C: SponsorBlock - Skip sponsored segments ===
+    const sponsorCache = {};
+
+    async function fetchSponsorSegments(videoId) {
+      if (sponsorCache[videoId] !== undefined) return sponsorCache[videoId];
+
+      try {
+        const resp = await fetch(
+          'https://sponsor.ajay.app/api/skipSegments?videoID=' + videoId,
+          { headers: { 'Accept': 'application/json' } }
+        );
+        if (resp.ok) {
+          const segments = await resp.json();
+          sponsorCache[videoId] = segments;
+          return segments;
+        }
+      } catch(e) {}
+
+      sponsorCache[videoId] = [];
+      return [];
+    }
+
+    function getVideoId() {
+      const url = new URL(window.location.href);
+      return url.searchParams.get('v');
+    }
+
+    async function skipSponsoredSegments() {
+      const videoId = getVideoId();
+      if (!videoId) return;
+
+      const video = document.querySelector('video');
+      if (!video || !video.duration) return;
+
+      const segments = await fetchSponsorSegments(videoId);
+      const currentTime = video.currentTime;
+
+      for (const seg of segments) {
+        const [start, end] = seg.segment;
+        if (currentTime >= start && currentTime < end) {
+          video.currentTime = end;
+          console.log('[BraveShield Bypass] Skipped sponsor segment (' + (seg.category || 'sponsor') + ')');
+
+          // Show notification
+          showSponsorNotification(seg.category || 'sponsor');
+          break;
+        }
+      }
+    }
+
+    function showSponsorNotification(category) {
+      const existing = document.getElementById('brave-shield-sponsor-toast');
+      if (existing) existing.remove();
+
+      const toast = document.createElement('div');
+      toast.id = 'brave-shield-sponsor-toast';
+      toast.style.cssText = 'position:fixed;top:80px;right:20px;background:#1a1a2e;color:#00d4ff;padding:10px 16px;border-radius:8px;border:1px solid #333;font-size:13px;z-index:999999;font-family:system-ui,sans-serif;box-shadow:0 4px 12px rgba(0,0,0,0.4);';
+      toast.textContent = '⏭ Skipped: ' + category;
+      document.body.appendChild(toast);
+      setTimeout(() => toast.remove(), 2000);
+    }
+
+    // === PART D: Block YouTube display/masthead ads ===
+    function blockDisplayAds() {
+      // Block ad frames
+      document.querySelectorAll('iframe').forEach(iframe => {
+        const src = (iframe.src || '').toLowerCase();
+        if (/doubleclick|googlesyndication|googleads|adservice|ad-click/i.test(src)) {
+          iframe.remove();
+        }
+      });
+
+      // Hide promoted content in feed
+      document.querySelectorAll(
+        'ytd-rich-item-renderer[is-ad], ytd-video-renderer[is-ad], ' +
+        'ytd-ad-slot-renderer, ytd-display-ad-renderer'
+      ).forEach(el => {
+        el.style.display = 'none';
+      });
+    }
+
+    // === Run all YouTube ad blocking ===
+    function runYouTubeAdBlock() {
+      skipVideoAds();
+      skipSponsoredSegments();
+      blockDisplayAds();
+    }
+
+    // Hook player on page load
+    hookYouTubePlayer();
+
+    // Run on interval
+    const ytInterval = setInterval(runYouTubeAdBlock, 1000);
+
+    // Watch for SPA navigation (YouTube is a SPA)
+    const ytObserver = new MutationObserver(() => {
+      setTimeout(runYouTubeAdBlock, 500);
+    });
+
+    if (document.body) {
+      ytObserver.observe(document.body, { childList: true, subtree: true });
+    }
+
+    // Stop after 2 hours
+    setTimeout(() => clearInterval(ytInterval), 7200000);
+
+    console.log('[BraveShield Bypass] YouTube ad blocking + SponsorBlock active');
+  }
+
+  // ==========================================
   // RUN ALL MODULES
   // ==========================================
   const modules = [
@@ -1225,7 +1431,8 @@
     ['Module 25: Screen Consistency', ensureScreenConsistency],
     ['Module 26: User Agent Spoofing', spoofUserAgent],
     ['Module 27: Adblock Detection Bypass', bypassAdblockDetection],
-    ['Module 28: Click Image Wait Bypass', bypassClickImageWait]
+    ['Module 28: Click Image Wait Bypass', bypassClickImageWait],
+    ['Module 29: YouTube Ad Block + SponsorBlock', blockYouTubeAds]
   ];
 
   modules.forEach(([name, fn]) => {

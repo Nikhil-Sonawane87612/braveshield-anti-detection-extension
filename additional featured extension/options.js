@@ -88,7 +88,7 @@ document.addEventListener('DOMContentLoaded', () => {
     'prevent-webrtc': 'preventWebRTC', 'deny-permissions': 'autoDenyPermissions',
     'clamp-timers': 'clampTimers', 'spoof-navigator': 'spoofNavigator',
     'screen-consistency': 'screenConsistency', 'spoof-fonts': 'spoofFonts',
-    'clean-css': 'cleanCSS'
+    'clean-css': 'cleanCSS', 'yt-ads': 'youtubeAds', 'yt-sponsor': 'sponsorBlock'
   };
 
   chrome.storage.local.get(Object.values(SETTINGS_MAP), (res) => {

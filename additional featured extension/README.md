@@ -1,6 +1,18 @@
-# BraveShield Bypass Pro v4.0 - Complete Anti-Detection Engine
+# BraveShield Bypass Pro v4.3 - Complete Anti-Detection Engine
 
-**25 modules** that bypass everything: Brave Shields, adblock traps, link shorteners, cookie consents, 15-20 second countdown timers, WebRTC leaks, and auto-clicks download buttons.
+**28 modules** that bypass everything: Brave Shields, adblock traps, link shorteners, cookie consents, countdown timers, click-image-wait patterns, WebRTC leaks, and auto-clicks download buttons.
+
+---
+
+## Installation
+
+1. **Extract** the ZIP file (right-click → Extract All)
+2. Open Brave/Chrome → go to `brave://extensions`
+3. Enable **Developer mode** (top-right toggle)
+4. Click **"Load unpacked"** and select the extracted folder (the one with `manifest.json`)
+5. Done!
+
+> Do NOT drag-and-drop the ZIP. You must extract first, then use Load unpacked.
 
 ---
 
@@ -29,7 +41,7 @@
 
 ### Auto-Bypass Features (Modules 7-12)
 7. **Link Shortener Auto-Bypass** - 50+ services (ouo.io, bc.vc, sh.st, linkvertise, etc.)
-8. **15-20s Timer/Countdown Bypass** - Accelerates timers, auto-clicks download buttons
+8. **Timer/Countdown Bypass** - Speeds up countdowns, auto-clicks Get Link
 9. **Cookie Consent Auto-Dismiss** - 20+ consent frameworks
 10. **Smart Auto-Scroll** - Auto-scrolls pages requiring scroll
 11. **Redirect Chain Follower** - Follows meta refresh and click-through redirects

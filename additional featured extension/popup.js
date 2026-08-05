@@ -35,7 +35,8 @@ document.addEventListener('DOMContentLoaded', () => {
     canvas: 'normalizeCanvas', webrtc: 'preventWebRTC',
     permissions: 'autoDenyPermissions',     bait: 'fakeNetworkBait',
     navigator: 'spoofNavigator',
-    adblock: 'bypassAdblockDetection'
+    adblock: 'bypassAdblockDetection',
+    youtube: 'blockYouTubeAds'
   };
 
   // User Agent selector

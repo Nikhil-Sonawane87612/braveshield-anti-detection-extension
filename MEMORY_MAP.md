@@ -82,7 +82,7 @@ EXTENSION LOAD
          │
          ├── AUTO-BYPASS FEATURES (Modules 7-12)
          │   ├── 7. Link Shortener ─────────► 50+ services, auto-click continue buttons
-         │   ├── 8. 15-20s Timer Bypass ────► override setInterval/setTimeout, force countdown to 0
+         │   ├── 8. Download Button Watcher ► watches DOM, auto-clicks download buttons when timer completes
          │   ├── 9. Cookie Consent ─────────► 20+ frameworks, auto-click "Accept All"
          │   ├── 10. Auto-Scroll ───────────► detect scroll requirements, auto-scroll
          │   ├── 11. Redirect Follower ─────► follow meta refresh + click-through redirects
@@ -281,15 +281,15 @@ chrome.storage.local = {
 - **Method:** Find and click Continue/Download/Get Link buttons via text and selector matching
 - **Evasion:** Auto-clicks through link shortener wait pages
 
-### Module 8: 15-20s Timer/Countdown Bypass (CRITICAL FIX)
-- **Targets:** setInterval/setTimeout, countdown DOM elements, wait text
+### Module 8: Download Button Watcher
+- **Targets:** Download/get-link/continue buttons that appear after countdown
 - **Method:**
-  - Override `setInterval`/`setTimeout` to accelerate countdowns (15-20s → 50ms)
-  - Find countdown elements and force value to 0
-  - Search parent containers for Continue/Download buttons and click
-  - MutationObserver for dynamically loaded buttons
-  - Override `eval` to replace countdown variable assignments
-- **Evasion:** Auto-bypasses 15-20 second download button waits
+  - MutationObserver watches DOM for new elements
+  - Checks selectors: a[href*="download"], a[href*="get-link"], button.download, etc.
+  - Validates visibility (offsetParent, offsetWidth, offsetHeight)
+  - Auto-clicks when button appears and matches link patterns
+  - Does NOT touch timers (lets site generate link server-side)
+- **Evasion:** Auto-clicks download button when it appears after timer completes
 
 ### Module 9: Cookie Consent Auto-Dismiss
 - **Targets:** 20+ consent framework selectors + text matching

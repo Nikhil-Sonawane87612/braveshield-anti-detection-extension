@@ -885,6 +885,152 @@
   }
 
   // ==========================================
+  // 26. USER AGENT SPOOFING (170+ UAs)
+  // ==========================================
+  function spoofUserAgent() {
+    try {
+      // Get selected UA from storage (default: random Chrome)
+      let selectedUA = null;
+      try {
+        // Try chrome.storage first (via message), fallback to localStorage
+        const savedUA = localStorage.getItem('braveshield_ua');
+        if (savedUA && savedUA !== 'random' && savedUA !== 'default') {
+          selectedUA = JSON.parse(savedUA);
+        }
+      } catch(e) {}
+
+      // If no specific UA selected, pick a random Chrome desktop
+      if (!selectedUA) {
+        const desktopChrome = [
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36",
+          "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+          "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+        ];
+        selectedUA = {
+          ua: desktopChrome[Math.floor(Math.random() * desktopChrome.length)],
+          brands: [{ brand: "Google Chrome", version: "131" }, { brand: "Chromium", version: "131" }, { brand: "Not_A Brand", version: "24" }],
+          platform: "Windows",
+          mobile: false,
+          platformVersion: "15.0.0"
+        };
+      }
+
+      // Override navigator.userAgent
+      Object.defineProperty(navigator, 'userAgent', {
+        get: function() { return selectedUA.ua; },
+        configurable: true
+      });
+
+      // Override navigator.appVersion
+      Object.defineProperty(navigator, 'appVersion', {
+        get: function() { return selectedUA.ua.substring(8); },
+        configurable: true
+      });
+
+      // Override navigator.platform
+      if (selectedUA.platform) {
+        const platformMap = {
+          'Windows': 'Win32',
+          'macOS': 'MacIntel',
+          'Linux': 'Linux x86_64',
+          'Android': 'Linux armv81',
+          'iOS': 'iPhone'
+        };
+        Object.defineProperty(navigator, 'platform', {
+          get: function() { return platformMap[selectedUA.platform] || selectedUA.platform; },
+          configurable: true
+        });
+      }
+
+      // Override navigator.userAgentData (Chromium only)
+      if (navigator.userAgentData && selectedUA.brands && selectedUA.brands.length > 0) {
+        Object.defineProperty(navigator.userAgentData, 'brands', {
+          get: function() { return selectedUA.brands; },
+          configurable: true
+        });
+        Object.defineProperty(navigator.userAgentData, 'mobile', {
+          get: function() { return selectedUA.mobile || false; },
+          configurable: true
+        });
+        Object.defineProperty(navigator.userAgentData, 'platform', {
+          get: function() { return selectedUA.platform || 'Windows'; },
+          configurable: true
+        });
+
+        // Override getHighEntropyValues
+        if (navigator.userAgentData.getHighEntropyValues) {
+          const origGetHigh = navigator.userAgentData.getHighEntropyValues;
+          navigator.userAgentData.getHighEntropyValues = function(hints) {
+            return origGetHigh.call(this, hints).then(res => {
+              res.brands = selectedUA.brands;
+              res.mobile = selectedUA.mobile || false;
+              res.platform = selectedUA.platform || 'Windows';
+              if (selectedUA.platformVersion) res.platformVersion = selectedUA.platformVersion;
+              return res;
+            });
+          };
+        }
+      }
+
+      // Override navigator.oscpu (Firefox-style)
+      if (selectedUA.oscpu) {
+        Object.defineProperty(navigator, 'oscpu', {
+          get: function() { return selectedUA.oscpu; },
+          configurable: true
+        });
+      }
+
+      // Override navigator.product (Firefox returns "Gecko", Chrome returns "Gecko" too)
+      Object.defineProperty(navigator, 'product', {
+        get: function() { return 'Gecko'; },
+        configurable: true
+      });
+
+      // Override navigator.vendor (Chrome returns "Google Inc.", Safari returns "Apple Computer, Inc.")
+      if (selectedUA.ua.includes('Chrome') && !selectedUA.ua.includes('Edg/')) {
+        Object.defineProperty(navigator, 'vendor', {
+          get: function() { return 'Google Inc.'; },
+          configurable: true
+        });
+      } else if (selectedUA.ua.includes('Edg/')) {
+        Object.defineProperty(navigator, 'vendor', {
+          get: function() { return 'Google Inc.'; },
+          configurable: true
+        });
+      } else if (selectedUA.ua.includes('Safari/') && !selectedUA.ua.includes('Chrome/')) {
+        Object.defineProperty(navigator, 'vendor', {
+          get: function() { return 'Apple Computer, Inc.'; },
+          configurable: true
+        });
+      }
+
+      // Override navigator.connection (Network Information)
+      if (navigator.connection) {
+        Object.defineProperty(navigator.connection, 'effectiveType', {
+          get: function() { return '4g'; },
+          configurable: true
+        });
+        Object.defineProperty(navigator.connection, 'rtt', {
+          get: function() { return 50; },
+          configurable: true
+        });
+        Object.defineProperty(navigator.connection, 'downlink', {
+          get: function() { return 10; },
+          configurable: true
+        });
+      }
+
+      // Store current UA info for other modules
+      window.__braveshield_currentUA = selectedUA;
+
+      console.log('[BraveShield Bypass] User Agent spoofed: ' + selectedUA.ua.substring(0, 60) + '...');
+    } catch(e) {
+      console.debug('[BraveShield Bypass] UA spoofing error:', e);
+    }
+  }
+
+  // ==========================================
   // RUN ALL MODULES
   // ==========================================
   const modules = [
@@ -912,7 +1058,8 @@
     ['Module 22: Navigator Consistency', spoofNavigatorConsistency],
     ['Module 23: CSS Property Cleanup', cleanCSSProperties],
     ['Module 24: Font Fingerprint', spoofFontFingerprint],
-    ['Module 25: Screen Consistency', ensureScreenConsistency]
+    ['Module 25: Screen Consistency', ensureScreenConsistency],
+    ['Module 26: User Agent Spoofing', spoofUserAgent]
   ];
 
   modules.forEach(([name, fn]) => {

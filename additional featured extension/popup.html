@@ -136,6 +136,74 @@
   </div>
 
   <div class="card">
+    <div class="card-title">User Agent Spoofing (170+ UAs)</div>
+    <div style="margin-bottom: 8px;">
+      <select id="ua-category" style="width:100%; padding:6px; background:#0f172a; border:1px solid #475569; border-radius:4px; color:white; font-size:11px; margin-bottom:6px;">
+        <option value="random">Random Chrome (Default)</option>
+        <optgroup label="Desktop - Chrome">
+          <option value="chrome_win131">Chrome 131 (Windows 11)</option>
+          <option value="chrome_win130">Chrome 130 (Windows 11)</option>
+          <option value="chrome_win129">Chrome 129 (Windows 10)</option>
+          <option value="chrome_win128">Chrome 128 (Windows 10)</option>
+          <option value="chrome_win124">Chrome 124 (Windows 10)</option>
+          <option value="chrome_mac131">Chrome 131 (macOS)</option>
+          <option value="chrome_mac130">Chrome 130 (macOS)</option>
+          <option value="chrome_mac129">Chrome 129 (macOS)</option>
+          <option value="chrome_mac124">Chrome 124 (macOS)</option>
+          <option value="chrome_lin131">Chrome 131 (Linux)</option>
+          <option value="chrome_lin130">Chrome 130 (Linux)</option>
+          <option value="chrome_lin124">Chrome 124 (Linux)</option>
+        </optgroup>
+        <optgroup label="Desktop - Edge">
+          <option value="edge131">Edge 131 (Windows 11)</option>
+          <option value="edge130">Edge 130 (Windows 11)</option>
+          <option value="edge129">Edge 129 (Windows 10)</option>
+          <option value="edge128">Edge 128 (Windows 10)</option>
+          <option value="edge124">Edge 124 (Windows 10)</option>
+        </optgroup>
+        <optgroup label="Desktop - Firefox">
+          <option value="firefox133">Firefox 133 (Windows)</option>
+          <option value="firefox132">Firefox 132 (Windows)</option>
+          <option value="firefox131">Firefox 131 (Windows)</option>
+          <option value="firefox_mac133">Firefox 133 (macOS)</option>
+          <option value="firefox_mac132">Firefox 132 (macOS)</option>
+        </optgroup>
+        <optgroup label="Desktop - Safari">
+          <option value="safari18">Safari 18 (macOS Sequoia)</option>
+          <option value="safari17">Safari 17 (macOS Sonoma)</option>
+          <option value="safari16">Safari 16 (macOS Ventura)</option>
+        </optgroup>
+        <optgroup label="Desktop - Opera">
+          <option value="opera110">Opera 110 (Windows)</option>
+          <option value="opera108">Opera 108 (Windows)</option>
+        </optgroup>
+        <optgroup label="Mobile - Android">
+          <option value="mobile_chrome131">Chrome 131 (Android)</option>
+          <option value="mobile_chrome130">Chrome 130 (Android)</option>
+          <option value="mobile_chrome124">Chrome 124 (Android)</option>
+          <option value="mobile_samsung28">Samsung 28 (Android)</option>
+          <option value="mobile_samsung25">Samsung 25 (Android)</option>
+          <option value="mobile_firefox133">Firefox 133 (Android)</option>
+        </optgroup>
+        <optgroup label="Mobile - iPhone">
+          <option value="safari_ios18">Safari 18 (iPhone - iOS 18)</option>
+          <option value="safari_ios17">Safari 17 (iPhone - iOS 17)</option>
+          <option value="chrome_ios18">Chrome 131 (iPhone - iOS 18)</option>
+        </optgroup>
+        <optgroup label="Tablet">
+          <option value="ipad_os18">Safari 18 (iPad - iPadOS 18)</option>
+          <option value="ipad_os17">Safari 17 (iPad - iPadOS 17)</option>
+          <option value="android_tab131">Chrome 131 (Android Tablet)</option>
+        </optgroup>
+      </select>
+    </div>
+    <div class="status-text">
+      <span class="dot"></span>
+      <span id="ua-status">Spoofing as Chrome 131</span>
+    </div>
+  </div>
+
+  <div class="card">
     <div class="card-title">Shield Bypass Stats</div>
     <div class="stats">
       <div class="stat-box">

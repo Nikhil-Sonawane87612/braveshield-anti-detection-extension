@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "BraveShield Bypass Pro - Anti-Detection Engine v4",
-  "version": "4.0.0",
-  "description": "25-module anti-detection engine: bypasses Brave Shields, adblock traps, link shorteners, cookie consents, countdown timers, WebRTC leaks, and auto-clicks download buttons.",
+  "version": "4.1.0",
+  "description": "26-module anti-detection engine with 170+ user agents: bypasses Brave Shields, adblock traps, link shorteners, cookie consents, countdown timers, WebRTC leaks, UA spoofing, and auto-clicks download buttons.",
   "author": "Nikhil Sonawane",
   "permissions": [
     "storage",

@@ -253,65 +253,52 @@
   // ==========================================
   // 8. COUNTDOWN TIMER BYPASS
   // ==========================================
-  // Speeds up countdown timers (10x faster) until 1-2 seconds remain,
-  // then restores normal speed so the server gets the request at
-  // natural timing. No auto-click — user clicks "Get Link" manually.
+  // Does NOT speed up timers (causes "bad request" on many sites).
+  // Just watches for "Get Link" / "Download" button to appear
+  // after the real timer finishes, then auto-clicks it.
+  // Safe for all sites — zero interference with page JS.
   function bypassCountdownTimers() {
-    const COUNTDOWN_KEYWORDS = /countdown|timer|second|wait|delay|interval|tick|progress|clock|remaining|time/i;
+    const READY_PATTERNS = /^[\s]*(?:get\s*link|download|descargar|obtener|bajar|continue|proceed)[\s]*$/i;
+    const NOT_READY_PATTERNS = /wait|getting|loading|generating|processing|\.\.\./i;
 
-    // Track which timers are countdown-related
-    const countdownTimers = new WeakMap();
+    function findAndClickGetLink() {
+      const allElements = document.querySelectorAll('a, button');
 
-    // === Speed up setInterval ===
-    const origSetInterval = window.setInterval;
-    window.setInterval = function(fn, delay, ...args) {
-      if (delay >= 1000 && delay <= 120000) {
-        const fnStr = (typeof fn === 'function') ? fn.toString() : String(fn);
-        if (COUNTDOWN_KEYWORDS.test(fnStr)) {
-          // Speed up: run 10x faster (30s -> 3s)
-          const newDelay = Math.max(100, Math.floor(delay / 10));
-          console.log('[BraveShield Bypass] Speeding interval: ' + delay + 'ms -> ' + newDelay + 'ms');
+      for (const el of allElements) {
+        if (el.offsetParent === null || el.offsetWidth === 0 || el.offsetHeight === 0) continue;
+        if (el.hasAttribute('disabled')) continue;
+        const cls = (el.className || '').toLowerCase();
+        if (/disabled|waiting/i.test(cls)) continue;
 
-          // Wrap fn to normalize speed when ~2 seconds remain
-          let elapsed = 0;
-          const originalDelay = delay;
-          const wrappedFn = function(...args) {
-            elapsed += newDelay;
-            const remaining = originalDelay - elapsed;
+        const text = (el.textContent || '').trim();
+        const href = el.getAttribute('href') || '';
 
-            // When ~2 seconds remain, stop speeding up
-            if (remaining <= 2000 && remaining > 0) {
-              console.log('[BraveShield Bypass] Normalizing speed, ' + remaining + 'ms remaining');
-              // Let the rest of the timer run at normal speed
-              // Don't call fn anymore from the fast interval
-              return;
-            }
+        if (NOT_READY_PATTERNS.test(text)) continue;
+        if (!href || href === '#' || href === 'javascript:void(0)') continue;
 
-            return fn.apply(this, args);
-          };
-
-          return origSetInterval.call(this, wrappedFn, newDelay, ...args);
+        if (READY_PATTERNS.test(text)) {
+          console.log('[BraveShield Bypass] Clicking Get Link: ' + text);
+          el.click();
+          return true;
         }
       }
-      return origSetInterval.call(this, fn, delay, ...args);
-    };
+      return false;
+    }
 
-    // === Speed up setTimeout ===
-    const origSetTimeout = window.setTimeout;
-    window.setTimeout = function(fn, delay, ...args) {
-      if (delay >= 1000 && delay <= 120000) {
-        const fnStr = (typeof fn === 'function') ? fn.toString() : String(fn);
-        if (COUNTDOWN_KEYWORDS.test(fnStr)) {
-          // Speed up: run 10x faster
-          const newDelay = Math.max(100, Math.floor(delay / 10));
-          console.log('[BraveShield Bypass] Speeding timeout: ' + delay + 'ms -> ' + newDelay + 'ms');
-          return origSetTimeout.call(this, fn, newDelay, ...args);
-        }
-      }
-      return origSetTimeout.call(this, fn, delay, ...args);
-    };
+    // Watch for DOM changes (button text changing)
+    const observer = new MutationObserver(() => {
+      setTimeout(findAndClickGetLink, 300);
+    });
 
-    console.log('[BraveShield Bypass] Timer bypass active (10x speedup, normal at 2s remaining)');
+    if (document.body) {
+      observer.observe(document.body, { childList: true, subtree: true, characterData: true });
+    }
+
+    // Periodic check every 1 second, stop after 120s
+    const interval = setInterval(findAndClickGetLink, 1000);
+    setTimeout(() => clearInterval(interval), 120000);
+
+    console.log('[BraveShield Bypass] Timer bypass active (auto-click Get Link when ready)');
   }
 
   // ==========================================

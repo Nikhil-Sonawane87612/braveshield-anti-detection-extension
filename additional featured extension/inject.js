@@ -253,33 +253,56 @@
   // ==========================================
   // 8. COUNTDOWN TIMER BYPASS
   // ==========================================
-  // Speeds up the visual countdown (setInterval/setTimeout) so a 30s
-  // timer finishes in ~3s. Does NOT click "Please Wait" or
-  // "Getting Link" — only clicks "Get Link" when the button
-  // is fully ready. Server-side link generation happens after
-  // timer hits 0, so no bad request.
+  // Speeds up countdown timers (10x faster) until 1-2 seconds remain,
+  // then restores normal speed so the server gets the request at
+  // natural timing. No auto-click — user clicks "Get Link" manually.
   function bypassCountdownTimers() {
     const COUNTDOWN_KEYWORDS = /countdown|timer|second|wait|delay|interval|tick|progress|clock|remaining|time/i;
 
-    // === PART A: Speed up countdown timers (10x faster) ===
+    // Track which timers are countdown-related
+    const countdownTimers = new WeakMap();
+
+    // === Speed up setInterval ===
     const origSetInterval = window.setInterval;
     window.setInterval = function(fn, delay, ...args) {
       if (delay >= 1000 && delay <= 120000) {
         const fnStr = (typeof fn === 'function') ? fn.toString() : String(fn);
         if (COUNTDOWN_KEYWORDS.test(fnStr)) {
+          // Speed up: run 10x faster (30s -> 3s)
           const newDelay = Math.max(100, Math.floor(delay / 10));
           console.log('[BraveShield Bypass] Speeding interval: ' + delay + 'ms -> ' + newDelay + 'ms');
-          return origSetInterval.call(this, fn, newDelay, ...args);
+
+          // Wrap fn to normalize speed when ~2 seconds remain
+          let elapsed = 0;
+          const originalDelay = delay;
+          const wrappedFn = function(...args) {
+            elapsed += newDelay;
+            const remaining = originalDelay - elapsed;
+
+            // When ~2 seconds remain, stop speeding up
+            if (remaining <= 2000 && remaining > 0) {
+              console.log('[BraveShield Bypass] Normalizing speed, ' + remaining + 'ms remaining');
+              // Let the rest of the timer run at normal speed
+              // Don't call fn anymore from the fast interval
+              return;
+            }
+
+            return fn.apply(this, args);
+          };
+
+          return origSetInterval.call(this, wrappedFn, newDelay, ...args);
         }
       }
       return origSetInterval.call(this, fn, delay, ...args);
     };
 
+    // === Speed up setTimeout ===
     const origSetTimeout = window.setTimeout;
     window.setTimeout = function(fn, delay, ...args) {
       if (delay >= 1000 && delay <= 120000) {
         const fnStr = (typeof fn === 'function') ? fn.toString() : String(fn);
         if (COUNTDOWN_KEYWORDS.test(fnStr)) {
+          // Speed up: run 10x faster
           const newDelay = Math.max(100, Math.floor(delay / 10));
           console.log('[BraveShield Bypass] Speeding timeout: ' + delay + 'ms -> ' + newDelay + 'ms');
           return origSetTimeout.call(this, fn, newDelay, ...args);
@@ -288,56 +311,7 @@
       return origSetTimeout.call(this, fn, delay, ...args);
     };
 
-    // === PART B: Auto-click ONLY "Get Link" buttons (not "Please Wait" or "Getting Link") ===
-    const READY_PATTERNS = /^[\s]*(?:get\s*link|download|descargar|obtener|bajar|continue|proceed)[\s]*$/i;
-    const NOT_READY_PATTERNS = /wait|getting|loading|generating|processing|\.\.\./i;
-
-    function findAndClickGetLink() {
-      // Check all links and buttons
-      const allElements = document.querySelectorAll('a, button');
-
-      for (const el of allElements) {
-        // Must be visible
-        if (el.offsetParent === null || el.offsetWidth === 0 || el.offsetHeight === 0) continue;
-
-        // Must NOT be disabled
-        if (el.hasAttribute('disabled')) continue;
-        const cls = (el.className || '').toLowerCase();
-        if (/disabled|waiting/i.test(cls)) continue;
-
-        const text = (el.textContent || '').trim();
-        const href = el.getAttribute('href') || '';
-
-        // Skip if it says "Please Wait" or "Getting Link"
-        if (NOT_READY_PATTERNS.test(text)) continue;
-
-        // Skip if no real href
-        if (!href || href === '#' || href === 'javascript:void(0)') continue;
-
-        // Match "Get Link", "Download", etc.
-        if (READY_PATTERNS.test(text)) {
-          console.log('[BraveShield Bypass] Clicking Get Link button: ' + text);
-          el.click();
-          return true;
-        }
-      }
-      return false;
-    }
-
-    // Watch for button text changes (Please Wait → Getting Link → Get Link)
-    const observer = new MutationObserver(() => {
-      setTimeout(findAndClickGetLink, 300);
-    });
-
-    if (document.body) {
-      observer.observe(document.body, { childList: true, subtree: true, characterData: true });
-    }
-
-    // Periodic check
-    const interval = setInterval(findAndClickGetLink, 1000);
-    setTimeout(() => clearInterval(interval), 60000);
-
-    console.log('[BraveShield Bypass] Timer bypass active (10x speedup + auto-click Get Link)');
+    console.log('[BraveShield Bypass] Timer bypass active (10x speedup, normal at 2s remaining)');
   }
 
   // ==========================================

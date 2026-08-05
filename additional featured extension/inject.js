@@ -251,86 +251,93 @@
   }
 
   // ==========================================
-  // 8. COUNTDOWN TIMER BYPASS (SAFE DOM-ONLY)
+  // 8. COUNTDOWN TIMER BYPASS
   // ==========================================
-  // Does NOT touch setInterval/setTimeout/eval.
-  // Does NOT hide or modify countdown values.
-  // Only watches for the download button to become enabled/clickable
-  // after the real timer completes, then auto-clicks it.
-  // Server-side timers run naturally = no bad request.
+  // Speeds up the visual countdown (setInterval/setTimeout) so a 30s
+  // timer finishes in ~3s. Does NOT click "Please Wait" or
+  // "Getting Link" — only clicks "Get Link" when the button
+  // is fully ready. Server-side link generation happens after
+  // timer hits 0, so no bad request.
   function bypassCountdownTimers() {
-    let lastClicked = 0;
+    const COUNTDOWN_KEYWORDS = /countdown|timer|second|wait|delay|interval|tick|progress|clock|remaining|time/i;
 
-    // === Auto-click download buttons when they become enabled ===
-    const DOWNLOAD_SELECTORS = [
-      'a[href*="download"]', 'a[href*="get-link"]', 'a[href*="generar"]',
-      'a[href*="continue"]', 'a[href*="proceed"]',
-      'button.download', 'button.get-link', 'button.continue',
-      '.download-btn', '.get-link-btn', '.continue-btn',
-      '#download-btn', '#get-link-btn', '#continue-btn',
-      '[class*="download"]', '[class*="get-link"]', '[class*="generar"]',
-      '[id*="download"]', '[id*="get-link"]', '[id*="generar"]',
-      'a.btn-primary', 'a.btn-download', 'button.btn-primary',
-      'a[onclick*="download"]', 'a[onclick*="link"]',
-      'a[data-download]', 'a[data-link]'
-    ];
+    // === PART A: Speed up countdown timers (10x faster) ===
+    const origSetInterval = window.setInterval;
+    window.setInterval = function(fn, delay, ...args) {
+      if (delay >= 1000 && delay <= 120000) {
+        const fnStr = (typeof fn === 'function') ? fn.toString() : String(fn);
+        if (COUNTDOWN_KEYWORDS.test(fnStr)) {
+          const newDelay = Math.max(100, Math.floor(delay / 10));
+          console.log('[BraveShield Bypass] Speeding interval: ' + delay + 'ms -> ' + newDelay + 'ms');
+          return origSetInterval.call(this, fn, newDelay, ...args);
+        }
+      }
+      return origSetInterval.call(this, fn, delay, ...args);
+    };
 
-    const LINK_PATTERNS = /download|get-link|generar|continue|proceed|descargar|bajar|obtener/i;
+    const origSetTimeout = window.setTimeout;
+    window.setTimeout = function(fn, delay, ...args) {
+      if (delay >= 1000 && delay <= 120000) {
+        const fnStr = (typeof fn === 'function') ? fn.toString() : String(fn);
+        if (COUNTDOWN_KEYWORDS.test(fnStr)) {
+          const newDelay = Math.max(100, Math.floor(delay / 10));
+          console.log('[BraveShield Bypass] Speeding timeout: ' + delay + 'ms -> ' + newDelay + 'ms');
+          return origSetTimeout.call(this, fn, newDelay, ...args);
+        }
+      }
+      return origSetTimeout.call(this, fn, delay, ...args);
+    };
 
-    function findAndClickDownloadButton() {
-      // Don't click too frequently
-      if (Date.now() - lastClicked < 2000) return false;
+    // === PART B: Auto-click ONLY "Get Link" buttons (not "Please Wait" or "Getting Link") ===
+    const READY_PATTERNS = /^[\s]*(?:get\s*link|download|descargar|obtener|bajar|continue|proceed)[\s]*$/i;
+    const NOT_READY_PATTERNS = /wait|getting|loading|generating|processing|\.\.\./i;
 
-      for (const selector of DOWNLOAD_SELECTORS) {
-        try {
-          const elements = document.querySelectorAll(selector);
-          for (const el of elements) {
-            // Must be visible
-            if (el.offsetParent === null || el.offsetWidth === 0 || el.offsetHeight === 0) continue;
+    function findAndClickGetLink() {
+      // Check all links and buttons
+      const allElements = document.querySelectorAll('a, button');
 
-            // Must NOT be disabled
-            if (el.hasAttribute('disabled')) continue;
-            if (el.getAttribute('aria-disabled') === 'true') continue;
-            const cls = (el.className || '').toLowerCase();
-            if (/disabled|waiting|generating|loading/i.test(cls)) continue;
+      for (const el of allElements) {
+        // Must be visible
+        if (el.offsetParent === null || el.offsetWidth === 0 || el.offsetHeight === 0) continue;
 
-            // Must have a real href (not # or javascript:void)
-            const href = el.getAttribute('href') || '';
-            if (href === '#' || href === '' || href === 'javascript:void(0)') continue;
+        // Must NOT be disabled
+        if (el.hasAttribute('disabled')) continue;
+        const cls = (el.className || '').toLowerCase();
+        if (/disabled|waiting/i.test(cls)) continue;
 
-            const text = (el.textContent || '').trim();
-            const onclick = el.getAttribute('onclick') || '';
+        const text = (el.textContent || '').trim();
+        const href = el.getAttribute('href') || '';
 
-            if (LINK_PATTERNS.test(text + ' ' + href + ' ' + onclick) && text.length < 50) {
-              console.log('[BraveShield Bypass] Clicking download button: ' + text.substring(0, 30));
-              lastClicked = Date.now();
-              el.click();
-              return true;
-            }
-          }
-        } catch(e) {}
+        // Skip if it says "Please Wait" or "Getting Link"
+        if (NOT_READY_PATTERNS.test(text)) continue;
+
+        // Skip if no real href
+        if (!href || href === '#' || href === 'javascript:void(0)') continue;
+
+        // Match "Get Link", "Download", etc.
+        if (READY_PATTERNS.test(text)) {
+          console.log('[BraveShield Bypass] Clicking Get Link button: ' + text);
+          el.click();
+          return true;
+        }
       }
       return false;
     }
 
-    // Watch for DOM changes (button appearing or becoming enabled)
+    // Watch for button text changes (Please Wait → Getting Link → Get Link)
     const observer = new MutationObserver(() => {
-      setTimeout(findAndClickDownloadButton, 500);
+      setTimeout(findAndClickGetLink, 300);
     });
 
     if (document.body) {
-      observer.observe(document.body, { childList: true, subtree: true, attributes: true });
+      observer.observe(document.body, { childList: true, subtree: true, characterData: true });
     }
 
-    // Periodic check as fallback
-    const interval = setInterval(() => {
-      findAndClickDownloadButton();
-    }, 2000);
+    // Periodic check
+    const interval = setInterval(findAndClickGetLink, 1000);
+    setTimeout(() => clearInterval(interval), 60000);
 
-    // Stop checking after 120 seconds
-    setTimeout(() => clearInterval(interval), 120000);
-
-    console.log('[BraveShield Bypass] Safe timer bypass active (watching for enabled download button)');
+    console.log('[BraveShield Bypass] Timer bypass active (10x speedup + auto-click Get Link)');
   }
 
   // ==========================================

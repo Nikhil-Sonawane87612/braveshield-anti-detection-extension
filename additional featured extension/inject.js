@@ -251,77 +251,56 @@
   }
 
   // ==========================================
-  // 8. 15-20 SEC COUNTDOWN TIMER BYPASS (FIXED - NO AUTO-CLICK)
+  // 8. COUNTDOWN TIMER BYPASS - DOWNLOAD BUTTON WATCHER
   // ==========================================
-  // Only speeds up timers. Does NOT auto-click any buttons.
-  // The user manually clicks after the timer completes.
+  // Does NOT touch timers at all. Only watches for download button
+  // to appear after timer completes, then auto-clicks it.
   function bypassCountdownTimers() {
-    // Pattern 1: Override setInterval to accelerate countdowns
-    const origSetInterval = window.setInterval;
-    window.setInterval = function(fn, delay, ...args) {
-      const fnStr = (typeof fn === 'function') ? fn.toString() : String(fn);
-      if (delay >= 500) {
-        const isCountdown = /countdown|timer|second|wait|delay|interval|tick|progress/i.test(fnStr) ||
-                           /countdown|timer|second|wait/i.test(fnStr) ||
-                           (delay >= 1000 && delay <= 60000);
-        if (isCountdown) {
-          const newDelay = Math.min(delay, 50);
-          console.log('[BraveShield Bypass] Accelerating timer: ' + delay + 'ms -> ' + newDelay + 'ms');
-          return origSetInterval.call(this, fn, newDelay, ...args);
-        }
+    const DOWNLOAD_SELECTORS = [
+      'a[href*="download"]', 'a[href*="get-link"]', 'a[href*="generar"]',
+      'a[href*="continue"]', 'a[href*="proceed"]',
+      'button.download', 'button.get-link', 'button.continue',
+      '.download-btn', '.get-link-btn', '.continue-btn',
+      '#download-btn', '#get-link-btn', '#continue-btn',
+      '[class*="download"]', '[class*="get-link"]', '[class*="generar"]',
+      '[id*="download"]', '[id*="get-link"]', '[id*="generar"]',
+      'a.btn-primary', 'a.btn-download', 'button.btn-primary',
+      'a[onclick*="download"]', 'a[onclick*="link"]',
+      'a[data-download]', 'a[data-link]'
+    ];
+
+    const LINK_PATTERNS = /download|get-link|generar|continue|proceed|descargar|bajar|obtener/i;
+
+    function findAndClickDownloadButton() {
+      for (const selector of DOWNLOAD_SELECTORS) {
+        try {
+          const elements = document.querySelectorAll(selector);
+          for (const el of elements) {
+            if (el.offsetParent !== null && el.offsetWidth > 0 && el.offsetHeight > 0) {
+              const text = (el.textContent || '').trim();
+              const href = el.getAttribute('href') || '';
+              const onclick = el.getAttribute('onclick') || '';
+              if (LINK_PATTERNS.test(text + ' ' + href + ' ' + onclick) && text.length < 50) {
+                console.log('[BraveShield Bypass] Found download button: ' + text.substring(0, 30));
+                el.click();
+                return true;
+              }
+            }
+          }
+        } catch(e) {}
       }
-      return origSetInterval.call(this, fn, delay, ...args);
-    };
+      return false;
+    }
 
-    // Pattern 2: Override setTimeout to accelerate countdowns
-    const origSetTimeout = window.setTimeout;
-    window.setTimeout = function(fn, delay, ...args) {
-      const fnStr = (typeof fn === 'function') ? fn.toString() : String(fn);
-      if (delay >= 1000 && delay <= 120000) {
-        const isCountdown = /countdown|timer|second|wait|delay|redirect|location|href|navigate/i.test(fnStr);
-        if (isCountdown) {
-          console.log('[BraveShield Bypass] Accelerating timeout: ' + delay + 'ms -> 50ms');
-          return origSetTimeout.call(this, fn, 50, ...args);
-        }
-      }
-      return origSetTimeout.call(this, fn, delay, ...args);
-    };
-
-    // Pattern 3: Override eval to replace countdown variable assignments
-    const origEval = window.eval;
-    window.eval = function(code) {
-      if (typeof code === 'string') {
-        code = code.replace(/var\s+(countdown|timer|seconds?|waitTime|delay)\s*=\s*\d+/gi, 'var $1 = 0');
-        code = code.replace(/let\s+(countdown|timer|seconds?|waitTime|delay)\s*=\s*\d+/gi, 'let $1 = 0');
-        code = code.replace(/const\s+(countdown|timer|seconds?|waitTime|delay)\s*=\s*\d+/gi, 'const $1 = 0');
-      }
-      return origEval.call(this, code);
-    };
-
-    // Pattern 4: Intercept XMLHttpRequest.open to detect and speed up timer-related AJAX
-    const origXHROpen = XMLHttpRequest.prototype.open;
-    XMLHttpRequest.prototype.open = function(method, url, ...args) {
-      this._braveShieldUrl = url;
-      return origXHROpen.call(this, method, url, ...args);
-    };
-
-    // Pattern 5: Watch for countdown variable changes in window scope
-    // Override common countdown variable names
-    let _countdownValue = 20;
-    Object.defineProperty(window, '__braveShield_countdown', {
-      get: function() { return _countdownValue; },
-      set: function(v) {
-        if (typeof v === 'number' && v > 0) {
-          _countdownValue = 0;
-          console.log('[BraveShield Bypass] Intercepted countdown set to ' + v + ', forced to 0');
-        } else {
-          _countdownValue = v;
-        }
-      },
-      configurable: true
+    const observer = new MutationObserver(() => {
+      setTimeout(findAndClickDownloadButton, 500);
     });
 
-    console.log('[BraveShield Bypass] Timer acceleration active (no auto-click)');
+    if (document.body) {
+      observer.observe(document.body, { childList: true, subtree: true });
+    }
+
+    console.log('[BraveShield Bypass] Download button watcher active');
   }
 
   // ==========================================

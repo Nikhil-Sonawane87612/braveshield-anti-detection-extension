@@ -4,12 +4,6 @@ A Chrome/Brave browser extension that completely bypasses Brave Browser detectio
 
 ---
 
-## Download
-
-**[Download Latest Release (.ZIP)](https://github.com/Nikhil-Sonawane87612/braveshield-anti-detection-extension/releases/latest)**
-
----
-
 ## Features
 
 ### Core Anti-Detection (Modules 1-6)

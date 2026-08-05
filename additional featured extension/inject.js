@@ -623,13 +623,10 @@
   // 20. NETWORK BAIT RESPONSE FAKING
   // ==========================================
   function fakeNetworkBait() {
-    // Override fetch to handle ad-bait requests
     const origFetch = window.fetch;
     window.fetch = function(input, init) {
       const url = (typeof input === 'string') ? input : (input instanceof Request ? input.url : '');
-      // Check if it's an ad-bait request
-      if (/\/ads\/|\/adserver\/|\/ad\/|\.gif\?|doubleclick|adsystem|advertising/i.test(url)) {
-        console.log('[BraveShield Bypass] Faking ad-bait response: ' + url);
+      if (/doubleclick|adsystem|advertising|\/ads\/|\/adserver\/|\.gif\?.*ad/i.test(url) && !url.includes('youtube.com')) {
         return Promise.resolve(new Response('', { status: 200, statusText: 'OK', headers: { 'Content-Type': 'image/gif' } }));
       }
       return origFetch.call(this, input, init);
@@ -1612,30 +1609,30 @@
   // 39. READER MODE
   // ==========================================
   function readerMode() {
-    // Remove common clutter elements
+    // Only hide on article/news sites, NOT on app-like sites (YouTube, social media, etc.)
+    if (location.hostname.match(/youtube\.com|youtu\.be|google\.com|facebook\.com|x\.com|twitter\.com|instagram\.com|tiktok\.com|reddit\.com|discord\.com|slack\.com|github\.com|netflix\.com|twitch\.tv/i)) {
+      console.log('[BraveShield Bypass] Reader mode skipped — site is an app');
+      return;
+    }
+
     const CLUTTER_SELECTORS = [
-      'nav', 'header', 'footer', '.sidebar', '#sidebar',
       '.advertisement', '.ad', '.ads', '.ad-container',
       '.social-share', '.share-buttons', '.related-articles',
-      '.comments', '#comments', '.newsletter-signup',
-      '.popup', '.modal', '.overlay', '.cookie-banner',
-      'iframe', 'ins.adsbygoogle', '[class*="promo"]',
-      '[class*="banner"]', '[id*="ad-"]'
+      '.newsletter-signup', '.cookie-banner',
+      '[class*="promo"]', '[class*="banner"]', '[id*="ad-"]'
     ];
 
     function cleanPage() {
       CLUTTER_SELECTORS.forEach(sel => {
         try {
           document.querySelectorAll(sel).forEach(el => {
-            // Don't remove if it's the main content
             if (el.querySelector('article') || el.querySelector('.article-body')) return;
             el.style.display = 'none';
           });
         } catch(e) {}
       });
 
-      // Make main content wider and centered
-      const main = document.querySelector('article, .article, .content, main, [role="main"]');
+      const main = document.querySelector('article, .article, .content');
       if (main) {
         main.style.maxWidth = '800px';
         main.style.margin = '0 auto';

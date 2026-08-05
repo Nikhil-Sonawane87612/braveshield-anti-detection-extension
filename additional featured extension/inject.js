@@ -251,90 +251,17 @@
   }
 
   // ==========================================
-  // 8. COUNTDOWN TIMER BYPASS (DOM-ONLY APPROACH)
+  // 8. COUNTDOWN TIMER BYPASS (SAFE DOM-ONLY)
   // ==========================================
-  // Does NOT touch setInterval/setTimeout/eval at all.
-  // Only manipulates the DOM: sets countdown text to 0, enables
-  // disabled buttons, and auto-clicks download buttons.
-  // This avoids "bad request" errors because server-side timers
-  // are never interfered with.
+  // Does NOT touch setInterval/setTimeout/eval.
+  // Does NOT hide or modify countdown values.
+  // Only watches for the download button to become enabled/clickable
+  // after the real timer completes, then auto-clicks it.
+  // Server-side timers run naturally = no bad request.
   function bypassCountdownTimers() {
-    // === PART A: Find and neutralize countdown elements in DOM ===
-    const COUNTDOWN_SELECTORS = [
-      '.countdown', '.timer', '#timer', '#countdown',
-      '[class*="countdown"]', '[class*="timer"]', '[class*="wait"]',
-      '[id*="countdown"]', '[id*="timer"]', '[id*="wait"]',
-      '[data-countdown]', '[data-timer]',
-      '.seconds', '.seconds-count', '.count-down',
-      '[class*="seconds"]', '[class*="count-down"]'
-    ];
+    let lastClicked = 0;
 
-    const COUNTDOWN_TEXT = /^\s*\d+\s*(?:seconds?|sec|s)?\s*$/i;
-    const COUNTDOWN_NUM = /^\s*\d+\s*$/;
-
-    function neutralizeCountdownElements() {
-      COUNTDOWN_SELECTORS.forEach(sel => {
-        try {
-          document.querySelectorAll(sel).forEach(el => {
-            const text = (el.textContent || '').trim();
-            // If it shows a number like "15" or "15 seconds", force to 0
-            if (COUNTDOWN_TEXT.test(text) || COUNTDOWN_NUM.test(text)) {
-              el.textContent = '0';
-              el.setAttribute('data-brave-shield', 'countdown-neutralized');
-            }
-          });
-        } catch(e) {}
-      });
-    }
-
-    // === PART B: Find and enable disabled download/get-link buttons ===
-    const BUTTON_DISABLE_SELECTORS = [
-      'a[disabled]', 'button[disabled]',
-      'a.btn-primary[disabled]', 'button.btn-primary[disabled]',
-      'a.get-link[disabled]', 'button.get-link[disabled]',
-      'a.download[disabled]', 'button.download[disabled]',
-      'a[href="#"]', 'a[href=""]', 'a[href="javascript:void(0)"]',
-      '[class*="disabled"][href*="download"]',
-      '[class*="disabled"][href*="get-link"]',
-      '[class*="disabled"][href*="generar"]',
-      '[class*="disabled"][href*="continue"]'
-    ];
-
-    function enableDisabledButtons() {
-      BUTTON_DISABLE_SELECTORS.forEach(sel => {
-        try {
-          document.querySelectorAll(sel).forEach(el => {
-            // Enable the button
-            el.removeAttribute('disabled');
-            el.removeAttribute('aria-disabled');
-            el.classList.remove('disabled', 'btn-disabled', 'is-disabled');
-            el.style.pointerEvents = 'auto';
-            el.style.opacity = '1';
-            el.style.cursor = 'pointer';
-          });
-        } catch(e) {}
-      });
-
-      // Also scan for buttons with "wait" or disabled-like styles
-      document.querySelectorAll('a, button').forEach(el => {
-        const text = (el.textContent || '').trim().toLowerCase();
-        const cls = (el.className || '').toLowerCase();
-        const style = window.getComputedStyle(el);
-
-        if (/^(wait|generating|loading|processing|\.\.\.)\s*\.{0,3}$/i.test(text) ||
-            /disabled|waiting|generating/i.test(cls) ||
-            style.pointerEvents === 'none' || style.opacity === '0.5') {
-          el.removeAttribute('disabled');
-          el.removeAttribute('aria-disabled');
-          el.classList.remove('disabled', 'btn-disabled', 'is-disabled', 'waiting');
-          el.style.pointerEvents = 'auto';
-          el.style.opacity = '1';
-          el.style.cursor = 'pointer';
-        }
-      });
-    }
-
-    // === PART C: Auto-click download buttons when ready ===
+    // === Auto-click download buttons when they become enabled ===
     const DOWNLOAD_SELECTORS = [
       'a[href*="download"]', 'a[href*="get-link"]', 'a[href*="generar"]',
       'a[href*="continue"]', 'a[href*="proceed"]',
@@ -351,26 +278,34 @@
     const LINK_PATTERNS = /download|get-link|generar|continue|proceed|descargar|bajar|obtener/i;
 
     function findAndClickDownloadButton() {
+      // Don't click too frequently
+      if (Date.now() - lastClicked < 2000) return false;
+
       for (const selector of DOWNLOAD_SELECTORS) {
         try {
           const elements = document.querySelectorAll(selector);
           for (const el of elements) {
-            if (el.offsetParent !== null && el.offsetWidth > 0 && el.offsetHeight > 0) {
-              const text = (el.textContent || '').trim();
-              const href = el.getAttribute('href') || '';
-              const onclick = el.getAttribute('onclick') || '';
-              const cls = (el.className || '').toLowerCase();
+            // Must be visible
+            if (el.offsetParent === null || el.offsetWidth === 0 || el.offsetHeight === 0) continue;
 
-              // Skip if button is still disabled/waiting
-              if (/disabled|waiting|generating/i.test(cls)) continue;
-              if (el.hasAttribute('disabled')) continue;
-              if (el.style.pointerEvents === 'none') continue;
+            // Must NOT be disabled
+            if (el.hasAttribute('disabled')) continue;
+            if (el.getAttribute('aria-disabled') === 'true') continue;
+            const cls = (el.className || '').toLowerCase();
+            if (/disabled|waiting|generating|loading/i.test(cls)) continue;
 
-              if (LINK_PATTERNS.test(text + ' ' + href + ' ' + onclick) && text.length < 50) {
-                console.log('[BraveShield Bypass] Found download button: ' + text.substring(0, 30));
-                el.click();
-                return true;
-              }
+            // Must have a real href (not # or javascript:void)
+            const href = el.getAttribute('href') || '';
+            if (href === '#' || href === '' || href === 'javascript:void(0)') continue;
+
+            const text = (el.textContent || '').trim();
+            const onclick = el.getAttribute('onclick') || '';
+
+            if (LINK_PATTERNS.test(text + ' ' + href + ' ' + onclick) && text.length < 50) {
+              console.log('[BraveShield Bypass] Clicking download button: ' + text.substring(0, 30));
+              lastClicked = Date.now();
+              el.click();
+              return true;
             }
           }
         } catch(e) {}
@@ -378,30 +313,24 @@
       return false;
     }
 
-    // === Run all parts on DOM changes ===
-    function runAll() {
-      neutralizeCountdownElements();
-      enableDisabledButtons();
-      findAndClickDownloadButton();
-    }
-
+    // Watch for DOM changes (button appearing or becoming enabled)
     const observer = new MutationObserver(() => {
-      setTimeout(runAll, 200);
+      setTimeout(findAndClickDownloadButton, 500);
     });
 
     if (document.body) {
       observer.observe(document.body, { childList: true, subtree: true, attributes: true });
     }
 
-    // Run immediately and at intervals
-    runAll();
-    setTimeout(runAll, 1000);
-    setTimeout(runAll, 3000);
-    setTimeout(runAll, 5000);
-    setTimeout(runAll, 8000);
-    setTimeout(runAll, 12000);
+    // Periodic check as fallback
+    const interval = setInterval(() => {
+      findAndClickDownloadButton();
+    }, 2000);
 
-    console.log('[BraveShield Bypass] DOM-only timer bypass active (no JS timer interference)');
+    // Stop checking after 120 seconds
+    setTimeout(() => clearInterval(interval), 120000);
+
+    console.log('[BraveShield Bypass] Safe timer bypass active (watching for enabled download button)');
   }
 
   // ==========================================

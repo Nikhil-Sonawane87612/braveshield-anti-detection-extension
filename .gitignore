@@ -1,0 +1,28 @@
+# Build artifacts
+_metadata/
+*.crx
+*.zip
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+ehthumbs.db
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.settings/
+
+# Node
+node_modules/
+package-lock.json
+
+# Temp files
+*.tmp
+*.bak
+*.log

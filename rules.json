@@ -1,0 +1,24 @@
+[
+  {
+    "id": 1,
+    "priority": 1,
+    "action": {
+      "type": "modifyHeaders",
+      "requestHeaders": [
+        {
+          "header": "Sec-CH-UA-Arch",
+          "operation": "set",
+          "value": "\"x86\""
+        },
+        {
+          "header": "Sec-CH-UA-Brave",
+          "operation": "remove"
+        }
+      ]
+    },
+    "condition": {
+      "urlFilter": "*",
+      "resourceTypes": ["main_frame", "sub_frame", "stylesheet", "script", "image", "xmlhttprequest"]
+    }
+  }
+]

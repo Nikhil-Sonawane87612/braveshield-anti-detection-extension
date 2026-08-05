@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>BraveShield Bypass Pro v4 - Settings</title>
+  <style>
+    body { background: #0b0f19; color: #e2e8f0; font-family: system-ui, -apple-system, sans-serif; padding: 32px; max-width: 900px; margin: 0 auto; }
+    h1 { color: #38bdf8; font-size: 24px; margin-bottom: 8px; }
+    p { color: #94a3b8; margin-bottom: 24px; font-size: 14px; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .section { background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 20px; margin-bottom: 20px; }
+    .section-title { font-size: 16px; font-weight: 700; color: #f8fafc; margin-bottom: 12px; border-bottom: 1px solid #334155; padding-bottom: 8px; }
+    .form-group { margin-bottom: 16px; }
+    label { display: block; font-size: 13px; font-weight: 600; color: #cbd5e1; margin-bottom: 6px; }
+    select, input[type="text"] { width: 100%; padding: 10px; background: #0f172a; border: 1px solid #475569; border-radius: 6px; color: white; font-size: 13px; box-sizing: border-box; }
+    .check-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; font-size: 13px; }
+    .check-row input { width: 18px; height: 18px; accent-color: #0284c7; }
+    .check-row-desc { font-size: 11px; color: #64748b; margin-left: 28px; margin-top: -6px; margin-bottom: 10px; }
+    .save-btn { background: #0284c7; color: white; padding: 12px 24px; border: none; border-radius: 8px; font-weight: 700; font-size: 14px; cursor: pointer; }
+    .save-btn:hover { background: #0369a1; }
+    .toast { background: #10b981; color: white; padding: 8px 16px; border-radius: 6px; display: inline-block; margin-left: 12px; font-weight: 600; opacity: 0; transition: opacity 0.3s; }
+    .list-container { background: #0f172a; border: 1px solid #334155; border-radius: 8px; padding: 12px; max-height: 200px; overflow-y: auto; }
+    .list-item { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid #1e293b; font-size: 12px; }
+    .list-item:last-child { border-bottom: none; }
+    .list-item .remove { color: #EF4444; cursor: pointer; font-size: 11px; }
+    .list-item .remove:hover { text-decoration: underline; }
+    .empty-state { text-align: center; color: #475569; padding: 20px; font-size: 12px; }
+    .add-row { display: flex; gap: 8px; margin-top: 8px; }
+    .add-row input { flex: 1; }
+    .add-row button { background: #10B981; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 600; }
+  </style>
+</head>
+<body>
+  <h1>BraveShield Bypass Pro v4 - Settings</h1>
+  <p>25 stealth modules configured. Toggle individual modules and manage per-site lists.</p>
+
+  <div class="grid">
+    <div>
+      <div class="section">
+        <div class="section-title">Core Stealth Modules</div>
+        <div class="check-row">
+          <input type="checkbox" id="mask-brave" checked>
+          <label for="mask-brave" style="margin:0;">Mask navigator.brave + isBrave()</label>
+        </div>
+        <div class="check-row-desc">Removes navigator.brave object and isBrave() method.</div>
+
+        <div class="check-row">
+          <input type="checkbox" id="bypass-traps" checked>
+          <label for="bypass-traps" style="margin:0;">DOM Ad-Block Trap Neutralizer</label>
+        </div>
+        <div class="check-row-desc">Hooks offsetHeight/getBoundingClientRect for ad-trap elements.</div>
+
+        <div class="check-row">
+          <input type="checkbox" id="stub-vars" checked>
+          <label for="stub-vars" style="margin:0;">Analytics & Ad Network Stubs</label>
+        </div>
+        <div class="check-row-desc">Fake window.adsbygoogle, ga, gtag, googletag, pbjs.</div>
+
+        <div class="check-row">
+          <input type="checkbox" id="mask-brands" checked>
+          <label for="mask-brands" style="margin:0;">Client Hints Brand Sanitizer</label>
+        </div>
+        <div class="check-row-desc">Removes "Brave" from navigator.userAgentData.brands.</div>
+
+        <div class="check-row">
+          <input type="checkbox" id="normalize-webgl" checked>
+          <label for="normalize-webgl" style="margin:0;">WebGL Vendor Normalization</label>
+        </div>
+        <div class="check-row-desc">Overrides GPU vendor/renderer strings to Chrome/NVIDIA.</div>
+
+        <div class="check-row">
+          <input type="checkbox" id="fix-braveleak" checked>
+          <label for="fix-braveleak" style="margin:0;">brave:// Protocol Leak Fix</label>
+        </div>
+        <div class="check-row-desc">Prevents HTMLAnchorElement from leaking brave: protocol.</div>
+
+        <div class="check-row">
+          <input type="checkbox" id="fix-storageleak" checked>
+          <label for="fix-storageleak" style="margin:0;">Storage Quota Leak Fix</label>
+        </div>
+        <div class="check-row-desc">Patches webkitTemporaryStorage to hide real disk size.</div>
+
+        <div class="check-row">
+          <input type="checkbox" id="normalize-audio" checked>
+          <label for="normalize-audio" style="margin:0;">AudioContext Normalization</label>
+        </div>
+        <div class="check-row-desc">Adds consistent noise to OfflineAudioContext output.</div>
+
+        <div class="check-row">
+          <input type="checkbox" id="normalize-canvas" checked>
+          <label for="normalize-canvas" style="margin:0;">Canvas Fingerprint Fix</label>
+        </div>
+        <div class="check-row-desc">Consistent toDataURL/getImageData output.</div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">Auto-Bypass Modules</div>
+        <div class="check-row">
+          <input type="checkbox" id="auto-links" checked>
+          <label for="auto-links" style="margin:0;">Link Shortener Auto-Bypass</label>
+        </div>
+        <div class="check-row-desc">50+ shortener services supported.</div>
+
+        <div class="check-row">
+          <input type="checkbox" id="auto-timers" checked>
+          <label for="auto-timers" style="margin:0;">15-20s Timer/Countdown Bypass</label>
+        </div>
+        <div class="check-row-desc">Accelerates countdowns, auto-clicks download buttons.</div>
+
+        <div class="check-row">
+          <input type="checkbox" id="auto-cookies" checked>
+          <label for="auto-cookies" style="margin:0;">Cookie Consent Auto-Dismiss</label>
+        </div>
+        <div class="check-row-desc">20+ consent frameworks auto-dismissed.</div>
+
+        <div class="check-row">
+          <input type="checkbox" id="auto-scroll" checked>
+          <label for="auto-scroll" style="margin:0;">Smart Auto-Scroll</label>
+        </div>
+        <div class="check-row-desc">Auto-scrolls pages requiring scroll.</div>
+
+        <div class="check-row">
+          <input type="checkbox" id="auto-popunder" checked>
+          <label for="auto-popunder" style="margin:0;">Popunder Interceptor</label>
+        </div>
+        <div class="check-row-desc">Blocks ad popunder/new-tab windows.</div>
+
+        <div class="check-row">
+          <input type="checkbox" id="fake-bait" checked>
+          <label for="fake-bait" style="margin:0;">Network Bait Response Faking</label>
+        </div>
+        <div class="check-row-desc">Fakes fetch/XHR responses for ad-bait requests.</div>
+      </div>
+    </div>
+
+    <div>
+      <div class="section">
+        <div class="section-title">Advanced Stealth</div>
+        <div class="check-row">
+          <input type="checkbox" id="hide-webdriver" checked>
+          <label for="hide-webdriver" style="margin:0;">navigator.webdriver Hide</label>
+        </div>
+        <div class="check-row-desc">Returns false for webdriver flag.</div>
+
+        <div class="check-row">
+          <input type="checkbox" id="prevent-webrtc" checked>
+          <label for="prevent-webrtc" style="margin:0;">WebRTC IP Leak Prevention</label>
+        </div>
+        <div class="check-row-desc">Strips ICE servers to prevent local IP leak.</div>
+
+        <div class="check-row">
+          <input type="checkbox" id="deny-permissions" checked>
+          <label for="deny-permissions" style="margin:0;">Permission Auto-Deny</label>
+        </div>
+        <div class="check-row-desc">Auto-deny notification/camera/mic/geolocation.</div>
+
+        <div class="check-row">
+          <input type="checkbox" id="clamp-timers" checked>
+          <label for="clamp-timers" style="margin:0;">Performance Timer Clamp</label>
+        </div>
+        <div class="check-row-desc">Reduces precision to prevent timing attacks.</div>
+
+        <div class="check-row">
+          <input type="checkbox" id="spoof-navigator" checked>
+          <label for="spoof-navigator" style="margin:0;">Navigator Consistency Spoofing</label>
+        </div>
+        <div class="check-row-desc">Consistent platform/hardware/languages values.</div>
+
+        <div class="check-row">
+          <input type="checkbox" id="screen-consistency" checked>
+          <label for="screen-consistency" style="margin:0;">Screen/Viewport Consistency</label>
+        </div>
+        <div class="check-row-desc">Ensures realistic screen dimensions.</div>
+
+        <div class="check-row">
+          <input type="checkbox" id="spoof-fonts" checked>
+          <label for="spoof-fonts" style="margin:0;">Font Fingerprint Spoofing</label>
+        </div>
+        <div class="check-row-desc">Returns consistent font check results.</div>
+
+        <div class="check-row">
+          <input type="checkbox" id="clean-css" checked>
+          <label for="clean-css" style="margin:0;">CSS Custom Property Cleanup</label>
+        </div>
+        <div class="check-row-desc">Removes browser-injected CSS variables.</div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">WebGL Profile</div>
+        <div class="form-group">
+          <label>Spoofed WebGL Vendor</label>
+          <input type="text" id="webgl-vendor" value="Google Inc. (NVIDIA)">
+        </div>
+        <div class="form-group">
+          <label>Spoofed WebGL Renderer</label>
+          <input type="text" id="webgl-renderer" value="ANGLE (NVIDIA, NVIDIA GeForce RTX 3060 Direct3D11 vs_5_0 ps_5_0, D3D11)">
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">Per-Site Whitelist</div>
+        <div id="whitelist" class="list-container">
+          <div class="empty-state">No sites whitelisted (extension works on all sites)</div>
+        </div>
+        <div class="add-row">
+          <input type="text" id="add-whitelist" placeholder="example.com">
+          <button id="btn-add-wl">Add</button>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">Per-Site Blacklist</div>
+        <div id="blacklist" class="list-container">
+          <div class="empty-state">No sites blacklisted</div>
+        </div>
+        <div class="add-row">
+          <input type="text" id="add-blacklist" placeholder="example.com">
+          <button id="btn-add-bl">Add</button>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">Bypass History</div>
+        <div id="history-list" class="list-container">
+          <div class="empty-state">No sites bypassed yet</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <button class="save-btn" id="save-settings">Save All Settings</button>
+  <span class="toast" id="toast">Settings Saved!</span>
+
+  <script src="options.js"></script>
+</body>
+</html>

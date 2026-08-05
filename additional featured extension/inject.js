@@ -251,42 +251,90 @@
   }
 
   // ==========================================
-  // 8. COUNTDOWN TIMER BYPASS (3x SPEEDUP + BUTTON WATCHER)
+  // 8. COUNTDOWN TIMER BYPASS (DOM-ONLY APPROACH)
   // ==========================================
-  // Gently speeds up countdown timers (3x faster) and auto-clicks
-  // download buttons when they appear.
+  // Does NOT touch setInterval/setTimeout/eval at all.
+  // Only manipulates the DOM: sets countdown text to 0, enables
+  // disabled buttons, and auto-clicks download buttons.
+  // This avoids "bad request" errors because server-side timers
+  // are never interfered with.
   function bypassCountdownTimers() {
-    const COUNTDOWN_KEYWORDS = /countdown|timer|second|wait|delay|interval|tick|progress|clock|remaining|time/i;
+    // === PART A: Find and neutralize countdown elements in DOM ===
+    const COUNTDOWN_SELECTORS = [
+      '.countdown', '.timer', '#timer', '#countdown',
+      '[class*="countdown"]', '[class*="timer"]', '[class*="wait"]',
+      '[id*="countdown"]', '[id*="timer"]', '[id*="wait"]',
+      '[data-countdown]', '[data-timer]',
+      '.seconds', '.seconds-count', '.count-down',
+      '[class*="seconds"]', '[class*="count-down"]'
+    ];
 
-    // Pattern 1: Gently speed up setInterval (3x faster)
-    const origSetInterval = window.setInterval;
-    window.setInterval = function(fn, delay, ...args) {
-      if (delay >= 1000 && delay <= 120000) {
-        const fnStr = (typeof fn === 'function') ? fn.toString() : String(fn);
-        if (COUNTDOWN_KEYWORDS.test(fnStr)) {
-          const newDelay = Math.max(333, Math.floor(delay / 3));
-          console.log('[BraveShield Bypass] Speeding interval: ' + delay + 'ms -> ' + newDelay + 'ms');
-          return origSetInterval.call(this, fn, newDelay, ...args);
+    const COUNTDOWN_TEXT = /^\s*\d+\s*(?:seconds?|sec|s)?\s*$/i;
+    const COUNTDOWN_NUM = /^\s*\d+\s*$/;
+
+    function neutralizeCountdownElements() {
+      COUNTDOWN_SELECTORS.forEach(sel => {
+        try {
+          document.querySelectorAll(sel).forEach(el => {
+            const text = (el.textContent || '').trim();
+            // If it shows a number like "15" or "15 seconds", force to 0
+            if (COUNTDOWN_TEXT.test(text) || COUNTDOWN_NUM.test(text)) {
+              el.textContent = '0';
+              el.setAttribute('data-brave-shield', 'countdown-neutralized');
+            }
+          });
+        } catch(e) {}
+      });
+    }
+
+    // === PART B: Find and enable disabled download/get-link buttons ===
+    const BUTTON_DISABLE_SELECTORS = [
+      'a[disabled]', 'button[disabled]',
+      'a.btn-primary[disabled]', 'button.btn-primary[disabled]',
+      'a.get-link[disabled]', 'button.get-link[disabled]',
+      'a.download[disabled]', 'button.download[disabled]',
+      'a[href="#"]', 'a[href=""]', 'a[href="javascript:void(0)"]',
+      '[class*="disabled"][href*="download"]',
+      '[class*="disabled"][href*="get-link"]',
+      '[class*="disabled"][href*="generar"]',
+      '[class*="disabled"][href*="continue"]'
+    ];
+
+    function enableDisabledButtons() {
+      BUTTON_DISABLE_SELECTORS.forEach(sel => {
+        try {
+          document.querySelectorAll(sel).forEach(el => {
+            // Enable the button
+            el.removeAttribute('disabled');
+            el.removeAttribute('aria-disabled');
+            el.classList.remove('disabled', 'btn-disabled', 'is-disabled');
+            el.style.pointerEvents = 'auto';
+            el.style.opacity = '1';
+            el.style.cursor = 'pointer';
+          });
+        } catch(e) {}
+      });
+
+      // Also scan for buttons with "wait" or disabled-like styles
+      document.querySelectorAll('a, button').forEach(el => {
+        const text = (el.textContent || '').trim().toLowerCase();
+        const cls = (el.className || '').toLowerCase();
+        const style = window.getComputedStyle(el);
+
+        if (/^(wait|generating|loading|processing|\.\.\.)\s*\.{0,3}$/i.test(text) ||
+            /disabled|waiting|generating/i.test(cls) ||
+            style.pointerEvents === 'none' || style.opacity === '0.5') {
+          el.removeAttribute('disabled');
+          el.removeAttribute('aria-disabled');
+          el.classList.remove('disabled', 'btn-disabled', 'is-disabled', 'waiting');
+          el.style.pointerEvents = 'auto';
+          el.style.opacity = '1';
+          el.style.cursor = 'pointer';
         }
-      }
-      return origSetInterval.call(this, fn, delay, ...args);
-    };
+      });
+    }
 
-    // Pattern 2: Gently speed up setTimeout (3x faster)
-    const origSetTimeout = window.setTimeout;
-    window.setTimeout = function(fn, delay, ...args) {
-      if (delay >= 1000 && delay <= 120000) {
-        const fnStr = (typeof fn === 'function') ? fn.toString() : String(fn);
-        if (COUNTDOWN_KEYWORDS.test(fnStr)) {
-          const newDelay = Math.max(333, Math.floor(delay / 3));
-          console.log('[BraveShield Bypass] Speeding timeout: ' + delay + 'ms -> ' + newDelay + 'ms');
-          return origSetTimeout.call(this, fn, newDelay, ...args);
-        }
-      }
-      return origSetTimeout.call(this, fn, delay, ...args);
-    };
-
-    // Pattern 3: Auto-click download buttons when they appear
+    // === PART C: Auto-click download buttons when ready ===
     const DOWNLOAD_SELECTORS = [
       'a[href*="download"]', 'a[href*="get-link"]', 'a[href*="generar"]',
       'a[href*="continue"]', 'a[href*="proceed"]',
@@ -311,6 +359,13 @@
               const text = (el.textContent || '').trim();
               const href = el.getAttribute('href') || '';
               const onclick = el.getAttribute('onclick') || '';
+              const cls = (el.className || '').toLowerCase();
+
+              // Skip if button is still disabled/waiting
+              if (/disabled|waiting|generating/i.test(cls)) continue;
+              if (el.hasAttribute('disabled')) continue;
+              if (el.style.pointerEvents === 'none') continue;
+
               if (LINK_PATTERNS.test(text + ' ' + href + ' ' + onclick) && text.length < 50) {
                 console.log('[BraveShield Bypass] Found download button: ' + text.substring(0, 30));
                 el.click();
@@ -323,15 +378,30 @@
       return false;
     }
 
+    // === Run all parts on DOM changes ===
+    function runAll() {
+      neutralizeCountdownElements();
+      enableDisabledButtons();
+      findAndClickDownloadButton();
+    }
+
     const observer = new MutationObserver(() => {
-      setTimeout(findAndClickDownloadButton, 500);
+      setTimeout(runAll, 200);
     });
 
     if (document.body) {
-      observer.observe(document.body, { childList: true, subtree: true });
+      observer.observe(document.body, { childList: true, subtree: true, attributes: true });
     }
 
-    console.log('[BraveShield Bypass] Timer speedup (5x) + download button watcher active');
+    // Run immediately and at intervals
+    runAll();
+    setTimeout(runAll, 1000);
+    setTimeout(runAll, 3000);
+    setTimeout(runAll, 5000);
+    setTimeout(runAll, 8000);
+    setTimeout(runAll, 12000);
+
+    console.log('[BraveShield Bypass] DOM-only timer bypass active (no JS timer interference)');
   }
 
   // ==========================================

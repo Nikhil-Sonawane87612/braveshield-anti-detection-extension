@@ -546,12 +546,8 @@
   // ==========================================
   function hideWebdriver() {
     try {
-      Object.defineProperty(navigator, 'webdriver', {
-        get: function() { return false; },
-        configurable: true
-      });
-      // Also remove from prototype
-      if (Object.getOwnPropertyDescriptor(Navigator.prototype, 'webdriver')) {
+      const desc = Object.getOwnPropertyDescriptor(Navigator.prototype, 'webdriver');
+      if (desc && desc.get && desc.get.toString().includes('native')) {
         Object.defineProperty(Navigator.prototype, 'webdriver', {
           get: function() { return false; },
           configurable: true
@@ -626,7 +622,8 @@
     const origFetch = window.fetch;
     window.fetch = function(input, init) {
       const url = (typeof input === 'string') ? input : (input instanceof Request ? input.url : '');
-      if (/doubleclick|adsystem|advertising|\/ads\/|\/adserver\/|\.gif\?.*ad/i.test(url) && !url.includes('youtube.com')) {
+      if (/\/ads\/|\/adserver\/|\/ad\/|\.gif\?|doubleclick|adsystem|advertising/i.test(url)) {
+        console.log('[BraveShield Bypass] Faking ad-bait response: ' + url);
         return Promise.resolve(new Response('', { status: 200, statusText: 'OK', headers: { 'Content-Type': 'image/gif' } }));
       }
       return origFetch.call(this, input, init);
@@ -1609,12 +1606,7 @@
   // 39. READER MODE
   // ==========================================
   function readerMode() {
-    // Only hide on article/news sites, NOT on app-like sites (YouTube, social media, etc.)
-    if (location.hostname.match(/youtube\.com|youtu\.be|google\.com|facebook\.com|x\.com|twitter\.com|instagram\.com|tiktok\.com|reddit\.com|discord\.com|slack\.com|github\.com|netflix\.com|twitch\.tv/i)) {
-      console.log('[BraveShield Bypass] Reader mode skipped — site is an app');
-      return;
-    }
-
+    // Remove common clutter elements
     const CLUTTER_SELECTORS = [
       '.advertisement', '.ad', '.ads', '.ad-container',
       '.social-share', '.share-buttons', '.related-articles',

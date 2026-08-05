@@ -16,7 +16,7 @@ A Chrome/Brave browser extension that completely bypasses Brave Browser detectio
 
 ### Auto-Bypass Features (Modules 7-12)
 - **Link Shortener Auto-Bypass** - 50+ services (ouo.io, bc.vc, sh.st, linkvertise, etc.)
-- **15-20s Timer/Countdown Bypass** - Speeds up countdowns (15-20s → 50ms), no auto-click
+- **Timer/Countdown Auto-Bypass** - Auto-clicks "Get Link" when countdown finishes
 - **Cookie Consent Auto-Dismiss** - 20+ consent frameworks auto-dismissed
 - **Smart Auto-Scroll** - Auto-scrolls pages requiring scroll
 - **Redirect Chain Follower** - Follows meta refresh and click-through redirects

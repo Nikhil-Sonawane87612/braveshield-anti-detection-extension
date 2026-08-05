@@ -5,19 +5,29 @@ document.addEventListener('DOMContentLoaded', () => {
   const whitelistEl = document.getElementById('whitelist');
   const blacklistEl = document.getElementById('blacklist');
 
+  // Tab navigation
+  document.querySelectorAll('.tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+      tab.classList.add('active');
+      document.getElementById('panel-' + tab.dataset.tab).classList.add('active');
+    });
+  });
+
   function renderList(container, items, type) {
     if (!items || items.length === 0) {
-      container.innerHTML = '<div class="empty-state">No ' + type + ' sites</div>';
+      container.innerHTML = '<div class="empty">No ' + type + ' sites</div>';
       return;
     }
     container.innerHTML = '';
     items.forEach(item => {
       const div = document.createElement('div');
-      div.className = 'list-item';
-      div.innerHTML = '<span>' + item + '</span><span class="remove" data-type="' + type + '" data-site="' + item + '">Remove</span>';
+      div.className = 'litem';
+      div.innerHTML = '<span>' + item + '</span><span class="rm" data-type="' + type + '" data-site="' + item + '">Remove</span>';
       container.appendChild(div);
     });
-    container.querySelectorAll('.remove').forEach(btn => {
+    container.querySelectorAll('.rm').forEach(btn => {
       btn.addEventListener('click', () => {
         const site = btn.dataset.site;
         const type = btn.dataset.type;
@@ -37,7 +47,7 @@ document.addEventListener('DOMContentLoaded', () => {
         historyList.innerHTML = '';
         res.bypassedSites.slice(-50).reverse().forEach(site => {
           const div = document.createElement('div');
-          div.className = 'list-item';
+          div.className = 'litem';
           div.textContent = site;
           historyList.appendChild(div);
         });
@@ -46,7 +56,6 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   loadLists();
 
-  // Add whitelist/blacklist
   document.getElementById('btn-add-wl').addEventListener('click', () => {
     const input = document.getElementById('add-whitelist');
     const site = input.value.trim();
@@ -75,20 +84,24 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Load saved settings
   const SETTINGS_MAP = {
     'mask-brave': 'maskBraveApi', 'bypass-traps': 'bypassShieldsTraps',
     'stub-vars': 'stubAnalytics', 'mask-brands': 'maskClientHints',
+    'mask-gpc': 'maskGPC',
     'normalize-webgl': 'normalizeWebgl', 'fix-braveleak': 'fixBraveLeak',
     'fix-storageleak': 'fixStorageLeak', 'normalize-audio': 'normalizeAudio',
     'normalize-canvas': 'normalizeCanvas', 'auto-links': 'autoBypassLinks',
-    'auto-timers': 'autoBypassTimers', 'auto-cookies': 'autoDismissCookies',
-    'auto-scroll': 'autoScroll', 'auto-popunder': 'interceptPopunders',
+    'auto-timers': 'autoBypassTimers', 'click-wait': 'clickImageWait',
+    'auto-cookies': 'autoDismissCookies', 'auto-scroll': 'autoScroll',
+    'auto-redirects': 'autoRedirects',
+    'auto-popunder': 'interceptPopunders',
+    'adblock-detect': 'bypassAdblockDetection',
     'fake-bait': 'fakeNetworkBait', 'hide-webdriver': 'hideWebdriver',
     'prevent-webrtc': 'preventWebRTC', 'deny-permissions': 'autoDenyPermissions',
     'clamp-timers': 'clampTimers', 'spoof-navigator': 'spoofNavigator',
     'screen-consistency': 'screenConsistency', 'spoof-fonts': 'spoofFonts',
-    'clean-css': 'cleanCSS', 'yt-ads': 'youtubeAds', 'yt-sponsor': 'sponsorBlock',
+    'clean-css': 'cleanCSS', 'yt-ads': 'youtubeAds', 'yt-ads2': 'youtubeAds',
+    'yt-sponsor': 'sponsorBlock', 'yt-sponsor2': 'sponsorBlock',
     'enable-rightclick': 'forceRightClick', 'enable-text-select': 'forceTextSelect',
     'anti-scroll-lock': 'antiScrollLock', 'auto-close-popups': 'autoClosePopups',
     'anti-clipboard-read': 'blockClipboardRead', 'anti-notification-spam': 'blockNotificationSpam',
@@ -106,15 +119,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
   saveBtn.addEventListener('click', () => {
     const settings = {};
+    const seen = new Set();
     Object.entries(SETTINGS_MAP).forEach(([id, key]) => {
+      if (seen.has(key)) return;
+      seen.add(key);
       const el = document.getElementById(id);
       if (el) settings[key] = el.checked;
     });
     settings.webglVendor = document.getElementById('webgl-vendor').value;
     settings.webglRenderer = document.getElementById('webgl-renderer').value;
     chrome.storage.local.set(settings, () => {
-      toast.style.opacity = '1';
-      setTimeout(() => { toast.style.opacity = '0'; }, 2000);
+      toast.classList.add('show');
+      setTimeout(() => { toast.classList.remove('show'); }, 2000);
     });
   });
 });

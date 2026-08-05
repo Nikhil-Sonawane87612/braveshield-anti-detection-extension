@@ -1,241 +1,98 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>BraveShield Bypass Pro v4</title>
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
-    body { width: 400px; background: #0f172a; color: #f8fafc; padding: 16px; max-height: 580px; overflow-y: auto; }
-    .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; border-bottom: 1px solid #1e293b; padding-bottom: 12px; }
-    .title { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 15px; color: #38bdf8; }
-    .badge { background: rgba(16, 185, 129, 0.2); color: #34d399; font-size: 10px; padding: 2px 8px; border-radius: 12px; font-weight: 600; border: 1px solid rgba(16, 185, 129, 0.3); }
-    .badge.bypass { background: rgba(245, 158, 11, 0.2); color: #F59E0B; border-color: rgba(245, 158, 11, 0.3); }
-    .badge.off { background: rgba(239, 68, 68, 0.2); color: #EF4444; border-color: rgba(239, 68, 68, 0.3); }
-    .card { background: #1e293b; border-radius: 10px; padding: 12px; margin-bottom: 12px; border: 1px solid #334155; }
-    .card-title { font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; padding-bottom: 6px; border-bottom: 1px solid #334155; }
-    .toggle-row { display: flex; align-items: center; justify-content: space-between; font-size: 12px; font-weight: 500; margin-bottom: 6px; }
-    .toggle-row:last-child { margin-bottom: 0; }
-    .toggle-label { display: flex; flex-direction: column; }
-    .toggle-desc { font-size: 10px; color: #64748b; margin-top: 1px; }
-    .switch { position: relative; display: inline-block; width: 38px; height: 20px; flex-shrink: 0; }
-    .switch input { opacity: 0; width: 0; height: 0; }
-    .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #475569; transition: .3s; border-radius: 20px; }
-    .slider:before { position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px; background-color: white; transition: .3s; border-radius: 50%; }
-    input:checked + .slider { background-color: #0284c7; }
-    input:checked + .slider:before { transform: translateX(18px); }
-    .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 8px; text-align: center; }
-    .stat-box { background: #0f172a; padding: 6px; border-radius: 6px; border: 1px solid #334155; }
-    .stat-val { font-size: 16px; font-weight: 700; color: #38bdf8; }
-    .stat-lbl { font-size: 9px; color: #94a3b8; margin-top: 2px; }
-    .btn { display: block; width: 100%; padding: 8px; background: #0284c7; color: white; border: none; border-radius: 6px; font-weight: 600; font-size: 11px; cursor: pointer; text-align: center; text-decoration: none; margin-top: 6px; }
-    .btn:hover { background: #0369a1; }
-    .btn.secondary { background: #1e293b; border: 1px solid #334155; }
-    .btn.secondary:hover { background: #334155; }
-    .status-text { font-size: 11px; color: #94a3b8; margin-top: 4px; display: flex; align-items: center; gap: 4px; }
-    .dot { width: 6px; height: 6px; background: #34d399; border-radius: 50%; display: inline-block; }
-    .dot.warning { background: #F59E0B; }
-    .dot.off { background: #EF4444; }
-    .site-info { font-size: 10px; color: #64748b; margin-top: 4px; padding: 4px 8px; background: #0f172a; border-radius: 4px; border: 1px solid #1e293b; }
-    .site-actions { display: flex; gap: 4px; margin-top: 6px; }
-    .site-actions .btn { flex: 1; margin-top: 0; font-size: 10px; padding: 6px; }
-    .btn.whitelist { background: #10B981; }
-    .btn.blacklist { background: #EF4444; }
-    .version { text-align: center; font-size: 10px; color: #475569; margin-top: 8px; }
-    ::-webkit-scrollbar { width: 6px; }
-    ::-webkit-scrollbar-track { background: #0f172a; }
-    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
-  </style>
+<meta charset="UTF-8">
+<title>BraveShield Bypass Pro</title>
+<link rel="stylesheet" href="popup.css">
 </head>
 <body>
-  <div class="header">
-    <div class="title">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-      BraveShield Bypass
+
+<div class="hdr">
+  <div class="hdr-top">
+    <div class="brand">
+      <div class="shld"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+      <div class="brand-t"><h1>BraveShield</h1><span>BYPASS PRO</span></div>
     </div>
-    <span class="badge" id="mode-badge">SHIELDS ON SAFE</span>
+    <span class="ver">v4.5.1</span>
   </div>
-
-  <div class="card">
-    <div class="card-title">Core Engine</div>
-    <div class="toggle-row">
-      <span>Anti-Detection Engine</span>
-      <label class="switch">
-        <input type="checkbox" id="main-toggle" checked>
-        <span class="slider"></span>
-      </label>
-    </div>
-    <div class="status-text">
-      <span class="dot" id="status-dot"></span>
-      <span id="domain-status">Active on current website</span>
-    </div>
-    <div class="site-info" id="site-info" style="display:none;"></div>
-    <div class="site-actions" id="site-actions" style="display:none;">
-      <button class="btn whitelist" id="btn-whitelist">+ Whitelist</button>
-      <button class="btn blacklist" id="btn-blacklist">+ Blacklist</button>
-    </div>
+  <div class="sbar" id="status-bar">
+    <span class="sdot" id="status-dot"></span>
+    <span class="slbl" id="status-label">SHIELDS ON - SAFE</span>
+    <span class="ssite" id="status-site"></span>
   </div>
+</div>
 
-  <div class="card">
-    <div class="card-title">Bypass Modules</div>
-    <div class="toggle-row">
-      <div class="toggle-label"><span>Link Shortener Bypass</span><span class="toggle-desc">Auto-clicks through 50+ shorteners</span></div>
-      <label class="switch"><input type="checkbox" id="toggle-links" checked><span class="slider"></span></label>
-    </div>
-    <div class="toggle-row">
-      <div class="toggle-label"><span>Timer Bypass</span><span class="toggle-desc">Auto-clicks Get Link when timer finishes</span></div>
-      <label class="switch"><input type="checkbox" id="toggle-timers" checked><span class="slider"></span></label>
-    </div>
-    <div class="toggle-row">
-      <div class="toggle-label"><span>Cookie Consent Dismiss</span><span class="toggle-desc">Auto-clicks Accept All on 20+ frameworks</span></div>
-      <label class="switch"><input type="checkbox" id="toggle-cookies" checked><span class="slider"></span></label>
-    </div>
-    <div class="toggle-row">
-      <div class="toggle-label"><span>Auto-Scroll</span><span class="toggle-desc">Scrolls pages requiring scroll</span></div>
-      <label class="switch"><input type="checkbox" id="toggle-scroll" checked><span class="slider"></span></label>
-    </div>
-    <div class="toggle-row">
-      <div class="toggle-label"><span>Popunder Interceptor</span><span class="toggle-desc">Blocks ad popunder windows</span></div>
-      <label class="switch"><input type="checkbox" id="toggle-popunder" checked><span class="slider"></span></label>
-    </div>
+<div class="stats">
+  <div class="scard"><div class="sval" id="traps-bypassed">0</div><div class="slbl">Traps Bypassed</div></div>
+  <div class="scard"><div class="sval" id="modules-active">39</div><div class="slbl">Modules Active</div></div>
+  <div class="scard"><div class="sval" id="sites-bypassed">0</div><div class="slbl">Sites Protected</div></div>
+</div>
+
+<div class="mtc">
+  <div class="mti">
+    <div class="mtic"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+    <div class="mtt"><h3>Anti-Detection Engine</h3><span>39 stealth modules active</span></div>
   </div>
+  <label class="sw"><input type="checkbox" id="main-toggle" checked><span class="sl"></span></label>
+</div>
 
-  <div class="card">
-    <div class="card-title">Stealth Modules</div>
-    <div class="toggle-row">
-      <div class="toggle-label"><span>brave:// Protocol Fix</span><span class="toggle-desc">Fixes protocol leak in DOM</span></div>
-      <label class="switch"><input type="checkbox" id="toggle-braveleak" checked><span class="slider"></span></label>
-    </div>
-    <div class="toggle-row">
-      <div class="toggle-label"><span>Storage Quota Fix</span><span class="toggle-desc">Hides real disk size from fingerprinting</span></div>
-      <label class="switch"><input type="checkbox" id="toggle-storageleak" checked><span class="slider"></span></label>
-    </div>
-    <div class="toggle-row">
-      <div class="toggle-label"><span>AudioContext Normalization</span><span class="toggle-desc">Prevents audio fingerprinting</span></div>
-      <label class="switch"><input type="checkbox" id="toggle-audio" checked><span class="slider"></span></label>
-    </div>
-    <div class="toggle-row">
-      <div class="toggle-label"><span>Canvas Fingerprint Fix</span><span class="toggle-desc">Consistent canvas output</span></div>
-      <label class="switch"><input type="checkbox" id="toggle-canvas" checked><span class="slider"></span></label>
-    </div>
-    <div class="toggle-row">
-      <div class="toggle-label"><span>WebRTC IP Leak Block</span><span class="toggle-desc">Prevents local IP exposure</span></div>
-      <label class="switch"><input type="checkbox" id="toggle-webrtc" checked><span class="slider"></span></label>
-    </div>
-    <div class="toggle-row">
-      <div class="toggle-label"><span>Permission Auto-Deny</span><span class="toggle-desc">Blocks notification/camera/mic requests</span></div>
-      <label class="switch"><input type="checkbox" id="toggle-permissions" checked><span class="slider"></span></label>
-    </div>
-    <div class="toggle-row">
-      <div class="toggle-label"><span>Network Bait Faking</span><span class="toggle-desc">Fakes ad-bait fetch/XHR responses</span></div>
-      <label class="switch"><input type="checkbox" id="toggle-bait" checked><span class="slider"></span></label>
-    </div>
-    <div class="toggle-row">
-      <div class="toggle-label"><span>Navigator Spoofing</span><span class="toggle-desc">Consistent platform/hardware values</span></div>
-      <label class="switch"><input type="checkbox" id="toggle-navigator" checked><span class="slider"></span></label>
-    </div>
-    <div class="toggle-row">
-      <div class="toggle-label"><span>Adblock Detection Bypass</span><span class="toggle-desc">Bypasses hispanoads, Admiral, BlockAdBlock etc.</span></div>
-      <label class="switch"><input type="checkbox" id="toggle-adblock" checked><span class="slider"></span></label>
-    </div>
-    <div class="toggle-row">
-      <div class="toggle-label"><span>YouTube Ad Block + SponsorBlock</span><span class="toggle-desc">Blocks video ads, skips sponsors</span></div>
-      <label class="switch"><input type="checkbox" id="toggle-youtube" checked><span class="slider"></span></label>
-    </div>
-  </div>
+<div class="shdr"><span class="stit">Auto Bypass</span><span class="scnt">7 modules</span></div>
+<div class="tlist">
+  <div class="titem"><div class="tinfo"><div class="ticon blue">&#9889;</div><div class="ttxt"><h4>Link Shortener Bypass</h4><span>50+ services auto-bypassed</span></div></div><label class="sw"><input type="checkbox" id="toggle-links" checked><span class="sl"></span></label></div>
+  <div class="titem"><div class="tinfo"><div class="ticon amber">&#9202;</div><div class="ttxt"><h4>Timer / Countdown Bypass</h4><span>Auto-clicks when timer finishes</span></div></div><label class="sw"><input type="checkbox" id="toggle-timers" checked><span class="sl"></span></label></div>
+  <div class="titem"><div class="tinfo"><div class="ticon green">&#10003;</div><div class="ttxt"><h4>Cookie Consent Dismiss</h4><span>20+ frameworks auto-dismissed</span></div></div><label class="sw"><input type="checkbox" id="toggle-cookies" checked><span class="sl"></span></label></div>
+  <div class="titem"><div class="tinfo"><div class="ticon purple">&#8645;</div><div class="ttxt"><h4>Smart Auto-Scroll</h4><span>Scrolls pages requiring scroll</span></div></div><label class="sw"><input type="checkbox" id="toggle-scroll" checked><span class="sl"></span></label></div>
+  <div class="titem"><div class="tinfo"><div class="ticon red">&#10006;</div><div class="ttxt"><h4>Popunder Interceptor</h4><span>Blocks ad popunder windows</span></div></div><label class="sw"><input type="checkbox" id="toggle-popunder" checked><span class="sl"></span></label></div>
+  <div class="titem"><div class="tinfo"><div class="ticon cyan">&#9651;</div><div class="ttxt"><h4>Adblock Detection Bypass</h4><span>Hispanoads, Admiral, BlockAdBlock</span></div></div><label class="sw"><input type="checkbox" id="toggle-adblock" checked><span class="sl"></span></label></div>
+  <div class="titem"><div class="tinfo"><div class="ticon rose">&#9654;</div><div class="ttxt"><h4>YouTube Ad Block + SponsorBlock</h4><span>Blocks ads, skips sponsors</span></div></div><label class="sw"><input type="checkbox" id="toggle-youtube" checked><span class="sl"></span></label></div>
+</div>
 
-  <div class="card">
-    <div class="card-title">User Agent Spoofing (170+ UAs)</div>
-    <div style="margin-bottom: 8px;">
-      <select id="ua-category" style="width:100%; padding:6px; background:#0f172a; border:1px solid #475569; border-radius:4px; color:white; font-size:11px; margin-bottom:6px;">
-        <option value="random">Random Chrome (Default)</option>
-        <optgroup label="Desktop - Chrome">
-          <option value="chrome_win131">Chrome 131 (Windows 11)</option>
-          <option value="chrome_win130">Chrome 130 (Windows 11)</option>
-          <option value="chrome_win129">Chrome 129 (Windows 10)</option>
-          <option value="chrome_win128">Chrome 128 (Windows 10)</option>
-          <option value="chrome_win124">Chrome 124 (Windows 10)</option>
-          <option value="chrome_mac131">Chrome 131 (macOS)</option>
-          <option value="chrome_mac130">Chrome 130 (macOS)</option>
-          <option value="chrome_mac129">Chrome 129 (macOS)</option>
-          <option value="chrome_mac124">Chrome 124 (macOS)</option>
-          <option value="chrome_lin131">Chrome 131 (Linux)</option>
-          <option value="chrome_lin130">Chrome 130 (Linux)</option>
-          <option value="chrome_lin124">Chrome 124 (Linux)</option>
-        </optgroup>
-        <optgroup label="Desktop - Edge">
-          <option value="edge131">Edge 131 (Windows 11)</option>
-          <option value="edge130">Edge 130 (Windows 11)</option>
-          <option value="edge129">Edge 129 (Windows 10)</option>
-          <option value="edge128">Edge 128 (Windows 10)</option>
-          <option value="edge124">Edge 124 (Windows 10)</option>
-        </optgroup>
-        <optgroup label="Desktop - Firefox">
-          <option value="firefox133">Firefox 133 (Windows)</option>
-          <option value="firefox132">Firefox 132 (Windows)</option>
-          <option value="firefox131">Firefox 131 (Windows)</option>
-          <option value="firefox_mac133">Firefox 133 (macOS)</option>
-          <option value="firefox_mac132">Firefox 132 (macOS)</option>
-        </optgroup>
-        <optgroup label="Desktop - Safari">
-          <option value="safari18">Safari 18 (macOS Sequoia)</option>
-          <option value="safari17">Safari 17 (macOS Sonoma)</option>
-          <option value="safari16">Safari 16 (macOS Ventura)</option>
-        </optgroup>
-        <optgroup label="Desktop - Opera">
-          <option value="opera110">Opera 110 (Windows)</option>
-          <option value="opera108">Opera 108 (Windows)</option>
-        </optgroup>
-        <optgroup label="Mobile - Android">
-          <option value="mobile_chrome131">Chrome 131 (Android)</option>
-          <option value="mobile_chrome130">Chrome 130 (Android)</option>
-          <option value="mobile_chrome124">Chrome 124 (Android)</option>
-          <option value="mobile_samsung28">Samsung 28 (Android)</option>
-          <option value="mobile_samsung25">Samsung 25 (Android)</option>
-          <option value="mobile_firefox133">Firefox 133 (Android)</option>
-        </optgroup>
-        <optgroup label="Mobile - iPhone">
-          <option value="safari_ios18">Safari 18 (iPhone - iOS 18)</option>
-          <option value="safari_ios17">Safari 17 (iPhone - iOS 17)</option>
-          <option value="chrome_ios18">Chrome 131 (iPhone - iOS 18)</option>
-        </optgroup>
-        <optgroup label="Tablet">
-          <option value="ipad_os18">Safari 18 (iPad - iPadOS 18)</option>
-          <option value="ipad_os17">Safari 17 (iPad - iPadOS 17)</option>
-          <option value="android_tab131">Chrome 131 (Android Tablet)</option>
-        </optgroup>
-      </select>
-    </div>
-    <div class="status-text">
-      <span class="dot"></span>
-      <span id="ua-status">Spoofing as Chrome 131</span>
-    </div>
-  </div>
+<div class="shdr"><span class="stit">Stealth Modules</span><span class="scnt">7 key modules</span></div>
+<div class="tlist">
+  <div class="titem"><div class="tinfo"><div class="ticon purple">&#128065;</div><div class="ttxt"><h4>Webdriver Hide</h4><span>Navigator.webdriver returns false</span></div></div><label class="sw"><input type="checkbox" id="toggle-webr" checked><span class="sl"></span></label></div>
+  <div class="titem"><div class="tinfo"><div class="ticon blue">&#127760;</div><div class="ttxt"><h4>WebRTC IP Leak Block</h4><span>Prevents local IP exposure</span></div></div><label class="sw"><input type="checkbox" id="toggle-webrtc" checked><span class="sl"></span></label></div>
+  <div class="titem"><div class="tinfo"><div class="ticon red">&#128276;</div><div class="ttxt"><h4>Permission Auto-Deny</h4><span>Blocks notification/camera/mic</span></div></div><label class="sw"><input type="checkbox" id="toggle-permissions" checked><span class="sl"></span></label></div>
+  <div class="titem"><div class="tinfo"><div class="ticon green">&#128176;</div><div class="ttxt"><h4>Network Bait Faking</h4><span>Fakes ad-bait fetch/XHR responses</span></div></div><label class="sw"><input type="checkbox" id="toggle-bait" checked><span class="sl"></span></label></div>
+  <div class="titem"><div class="tinfo"><div class="ticon cyan">&#128274;</div><div class="ttxt"><h4>Canvas + Audio Fingerprint</h4><span>Consistent output prevents tracking</span></div></div><label class="sw"><input type="checkbox" id="toggle-canvas" checked><span class="sl"></span></label></div>
+  <div class="titem"><div class="tinfo"><div class="ticon amber">&#128274;</div><div class="ttxt"><h4>Navigator Consistency Spoof</h4><span>Platform, hardware, screen values</span></div></div><label class="sw"><input type="checkbox" id="toggle-navigator" checked><span class="sl"></span></label></div>
+</div>
 
-  <div class="card">
-    <div class="card-title">Shield Bypass Stats</div>
-    <div class="stats">
-      <div class="stat-box">
-        <div class="stat-val" id="traps-bypassed">0</div>
-        <div class="stat-lbl">Traps Neutralized</div>
-      </div>
-      <div class="stat-box">
-        <div class="stat-val" id="api-masked">100%</div>
-        <div class="stat-lbl">Chrome Replica</div>
-      </div>
-      <div class="stat-box">
-        <div class="stat-val" id="sites-bypassed">0</div>
-        <div class="stat-lbl">Sites Bypassed</div>
-      </div>
-      <div class="stat-box">
-        <div class="stat-val" id="current-tab-count">0</div>
-        <div class="stat-lbl">Tab Requests</div>
-      </div>
-    </div>
-  </div>
+<div class="shdr"><span class="stit">Extra Features</span><span class="scnt">6 modules</span></div>
+<div class="tlist">
+  <div class="titem"><div class="tinfo"><div class="ticon green">&#9758;</div><div class="ttxt"><h4>Force Right-Click</h4><span>Override site right-click blocks</span></div></div><label class="sw"><input type="checkbox" id="toggle-rightclick" checked><span class="sl"></span></label></div>
+  <div class="titem"><div class="tinfo"><div class="ticon blue">&#9998;</div><div class="ttxt"><h4>Force Text Selection</h4><span>Override copy/select blocks</span></div></div><label class="sw"><input type="checkbox" id="toggle-textsel" checked><span class="sl"></span></label></div>
+  <div class="titem"><div class="tinfo"><div class="ticon amber">&#8693;</div><div class="ttxt"><h4>Anti-Scroll Lock</h4><span>Override overflow:hidden blocks</span></div></div><label class="sw"><input type="checkbox" id="toggle-scrolllock" checked><span class="sl"></span></label></div>
+  <div class="titem"><div class="tinfo"><div class="ticon red">&#128197;</div><div class="ttxt"><h4>Block Clipboard + Notifications</h4><span>Prevent site clipboard/notification spam</span></div></div><label class="sw"><input type="checkbox" id="toggle-clipboard" checked><span class="sl"></span></label></div>
+  <div class="titem"><div class="tinfo"><div class="ticon cyan">&#127759;</div><div class="ttxt"><h4>Timezone + Geolocation Spoof</h4><span>Match region to selected UA</span></div></div><label class="sw"><input type="checkbox" id="toggle-timezone"><span class="sl"></span></label></div>
+  <div class="titem"><div class="tinfo"><div class="ticon rose">&#127761;</div><div class="ttxt"><h4>Force Dark Mode + Reader</h4><span>Dark theme + strip clutter</span></div></div><label class="sw"><input type="checkbox" id="toggle-darkmode"><span class="sl"></span></label></div>
+</div>
 
-  <a href="options.html" target="_blank" class="btn secondary">Advanced Options</a>
-  <div class="version">v4.0.0 | 25 Modules Active | BraveShield Bypass Pro</div>
+<div class="uac">
+  <div class="uac-l">User Agent (170+ Options)</div>
+  <select class="uasel" id="ua-category">
+    <option value="random">Random Chrome (Default)</option>
+    <optgroup label="Desktop - Chrome"><option value="chrome_win131">Chrome 131 (Win11)</option><option value="chrome_win130">Chrome 130 (Win11)</option><option value="chrome_mac131">Chrome 131 (Mac)</option><option value="chrome_lin131">Chrome 131 (Linux)</option><option value="chrome_win129">Chrome 129 (Win10)</option><option value="chrome_win124">Chrome 124 (Win10)</option><option value="chrome_mac130">Chrome 130 (Mac)</option><option value="chrome_mac129">Chrome 129 (Mac)</option><option value="chrome_mac124">Chrome 124 (Mac)</option><option value="chrome_lin130">Chrome 130 (Linux)</option><option value="chrome_lin124">Chrome 124 (Linux)</option></optgroup>
+    <optgroup label="Desktop - Edge"><option value="edge131">Edge 131 (Win11)</option><option value="edge130">Edge 130 (Win11)</option><option value="edge129">Edge 129 (Win10)</option><option value="edge124">Edge 124 (Win10)</option></optgroup>
+    <optgroup label="Desktop - Firefox"><option value="firefox133">Firefox 133 (Win)</option><option value="firefox132">Firefox 132 (Win)</option><option value="firefox_mac133">Firefox 133 (Mac)</option></optgroup>
+    <optgroup label="Desktop - Safari"><option value="safari18">Safari 18 (Mac)</option><option value="safari17">Safari 17 (Mac)</option></optgroup>
+    <optgroup label="Desktop - Opera"><option value="opera110">Opera 110 (Win)</option><option value="opera108">Opera 108 (Win)</option></optgroup>
+    <optgroup label="Mobile - Android"><option value="mobile_chrome131">Chrome 131 (Android)</option><option value="mobile_chrome130">Chrome 130 (Android)</option><option value="mobile_samsung28">Samsung 28 (Android)</option><option value="mobile_firefox133">Firefox 133 (Android)</option></optgroup>
+    <optgroup label="Mobile - iPhone"><option value="safari_ios18">Safari 18 (iPhone)</option><option value="safari_ios17">Safari 17 (iPhone)</option><option value="chrome_ios18">Chrome 131 (iPhone)</option></optgroup>
+    <optgroup label="Tablet"><option value="ipad_os18">Safari 18 (iPad)</option><option value="ipad_os17">Safari 17 (iPad)</option><option value="android_tab131">Chrome 131 (Android Tablet)</option></optgroup>
+  </select>
+  <div class="uast"><span class="dot"></span><span id="ua-status">Spoofing as Random Chrome</span></div>
+</div>
 
-  <script src="popup.js"></script>
+<div class="sacts">
+  <button class="sbtn wl" id="btn-whitelist">+ Whitelist Site</button>
+  <button class="sbtn bl" id="btn-blacklist">+ Blacklist Site</button>
+</div>
+
+<div class="bbar">
+  <a href="options.html" target="_blank" class="abtn sec">Advanced Options</a>
+</div>
+<div class="ftr">v4.5.1 | 39 Modules | BraveShield Bypass Pro</div>
+
+<script src="popup.js"></script>
 </body>
 </html>

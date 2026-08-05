@@ -1,4 +1,4 @@
-# BraveShield Bypass Pro - Memory Map & Architecture Graph (v4.1)
+# BraveShield Bypass Pro - Memory Map & Architecture Graph (v4.2)
 
 ## Project Structure
 
@@ -23,11 +23,11 @@ braveshield-anti-detection-extension/
 │   ├── icon48.png                     # Extension page icon
 │   └── icon128.png                    # Store listing icon
 │
-└── additional featured extension/     # v4.1 - 26 modules + 170 UAs
-    ├── manifest.json                  # MV3 manifest (v4.1)
+└── additional featured extension/     # v4.2 - 27 modules + 170 UAs
+    ├── manifest.json                  # MV3 manifest (v4.2)
     ├── background.js                  # Enhanced service worker + whitelist/blacklist
     ├── content.js                     # Enhanced content bridge + UA passthrough
-    ├── inject.js                      # 26-module stealth engine (900+ lines)
+    ├── inject.js                      # 27-module stealth engine (1400+ lines)
     ├── popup.html                     # Full-featured popup with UA selector
     ├── popup.js                       # Popup logic with all toggles
     ├── options.html                   # Complete settings page
@@ -109,8 +109,13 @@ EXTENSION LOAD
          │
          └── USER AGENT SPOOFING (Module 26)
              └── 26. UA Spoofing ──────────► override navigator.userAgent, userAgentData, platform, vendor
-                                            reads from localStorage (set by content.js)
-                                            170+ UAs across 15 categories
+                                             reads from localStorage (set by content.js)
+                                             170+ UAs across 15 categories
+         │
+         └── ADBLOCK DETECTION BYPASS (Module 27)
+             └── 27. Adblock Bypass ───────► bypass hispanoads, Admiral, BlockAdBlock, FuckAdBlock
+                                             override detection vars/functions/classes
+                                             fake ad-bait fetch/XHR, filter mutations
 ```
 
 ---
@@ -398,6 +403,19 @@ chrome.storage.local = {
   13. Mobile Chrome (iPhone) - 12 UAs
   14. Tablet Safari (iPad) - 17 UAs
   15. Tablet Chrome (Android) - 12 UAs
+
+### Module 27: Adblock Detection Bypass
+- **Targets:** hispanoads, Admiral, BlockAdBlock, FuckAdBlock, and similar detection services
+- **Methods:**
+  - Override adblock detection variables (adBlockDetected, canRunAds, etc.)
+  - Override detection functions (checkAdBlock, detectAdBlock, etc.)
+  - Override BlockAdBlock/FuckAdBlock class constructors
+  - Filter ad-bait mutations from MutationObserver
+  - Fake ad-bait fetch/XHR responses (200 OK)
+  - Neutralize ad-bait script creation via document.createElement override
+  - CSS overrides for ad-bait element visibility
+  - Hide adblock detection modals/overlays
+  - MutationObserver to dynamically remove modals
 
 ---
 

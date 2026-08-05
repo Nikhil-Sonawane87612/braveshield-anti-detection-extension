@@ -1401,6 +1401,254 @@
   }
 
   // ==========================================
+  // 30. FORCE ENABLE RIGHT-CLICK
+  // ==========================================
+  function forceEnableRightClick() {
+    document.addEventListener('contextmenu', e => e.stopImmediatePropagation(), true);
+    document.addEventListener('mousedown', e => {
+      if (e.button === 2) e.stopImmediatePropagation();
+    }, true);
+    document.addEventListener('keydown', e => {
+      if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && e.key === 'I')) {
+        e.stopImmediatePropagation();
+      }
+    }, true);
+    console.log('[BraveShield Bypass] Right-click force enabled');
+  }
+
+  // ==========================================
+  // 31. FORCE ENABLE TEXT SELECTION
+  // ==========================================
+  function forceEnableTextSelect() {
+    const style = document.createElement('style');
+    style.textContent = `
+      *, *::before, *::after {
+        -webkit-user-select: text !important;
+        -moz-user-select: text !important;
+        -ms-user-select: text !important;
+        user-select: text !important;
+        -webkit-touch-callout: default !important;
+      }
+    `;
+    (document.head || document.documentElement).appendChild(style);
+
+    document.addEventListener('selectstart', e => e.stopImmediatePropagation(), true);
+    document.addEventListener('copy', e => e.stopImmediatePropagation(), true);
+    document.addEventListener('cut', e => e.stopImmediatePropagation(), true);
+    console.log('[BraveShield Bypass] Text selection force enabled');
+  }
+
+  // ==========================================
+  // 32. ANTI-SCROLL LOCK
+  // ==========================================
+  function antiScrollLock() {
+    const style = document.createElement('style');
+    style.textContent = `
+      html, body {
+        overflow: auto !important;
+        overflow-x: auto !important;
+        overflow-y: auto !important;
+      }
+      body {
+        position: static !important;
+        width: auto !important;
+        height: auto !important;
+      }
+    `;
+    (document.head || document.documentElement).appendChild(style);
+    document.documentElement.style.overflow = 'auto';
+    document.body.style.overflow = 'auto';
+    console.log('[BraveShield Bypass] Anti-scroll lock active');
+  }
+
+  // ==========================================
+  // 33. AUTO-CLOSE POPUPS
+  // ==========================================
+  function autoClosePopups() {
+    const origOpen = window.open;
+    window.open = function(url, target, features) {
+      console.log('[BraveShield Bypass] Blocked popup: ' + url);
+      return null;
+    };
+
+    // Close existing popups
+    const closePopups = () => {
+      document.querySelectorAll(
+        'div[class*="popup"], div[class*="modal"][style*="z-index"], ' +
+        'div[id*="popup"], div[id*="modal"][style*="z-index"]'
+      ).forEach(el => {
+        const z = parseInt(window.getComputedStyle(el).zIndex) || 0;
+        if (z > 1000) el.remove();
+      });
+    };
+
+    closePopups();
+    setTimeout(closePopups, 1000);
+    console.log('[BraveShield Bypass] Auto-close popups active');
+  }
+
+  // ==========================================
+  // 34. BLOCK CLIPBOARD READ
+  // ==========================================
+  function blockClipboardRead() {
+    navigator.clipboard.readText = async () => {
+      console.log('[BraveShield Bypass] Blocked clipboard read');
+      return '';
+    };
+    navigator.clipboard.read = async () => {
+      console.log('[BraveShield Bypass] Blocked clipboard read');
+      return new ClipboardItem();
+    };
+    console.log('[BraveShield Bypass] Clipboard read blocked');
+  }
+
+  // ==========================================
+  // 35. BLOCK NOTIFICATION SPAM
+  // ==========================================
+  function blockNotificationSpam() {
+    if (Notification && Notification.permission) {
+      Object.defineProperty(Notification, 'permission', { get: () => 'denied' });
+    }
+    if (navigator.permissions) {
+      const origQuery = navigator.permissions.query;
+      navigator.permissions.query = (desc) => {
+        if (desc && desc.name === 'notifications') {
+          return Promise.resolve({ state: 'denied', onchange: null });
+        }
+        return origQuery.call(navigator.permissions, desc);
+      };
+    }
+    console.log('[BraveShield Bypass] Notification spam blocked');
+  }
+
+  // ==========================================
+  // 36. TIMEZONE SPOOFING
+  // ==========================================
+  function timezoneSpoof() {
+    const UA_TIMEZONES = {
+      'Windows': 'America/New_York',
+      'macOS': 'America/Los_Angeles',
+      'Linux': 'Europe/London',
+      'Android': 'Asia/Tokyo',
+      'iOS': 'America/Chicago'
+    };
+
+    const stored = localStorage.getItem('braveshield_ua');
+    if (stored) {
+      try {
+        const ua = JSON.parse(stored);
+        const tz = UA_TIMEZONES[ua.platform] || 'UTC';
+        const origDateTimeFormat = Intl.DateTimeFormat;
+        const handler = {
+          apply: function(target, thisArg, args) {
+            if (args.length > 1 && typeof args[1] === 'object') {
+              args[1].timeZone = tz;
+            } else {
+              args[1] = { timeZone: tz };
+            }
+            return Reflect.apply(target, thisArg, args);
+          }
+        };
+        window.Intl.DateTimeFormat = new Proxy(origDateTimeFormat, handler);
+        console.log('[BraveShield Bypass] Timezone spoofed to: ' + tz);
+      } catch(e) {}
+    }
+  }
+
+  // ==========================================
+  // 37. GEOLOCATION SPOOFING
+  // ==========================================
+  function geolocationSpoof() {
+    const GEO_POSITION = {
+      coords: {
+        latitude: 40.7128,
+        longitude: -74.0060,
+        accuracy: 10,
+        altitude: null,
+        altitudeAccuracy: null,
+        heading: null,
+        speed: null
+      },
+      timestamp: Date.now()
+    };
+
+    navigator.geolocation.getCurrentPosition = (success) => {
+      console.log('[BraveShield Bypass] Geolocation spoofed');
+      success(GEO_POSITION);
+    };
+
+    navigator.geolocation.watchPosition = (success) => {
+      success(GEO_POSITION);
+      return 0;
+    };
+
+    console.log('[BraveShield Bypass] Geolocation spoofing active');
+  }
+
+  // ==========================================
+  // 38. FORCE DARK MODE
+  // ==========================================
+  function forceDarkMode() {
+    const style = document.createElement('style');
+    style.id = 'brave-shield-dark-mode';
+    style.textContent = `
+      @media (prefers-color-scheme: light) {
+        :root {
+          color-scheme: dark !important;
+        }
+        body, html {
+          background-color: #1a1a1a !important;
+          color: #e0e0e0 !important;
+        }
+        a { color: #6ea8fe !important; }
+        img { opacity: 0.9; }
+      }
+    `;
+    (document.head || document.documentElement).appendChild(style);
+    console.log('[BraveShield Bypass] Dark mode forced');
+  }
+
+  // ==========================================
+  // 39. READER MODE
+  // ==========================================
+  function readerMode() {
+    // Remove common clutter elements
+    const CLUTTER_SELECTORS = [
+      'nav', 'header', 'footer', '.sidebar', '#sidebar',
+      '.advertisement', '.ad', '.ads', '.ad-container',
+      '.social-share', '.share-buttons', '.related-articles',
+      '.comments', '#comments', '.newsletter-signup',
+      '.popup', '.modal', '.overlay', '.cookie-banner',
+      'iframe', 'ins.adsbygoogle', '[class*="promo"]',
+      '[class*="banner"]', '[id*="ad-"]'
+    ];
+
+    function cleanPage() {
+      CLUTTER_SELECTORS.forEach(sel => {
+        try {
+          document.querySelectorAll(sel).forEach(el => {
+            // Don't remove if it's the main content
+            if (el.querySelector('article') || el.querySelector('.article-body')) return;
+            el.style.display = 'none';
+          });
+        } catch(e) {}
+      });
+
+      // Make main content wider and centered
+      const main = document.querySelector('article, .article, .content, main, [role="main"]');
+      if (main) {
+        main.style.maxWidth = '800px';
+        main.style.margin = '0 auto';
+        main.style.padding = '20px';
+      }
+    }
+
+    cleanPage();
+    setTimeout(cleanPage, 1000);
+    console.log('[BraveShield Bypass] Reader mode active');
+  }
+
+  // ==========================================
   // RUN ALL MODULES
   // ==========================================
   const modules = [
@@ -1432,7 +1680,17 @@
     ['Module 26: User Agent Spoofing', spoofUserAgent],
     ['Module 27: Adblock Detection Bypass', bypassAdblockDetection],
     ['Module 28: Click Image Wait Bypass', bypassClickImageWait],
-    ['Module 29: YouTube Ad Block + SponsorBlock', blockYouTubeAds]
+    ['Module 29: YouTube Ad Block + SponsorBlock', blockYouTubeAds],
+    ['Module 30: Force Right-Click', forceEnableRightClick],
+    ['Module 31: Force Text Selection', forceEnableTextSelect],
+    ['Module 32: Anti-Scroll Lock', antiScrollLock],
+    ['Module 33: Auto-Close Popups', autoClosePopups],
+    ['Module 34: Block Clipboard Read', blockClipboardRead],
+    ['Module 35: Block Notification Spam', blockNotificationSpam],
+    ['Module 36: Timezone Spoofing', timezoneSpoof],
+    ['Module 37: Geolocation Spoofing', geolocationSpoof],
+    ['Module 38: Force Dark Mode', forceDarkMode],
+    ['Module 39: Reader Mode', readerMode]
   ];
 
   modules.forEach(([name, fn]) => {

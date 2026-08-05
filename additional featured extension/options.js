@@ -88,7 +88,13 @@ document.addEventListener('DOMContentLoaded', () => {
     'prevent-webrtc': 'preventWebRTC', 'deny-permissions': 'autoDenyPermissions',
     'clamp-timers': 'clampTimers', 'spoof-navigator': 'spoofNavigator',
     'screen-consistency': 'screenConsistency', 'spoof-fonts': 'spoofFonts',
-    'clean-css': 'cleanCSS', 'yt-ads': 'youtubeAds', 'yt-sponsor': 'sponsorBlock'
+    'clean-css': 'cleanCSS', 'yt-ads': 'youtubeAds', 'yt-sponsor': 'sponsorBlock',
+    'enable-rightclick': 'forceRightClick', 'enable-text-select': 'forceTextSelect',
+    'anti-scroll-lock': 'antiScrollLock', 'auto-close-popups': 'autoClosePopups',
+    'anti-clipboard-read': 'blockClipboardRead', 'anti-notification-spam': 'blockNotificationSpam',
+    'timezone-spoof': 'timezoneSpoof', 'geolocation-spoof': 'geolocationSpoof',
+    'dark-mode-force': 'forceDarkMode', 'reader-mode': 'readerMode',
+    'anti-screenshot-detect': 'antiScreenshotDetect'
   };
 
   chrome.storage.local.get(Object.values(SETTINGS_MAP), (res) => {

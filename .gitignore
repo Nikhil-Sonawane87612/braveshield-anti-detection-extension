@@ -5,6 +5,9 @@ _metadata/
 # Allow release zip
 !BraveShield-Bypass-Pro-*.zip
 
+# Exclude other zips
+additional featured extension.zip
+
 # OS files
 .DS_Store
 Thumbs.db

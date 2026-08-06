@@ -1,4 +1,4 @@
-# BraveShield Bypass Pro v4.4 - Complete Anti-Detection Engine
+# BraveShield Bypass Pro v4.6 - Complete Anti-Detection Engine
 
 **37 modules** that bypass everything: Brave Shields, adblock traps, link shorteners, cookie consents, countdown timers, click-image-wait patterns, WebRTC leaks, and auto-clicks download buttons.
 
@@ -79,6 +79,38 @@
 35. **Anti-Screenshot Detection** - Blocks canvas-based screenshot detection
 36. **Timezone Spoofing** - Matches UA region timezone
 37. **Geolocation Spoofing** - Fakes GPS coordinates
+
+---
+
+## New Features in v4.6
+
+### 🚀 Category Bulk Toggles (Popup + Options)
+- **Enable All / Disable All per category** — Auto Bypass, Stealth, Extra, YouTube, Sites, Profile
+- Category buttons in the popup header and per-panel buttons in Options
+- Global Enable All / Disable All sync instantly between popup, Options, and All Modules tab
+
+### 🎛️ All Modules Accordion (Options)
+- Category groups are now **collapsible accordions** with +/- indicators
+- Search bar filters across all modules in real time
+
+### 🔄 Real-Time Sync
+- `chrome.storage.onChanged` listener on both popup **and** options pages
+- Changes made in either UI (or bulk toggles) reflect everywhere instantly
+
+### 🐞 Critical Fixes (v4.6)
+- **Fixed:** Category buttons (`page-auto`, `adblock-det`, `youtube-bypass`, `sites`, `profile`) referenced an undefined `POPUP_CATEGORIES` map in options.js and did nothing — now wired and guarded
+- **Fixed:** Live sync missing in options page
+- Module 17 overrides only `Navigator.prototype` (no instance override)
+- Module 20 never intercepts YouTube API calls
+- Safe-list (`isSafelistedHost()`) disables modules 5, 8, 27, 28, 31, 32 on AI sites
+- SponsorBlock hooks deferred until video `readyState >= 1`; DOM scans batched/debounced
+- Simulated click fallback navigation for TG mod APK download sites
+
+### 📦 Extra Features (v4.6)
+- Export / Import settings as JSON (Backup & Restore)
+- Per-site profile presets
+- Keyboard shortcuts: `Ctrl+Shift+E` enable all, `Ctrl+Shift+D` disable all, `Ctrl+Shift+F` focus search
+- Stats dashboard (modules active, sites bypassed, traps bypassed, session time)
 
 ---
 

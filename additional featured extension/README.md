@@ -1,6 +1,6 @@
-# BraveShield Bypass Pro v4.3 - Complete Anti-Detection Engine
+# BraveShield Bypass Pro v4.4 - Complete Anti-Detection Engine
 
-**28 modules** that bypass everything: Brave Shields, adblock traps, link shorteners, cookie consents, countdown timers, click-image-wait patterns, WebRTC leaks, and auto-clicks download buttons.
+**37 modules** that bypass everything: Brave Shields, adblock traps, link shorteners, cookie consents, countdown timers, click-image-wait patterns, WebRTC leaks, and auto-clicks download buttons.
 
 ---
 
@@ -29,7 +29,7 @@
 
 ---
 
-## All 25 Modules
+## All 37 Modules
 
 ### Core Anti-Detection (Modules 1-6)
 1. **Navigator.brave Destruction** - Removes `navigator.brave` + `isBrave()`
@@ -39,32 +39,72 @@
 5. **DOM Trap Dimension Neutralization** - Hooks `offsetHeight`, `offsetWidth`, `getBoundingClientRect`
 6. **WebGL Farbling Normalization** - Consistent GPU vendor/renderer strings
 
-### Auto-Bypass Features (Modules 7-12)
+### Auto-Bypass Features (Modules 7-15)
 7. **Link Shortener Auto-Bypass** - 50+ services (ouo.io, bc.vc, sh.st, linkvertise, etc.)
 8. **Timer/Countdown Bypass** - Speeds up countdowns, auto-clicks Get Link
-9. **Cookie Consent Auto-Dismiss** - 20+ consent frameworks
-10. **Smart Auto-Scroll** - Auto-scrolls pages requiring scroll
-11. **Redirect Chain Follower** - Follows meta refresh and click-through redirects
-12. **Popunder Interceptor** - Blocks ad popunder windows
+9. **Click Image Wait Bypass** - Bypasses "click image wait 10 seconds" ad patterns
+10. **Cookie Consent Auto-Dismiss** - 20+ consent frameworks (OneTrust, Cookiebot, etc.)
+11. **Smart Auto-Scroll** - Auto-scrolls pages requiring scroll
+12. **Redirect Chain Follower** - Follows meta refresh and click-through redirects
+13. **Popunder Interceptor** - Blocks ad popunder windows
+14. **Adblock Detection Bypass** - Bypasses Hispanoads, Admiral, BlockAdBlock, FuckAdBlock
+15. **Network Bait Faking** - Fakes ad-bait fetch/XHR requests
 
-### Fingerprint Leak Fixes (Modules 13-16)
-13. **brave:// Protocol Leak Fix** - `document.createElement('a').href='brave://x'` returns `chrome:`
-14. **Storage Quota Leak Fix** - `webkitTemporaryStorage.queryUsageAndQuota()` returns fake 2GB
-15. **AudioContext Normalization** - Consistent `OfflineAudioContext` output
-16. **Canvas Fingerprint Fix** - Consistent `toDataURL()`/`getImageData()` output
+### Fingerprint Leak Fixes (Modules 16-19)
+16. **brave:// Protocol Leak Fix** - `document.createElement('a').href='brave://x'` returns `chrome:`
+17. **Storage Quota Leak Fix** - `webkitTemporaryStorage.queryUsageAndQuota()` returns fake 2GB
+18. **AudioContext Normalization** - Consistent `OfflineAudioContext` output
+19. **Canvas Fingerprint Fix** - Consistent `toDataURL()`/`getImageData()` output
 
-### Anti-Automation (Modules 17-21)
-17. **navigator.webdriver Hide** - Returns `false` for webdriver flag
-18. **WebRTC IP Leak Prevention** - Strips ICE servers to prevent local IP exposure
-19. **Permission Auto-Deny** - Auto-deny notification/camera/mic/geolocation
-20. **Network Bait Response Faking** - Fakes `fetch()`/`XMLHttpRequest` for ad-bait requests
-21. **Performance Timer Clamp** - Reduces precision to prevent timing attacks
+### Anti-Automation (Modules 20-24)
+20. **navigator.webdriver Hide** - Returns `false` for webdriver flag
+21. **WebRTC IP Leak Prevention** - Strips ICE servers to prevent local IP exposure
+22. **Permission Auto-Deny** - Auto-deny notification/camera/mic/geolocation
+23. **Performance Timer Clamp** - Reduces precision to prevent timing attacks
+24. **Navigator Consistency Spoofing** - Consistent `productSub`, `platform`, `languages`, `hardwareConcurrency`
 
-### Consistency Spoofing (Modules 22-25)
-22. **Navigator Consistency Spoofing** - Consistent `productSub`, `platform`, `languages`, `hardwareConcurrency`
-23. **CSS Custom Property Cleanup** - Removes browser-injected CSS variables
-24. **Font Fingerprint Spoofing** - Consistent `document.fonts.check()` results
-25. **Screen/Viewport Consistency** - Realistic screen dimensions
+### Consistency Spoofing (Modules 25-28)
+25. **CSS Custom Property Cleanup** - Removes browser-injected CSS variables
+26. **Font Fingerprint Spoofing** - Consistent `document.fonts.check()` results
+27. **Screen/Viewport Consistency** - Realistic screen dimensions
+28. **WebGL Vendor/Renderer Spoofing** - Customizable GPU strings
+
+### Accessibility & Privacy (Modules 29-37)
+29. **Force Right-Click** - Overrides site context menu blocks
+30. **Force Text Selection** - Overrides copy/select blocks
+31. **Anti-Scroll Lock** - Overrides `overflow:hidden` locks
+32. **Auto-Close Popups** - Closes ad/spam popup windows
+33. **Block Clipboard Read** - Prevents sites from reading clipboard
+34. **Block Notification Spam** - Auto-denies notification permission prompts
+35. **Anti-Screenshot Detection** - Blocks canvas-based screenshot detection
+36. **Timezone Spoofing** - Matches UA region timezone
+37. **Geolocation Spoofing** - Fakes GPS coordinates
+
+---
+
+## New Features in v4.4
+
+### 🔄 Settings Sync System
+- **Real-time bidirectional sync** between Popup and Options page
+- Changes made in either UI instantly reflect in the other
+- Uses `chrome.storage.onChanged` listener for instant updates
+
+### 🎛️ "All Modules" Section (Options Page)
+- **Single unified view** of all 37 modules organized by category
+- **Search bar** - Filter modules by name or description in real-time
+- **Enable All / Disable All** buttons - Bulk toggle all modules instantly
+- Module count per category displayed
+- Clean card-based layout matching other sections
+
+### ⚡ Popup Bulk Actions
+- **Enable All / Disable All** buttons in popup header
+- One-click toggle for all modules from the main popup
+- Changes sync immediately to Options page
+
+### 🛡️ Safe-List Protection for AI Sites
+- **Gemini, ChatGPT, Claude, DeepSeek, Perplexity** automatically excluded from aggressive ad-detection
+- Prevents false positives that broke typing/scrolling on legitimate AI platforms
+- Modules 5, 8, 27, 31, 32, 33 now respect the safe-list
 
 ---
 
@@ -83,15 +123,30 @@
 
 ### Popup UI
 - Master on/off toggle
-- Individual module toggles for all 12 categories
+- Individual module toggles for all 17 categories
 - Real-time status display
 - Whitelist/blacklist buttons per site
+- **Enable All / Disable All** bulk actions
 
 ### Options Page
-- All 25 module toggles
+- All 37 module toggles organized in 6 tabs
+- **"All Modules" tab** with search + bulk actions
 - WebGL vendor/renderer customization
 - Whitelist/blacklist management with add/remove
-- Bypass history viewer
+- Bypass history viewer (last 50 sites)
+
+---
+
+## Bug Fixes in v4.4
+
+- ✅ **Fixed**: `Uncaught TypeError: Cannot read properties of null (reading 'appendChild')` - Added null guards for DOM append operations
+- ✅ **Fixed**: `Uncaught (in promise) TypeError: Cannot read properties of undefined (reading 'forEach')` - Inlined settings module to avoid dynamic import issues
+- ✅ **Fixed**: `Uncaught (in promise) TypeError: Cannot convert undefined or null to object` - Added defensive checks for storage operations
+- ✅ **Fixed**: Download buttons on TG mod / link shortener sites being hidden by overly aggressive selectors
+- ✅ **Fixed**: Image buttons and clickable elements incorrectly removed by ad-detection
+- ✅ **Fixed**: Duplicate module entries (yt-ads2, yt-sponsor2) in options
+- ✅ **Fixed**: Gemini/ChatGPT/Claude layout issues (scroll, typing, content visibility)
+- ✅ **Fixed**: Settings sync between popup and options page
 
 ---
 
@@ -101,7 +156,7 @@
 2. Open `brave://extensions` (or `chrome://extensions`)
 3. Enable **Developer mode**
 4. Click **Load unpacked** and select the `additional featured extension` folder
-5. All 25 modules are active by default
+5. All 37 modules are active by default
 
 ---
 

@@ -1,3 +1,47 @@
+// Shared Settings Data - Inlined for browser compatibility
+const SETTINGS_MAP = {
+  'auto-links': 'autoBypassLinks',
+  'auto-timers': 'autoBypassTimers',
+  'click-wait': 'clickImageWait',
+  'auto-cookies': 'autoDismissCookies',
+  'auto-scroll': 'autoScroll',
+  'auto-redirects': 'autoRedirects',
+  'auto-popunder': 'interceptPopunders',
+  'adblock-detect': 'bypassAdblockDetection',
+  'fake-bait': 'fakeNetworkBait',
+  'mask-brave': 'maskBraveApi',
+  'mask-brands': 'maskClientHints',
+  'mask-gpc': 'maskGPC',
+  'stub-vars': 'stubAnalytics',
+  'bypass-traps': 'bypassShieldsTraps',
+  'normalize-webgl': 'normalizeWebgl',
+  'fix-braveleak': 'fixBraveLeak',
+  'fix-storageleak': 'fixStorageLeak',
+  'normalize-audio': 'normalizeAudio',
+  'normalize-canvas': 'normalizeCanvas',
+  'hide-webdriver': 'hideWebdriver',
+  'prevent-webrtc': 'preventWebRTC',
+  'deny-permissions': 'autoDenyPermissions',
+  'clamp-timers': 'clampTimers',
+  'spoof-navigator': 'spoofNavigator',
+  'screen-consistency': 'screenConsistency',
+  'spoof-fonts': 'spoofFonts',
+  'clean-css': 'cleanCSS',
+  'yt-ads': 'youtubeAds',
+  'yt-sponsor': 'sponsorBlock',
+  'enable-rightclick': 'forceRightClick',
+  'enable-text-select': 'forceTextSelect',
+  'anti-scroll-lock': 'antiScrollLock',
+  'auto-close-popups': 'autoClosePopups',
+  'anti-clipboard-read': 'blockClipboardRead',
+  'anti-notification-spam': 'blockNotificationSpam',
+  'anti-screenshot-detect': 'antiScreenshotDetect',
+  'timezone-spoof': 'timezoneSpoof',
+  'geolocation-spoof': 'geolocationSpoof'
+};
+
+const ALL_SETTING_IDS = Object.keys(SETTINGS_MAP);
+
 document.addEventListener('DOMContentLoaded', () => {
   const mainToggle = document.getElementById('main-toggle');
   const statusBar = document.getElementById('status-bar');
@@ -8,40 +52,29 @@ document.addEventListener('DOMContentLoaded', () => {
   const sitesBypassed = document.getElementById('sites-bypassed');
   const btnWhitelist = document.getElementById('btn-whitelist');
   const btnBlacklist = document.getElementById('btn-blacklist');
+  const toggleAllOn = document.getElementById('popup-toggle-all-on');
+  const toggleAllOff = document.getElementById('popup-toggle-all-off');
 
-  const toggles = {
-    links: document.getElementById('toggle-links'),
-    timers: document.getElementById('toggle-timers'),
-    cookies: document.getElementById('toggle-cookies'),
-    scroll: document.getElementById('toggle-scroll'),
-    popunder: document.getElementById('toggle-popunder'),
-    adblock: document.getElementById('toggle-adblock'),
-    youtube: document.getElementById('toggle-youtube'),
-    webr: document.getElementById('toggle-webr'),
-    webrtc: document.getElementById('toggle-webrtc'),
-    permissions: document.getElementById('toggle-permissions'),
-    bait: document.getElementById('toggle-bait'),
-    canvas: document.getElementById('toggle-canvas'),
-    navigator: document.getElementById('toggle-navigator'),
-    rightclick: document.getElementById('toggle-rightclick'),
-    textsel: document.getElementById('toggle-textsel'),
-    scrolllock: document.getElementById('toggle-scrolllock'),
-    clipboard: document.getElementById('toggle-clipboard'),
-    timezone: document.getElementById('toggle-timezone'),
-    darkmode: document.getElementById('toggle-darkmode')
-  };
-
-  const storageKeys = {
-    links: 'autoBypassLinks', timers: 'autoBypassTimers',
-    cookies: 'autoDismissCookies', scroll: 'autoScroll',
-    popunder: 'interceptPopunders', adblock: 'bypassAdblockDetection',
-    youtube: 'blockYouTubeAds',
-    webr: 'hideWebdriver', webrtc: 'preventWebRTC',
-    permissions: 'autoDenyPermissions', bait: 'fakeNetworkBait',
-    canvas: 'normalizeCanvas', navigator: 'spoofNavigator',
-    rightclick: 'forceRightClick', textsel: 'forceTextSelect',
-    scrolllock: 'antiScrollLock', clipboard: 'blockClipboardRead',
-    timezone: 'timezoneSpoof', darkmode: 'forceDarkMode'
+  // Map popup toggle IDs to setting IDs
+  const POPUP_TOGGLE_MAP = {
+    'toggle-links': 'auto-links',
+    'toggle-timers': 'auto-timers',
+    'toggle-cookies': 'auto-cookies',
+    'toggle-scroll': 'auto-scroll',
+    'toggle-popunder': 'auto-popunder',
+    'toggle-adblock': 'adblock-detect',
+    'toggle-youtube': 'yt-ads',
+    'toggle-webr': 'hide-webdriver',
+    'toggle-webrtc': 'prevent-webrtc',
+    'toggle-permissions': 'deny-permissions',
+    'toggle-bait': 'fake-bait',
+    'toggle-canvas': 'normalize-canvas',
+    'toggle-navigator': 'spoof-navigator',
+    'toggle-rightclick': 'enable-rightclick',
+    'toggle-textsel': 'enable-text-select',
+    'toggle-scrolllock': 'anti-scroll-lock',
+    'toggle-clipboard': 'anti-clipboard-read',
+    'toggle-timezone': 'timezone-spoof'
   };
 
   const uaCategory = document.getElementById('ua-category');
@@ -83,17 +116,50 @@ document.addEventListener('DOMContentLoaded', () => {
 
   let currentHostname = '';
 
-  chrome.storage.local.get([
-    'enabled', 'blockedCounter', 'bypassedSites', 'currentTabBlocked',
-    ...Object.values(storageKeys)
-  ], (res) => {
-    mainToggle.checked = res.enabled !== false;
-    Object.keys(toggles).forEach(key => {
-      if (toggles[key]) toggles[key].checked = res[storageKeys[key]] !== false;
+  const storageKeys = Object.values(SETTINGS_MAP);
+
+  function loadAllSettings() {
+    chrome.storage.local.get([
+      'enabled', 'blockedCounter', 'bypassedSites', 'currentTabBlocked',
+      ...storageKeys
+    ], (res) => {
+      mainToggle.checked = res.enabled !== false;
+      Object.entries(POPUP_TOGGLE_MAP).forEach(([toggleId, settingId]) => {
+        const key = SETTINGS_MAP[settingId];
+        const el = document.getElementById(toggleId);
+        if (el && key && res[key] !== undefined) {
+          el.checked = res[key];
+        }
+      });
+      if (res.blockedCounter) trapsVal.textContent = res.blockedCounter;
+      if (res.bypassedSites) sitesBypassed.textContent = res.bypassedSites.length;
+      updateUI(res.enabled !== false);
     });
-    if (res.blockedCounter) trapsVal.textContent = res.blockedCounter;
-    if (res.bypassedSites) sitesBypassed.textContent = res.bypassedSites.length;
-    updateUI(res.enabled !== false);
+  }
+
+  loadAllSettings();
+
+  // Listen for storage changes to sync with options page
+  chrome.storage.onChanged.addListener((changes, area) => {
+    if (area === 'local') {
+      Object.keys(changes).forEach(key => {
+        // Find setting ID
+        const settingId = Object.entries(SETTINGS_MAP).find(([, v]) => v === key);
+        if (settingId) {
+          const [id] = settingId;
+          // Update popup toggle if exists
+          const popupToggleId = Object.entries(POPUP_TOGGLE_MAP).find(([, v]) => v === id);
+          if (popupToggleId) {
+            const el = document.getElementById(popupToggleId[0]);
+            if (el) el.checked = changes[key].newValue;
+          }
+        }
+        if (key === 'enabled') {
+          mainToggle.checked = changes[key].newValue !== false;
+          updateUI(changes[key].newValue !== false);
+        }
+      });
+    }
   });
 
   chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
@@ -152,14 +218,35 @@ document.addEventListener('DOMContentLoaded', () => {
     updateUI(isEnabled);
   });
 
-  Object.keys(toggles).forEach(key => {
-    if (toggles[key]) {
-      toggles[key].addEventListener('change', () => {
-        chrome.storage.local.set({ [storageKeys[key]]: toggles[key].checked });
-        chrome.runtime.sendMessage({ type: 'TOGGLE_MODULE', key: storageKeys[key], value: toggles[key].checked });
+  Object.entries(POPUP_TOGGLE_MAP).forEach(([toggleId, settingId]) => {
+    const el = document.getElementById(toggleId);
+    const key = SETTINGS_MAP[settingId];
+    if (el && key) {
+      el.addEventListener('change', () => {
+        chrome.storage.local.set({ [key]: el.checked });
+        chrome.runtime.sendMessage({ type: 'TOGGLE_MODULE', key, value: el.checked });
       });
     }
   });
+
+  // Bulk actions
+  function setAllModules(enabled) {
+    const settings = {};
+    Object.entries(SETTINGS_MAP).forEach(([id, key]) => {
+      settings[key] = enabled;
+      // Update popup toggles if they exist
+      const popupToggleId = Object.entries(POPUP_TOGGLE_MAP).find(([, v]) => v === id);
+      if (popupToggleId) {
+        const el = document.getElementById(popupToggleId[0]);
+        if (el) el.checked = enabled;
+      }
+    });
+    chrome.storage.local.set(settings);
+    chrome.runtime.sendMessage({ type: 'TOGGLE_ALL_MODULES', enabled });
+  }
+
+  toggleAllOn.addEventListener('click', () => setAllModules(true));
+  toggleAllOff.addEventListener('click', () => setAllModules(false));
 
   btnWhitelist.addEventListener('click', () => {
     if (currentHostname) {

@@ -141,20 +141,36 @@
   // ==========================================
   // 5. DOM TRAP NEUTRALIZATION
   // ==========================================
-  const AD_TRAP_PATTERNS = [
+  // SAFELIST: Never interfere with these host domains (AI, productivity, etc.)
+  var SAFELIST_HOSTS = [
+    'gemini.google.com', 'chatgpt.com', 'chat.openai.com', 'claude.ai',
+    'google.com', 'googleapis.com', 'googleusercontent.com',
+    'anthropic.com', 'deepseek.com', 'kagi.com', 'perplexity.ai',
+    'bing.com', 'microsoft.com', 'office.com', 'notion.so', 'notion.com',
+    'figma.com', 'canva.com', 'linear.app', 'slack.com', 'discord.com',
+    'github.com', 'gitlab.com', 'stackoverflow.com'
+  ];
+  function isSafelistedHost() {
+    var host = window.location.hostname || '';
+    return SAFELIST_HOSTS.some(function(s) { return host.includes(s); });
+  }
+
+  var AD_TRAP_PATTERNS = [
     /ad[s]?[-_]?google/i, /ad[-_]?banner/i, /ad[-_]?unit/i,
     /ad[-_]?container/i, /ad[-_]?wrapper/i, /adblock/i,
-    /blockadblock/i, /fuckadblock/i, /sponsor/i,
-    /taboola/i, /outbrain/i, /admiral/i, /ciduno/i,
-    /prebid/i, /moat/i, /intent/i, /adskeeper/i,
+    /blockadblock/i, /fuckadblock/i, /taboola/i, /outbrain/i,
+    /admiral/i, /ciduno/i, /prebid/i, /moat/i,
     /propeller/i, /hilltop/i, /diablo/i
   ];
   function isAdTrapElement(el) {
     if (!el || !(el instanceof HTMLElement)) return false;
-    const id = el.id || '';
-    const className = typeof el.className === 'string' ? el.className : '';
-    const src = el.getAttribute ? (el.getAttribute('src') || '') : '';
-    return AD_TRAP_PATTERNS.some(p => p.test(id) || p.test(className) || p.test(src));
+    if (isSafelistedHost()) return false;
+    var id = el.id || '';
+    var className = typeof el.className === 'string' ? el.className : '';
+    var src = el.getAttribute ? (el.getAttribute('src') || '') : '';
+    return AD_TRAP_PATTERNS.some(function(p) {
+      return p.test(id) || p.test(className) || p.test(src);
+    });
   }
   const origOffsetHeight = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'offsetHeight');
   if (origOffsetHeight) {
@@ -305,6 +321,23 @@
   // ==========================================
   // 9. COOKIE CONSENT AUTO-DISMISS
   // ==========================================
+  function isVisible(el) {
+    if (!el || el.nodeType !== 1) return false;
+    var style = window.getComputedStyle(el);
+    if (style.display === 'none' || style.visibility === 'hidden' || style.opacity === '0') return false;
+    var rect = el.getBoundingClientRect();
+    return rect.width > 0 && rect.height > 0;
+  }
+
+  function safeClick(el) {
+    if (el && typeof el.click === 'function') {
+      el.click();
+    } else if (el && el.dispatchEvent) {
+      var evt = new MouseEvent('click', { view: window, bubbles: true, cancelable: true });
+      el.dispatchEvent(evt);
+    }
+  }
+
   function autoDismissCookieConsent() {
     const CONSENT_SELECTORS = [
       '#onetrust-accept-btn-handler', '.onetrust-accept-btn-handler',
@@ -314,17 +347,17 @@
       '[data-testid="cookie-accept"]', 'button[data-cky-tag="accept-button"]',
       '.iubenda-cs-accept-btn', '#iubenda-cs-accept', '.cky-btn-accept',
       '.fc-cta-consent', '#cookieconsentaccept', '.cookiescript_accept',
-      '#cookiescript_accept', 'button[class*="accept"]', 'a[class*="accept"]',
+      '#cookiescript_accept',
       '.cmpboxbtn.cmpboxbtnyes', '#cmpbntyestxt',
       '.qc-cmp2-summary-buttons button[mode="primary"]',
       '#qcCmpButtons button[onclick*="accept"]', '.evidon-banner-acceptbutton',
       '#evidon-acceptbutton', '#truste-consent-button', '.trustarc-agree-btn',
       '.ncmp__btn[data-gdpr-consent="accept"]', '#gdpr-banner button',
-      '[class*="cookie"] button[class*="accept"]', '[class*="consent"] button:first-child',
-      '.modal-footer .btn-primary', '.modal .btn-success'
+      '[class*="cookie"] button[id*="accept"]', '[class*="consent"] button[id*="accept"]'
     ];
 
     function tryDismiss() {
+      if (isSafelistedHost()) return false;
       for (const sel of CONSENT_SELECTORS) {
         const btn = document.querySelector(sel);
         if (btn && isVisible(btn)) {
@@ -340,15 +373,16 @@
       for (const btn of buttons) {
         const text = (btn.textContent || '').trim().toLowerCase();
         if (CONSENT_TEXT.some(p => p.test(text)) && isVisible(btn)) {
-          const parent = btn.closest('[class*="cookie"], [class*="consent"], [id*="cookie"], [id*="consent"], [class*="gdpr"]');
+          const parent = btn.closest('[class*="cookie"], [class*="consent"], [id*="cookie"], [id*="consent"], [class*="gdpr"], #onetrust, #CybotCookiebotDialog');
           if (parent) {
             safeClick(btn);
             return true;
           }
         }
       }
-      // Hide overlays
-      document.querySelectorAll('[class*="cookie-banner"], [class*="cookie-notice"], [class*="consent-banner"], [id*="cookie-banner"], [class*="gdpr"]').forEach(el => {
+      // Hide overlays - only on non-safelisted hosts
+      if (isSafelistedHost()) return false;
+      document.querySelectorAll('[class*="cookie-banner"], [class*="cookie-notice"], [class*="consent-banner"], [id*="cookie-banner"], #onetrust-banner-sdk, #CybotCookiebotDialog').forEach(el => {
         if (isVisible(el)) el.style.display = 'none';
       });
       return false;
@@ -1108,6 +1142,7 @@
   // Handles "CLICK IMAGE WAIT 10 SECOND" patterns where ads appear
   // after clicking an image and can only be removed after 10-15 seconds.
   function bypassClickImageWait() {
+    if (isSafelistedHost()) return;
     // Detect "click image" / "wait 10 seconds" text patterns
     const WAIT_PATTERNS = /click\s+(?:the\s+)?image|wait\s+\d+\s*sec|click\s+(?:on\s+)?(?:the\s+)?(?:image|photo|picture|ad)|wait\s+(?:for\s+)?\d+|despues\s+de\s+\d+|espera\s+\d+/i;
 
@@ -1117,54 +1152,40 @@
     }
 
     // Common ad/banner selectors that appear after clicking
-    const AD_SELECTORS = [
+    // NOTE: We do NOT blanket-remove all fixed/absolute z-index>100 elements
+    // — that would hide legitimate download buttons on TG mod sites, etc.
+    var AD_SELECTORS = [
       '[class*="banner"]', '[id*="banner"]',
-      '[class*="popup"]', '[id*="popup"]',
-      '[class*="modal"]', '[id*="modal"]',
-      '[class*="overlay"]', '[id*="overlay"]',
       '[class*="interstitial"]', '[id*="interstitial"]',
       '[class*="ad-wrapper"]', '[class*="ad-container"]',
       '[class*="ad-block"]', '[id*="ad-block"]',
       '[class*="广告"]', '[id*="广告"]',
       'iframe[src*="ad"]', 'iframe[src*="banner"]',
       'iframe[src*="pop"]', 'iframe[src*="click"]',
-      '[style*="position: fixed"]',
-      '[style*="position:fixed"]',
-      'div[style*="z-index: 999"]',
-      'div[style*="z-index:999"]',
-      'div[style*="z-index: 9999"]',
-      'div[style*="z-index:9999"]',
-      'div[style*="z-index: 99999"]',
-      'div[style*="z-index:99999"]'
+      // Only remove fixed-position overlays with explicit ad-related class/id
+      'div[class*="ad-overlay"]', 'div[id*="ad-overlay"]',
+      'div[class*="ad-modal"]', 'div[id*="ad-modal"]',
+      'div[class*="popunder"]', 'div[id*="popunder"]',
+      'div[class*="clickunder"]', 'div[id*="clickunder"]'
     ];
 
     function hideClickImageAds() {
-      AD_SELECTORS.forEach(sel => {
+      AD_SELECTORS.forEach(function(sel) {
         try {
-          document.querySelectorAll(sel).forEach(el => {
-            const style = window.getComputedStyle(el);
-            const zIndex = parseInt(style.zIndex) || 0;
-            const pos = style.position;
-            // Only remove if it's a fixed/absolute overlay with high z-index
-            if ((pos === 'fixed' || pos === 'absolute') && zIndex > 100) {
-              el.style.display = 'none';
-              el.style.visibility = 'hidden';
-              el.remove();
-            }
+          document.querySelectorAll(sel).forEach(function(el) {
+            el.style.display = 'none';
+            el.style.visibility = 'hidden';
+            el.remove();
           });
         } catch(e) {}
       });
 
-      // Also remove iframes that look like ads
-      document.querySelectorAll('iframe').forEach(iframe => {
-        const src = (iframe.src || '').toLowerCase();
-        const cls = (iframe.className || '').toLowerCase();
-        if (/ad|banner|pop|click|interstitial/i.test(src + ' ' + cls)) {
-          const style = window.getComputedStyle(iframe);
-          const zIndex = parseInt(style.zIndex) || 0;
-          if (zIndex > 100 || style.position === 'fixed') {
-            iframe.remove();
-          }
+      // Also remove iframes that look like ads — only if src/class explicitly matches ad patterns
+      document.querySelectorAll('iframe').forEach(function(iframe) {
+        var src = (iframe.src || '').toLowerCase();
+        var cls = (iframe.className || '').toLowerCase();
+        if (/ad[s]?[-_]?/i.test(src + ' ' + cls) || /doubleclick|googlesyndication|googlead/i.test(src)) {
+          iframe.remove();
         }
       });
     }
@@ -1343,7 +1364,7 @@
       toast.id = 'brave-shield-sponsor-toast';
       toast.style.cssText = 'position:fixed;top:80px;right:20px;background:#1a1a2e;color:#00d4ff;padding:10px 16px;border-radius:8px;border:1px solid #333;font-size:13px;z-index:999999;font-family:system-ui,sans-serif;box-shadow:0 4px 12px rgba(0,0,0,0.4);';
       toast.textContent = '⏭ Skipped: ' + category;
-      document.body.appendChild(toast);
+      if (document.body) document.body.appendChild(toast);
       setTimeout(() => toast.remove(), 2000);
     }
 
@@ -1424,7 +1445,8 @@
         -webkit-touch-callout: default !important;
       }
     `;
-    (document.head || document.documentElement).appendChild(style);
+    const parent = document.head || document.documentElement;
+    if (parent) parent.appendChild(style);
 
     document.addEventListener('selectstart', e => e.stopImmediatePropagation(), true);
     document.addEventListener('copy', e => e.stopImmediatePropagation(), true);
@@ -1436,6 +1458,7 @@
   // 32. ANTI-SCROLL LOCK
   // ==========================================
   function antiScrollLock() {
+    if (isSafelistedHost()) return;
     const style = document.createElement('style');
     style.textContent = `
       html, body {
@@ -1449,7 +1472,8 @@
         height: auto !important;
       }
     `;
-    (document.head || document.documentElement).appendChild(style);
+    const parent = document.head || document.documentElement;
+    if (parent) parent.appendChild(style);
     document.documentElement.style.overflow = 'auto';
     document.body.style.overflow = 'auto';
     console.log('[BraveShield Bypass] Anti-scroll lock active');
@@ -1459,17 +1483,19 @@
   // 33. AUTO-CLOSE POPUPS
   // ==========================================
   function autoClosePopups() {
+    if (isSafelistedHost()) return;
     const origOpen = window.open;
     window.open = function(url, target, features) {
       console.log('[BraveShield Bypass] Blocked popup: ' + url);
       return null;
     };
 
-    // Close existing popups
+    // Close existing popups - only target obvious ad/spam popups, not app modals
     const closePopups = () => {
       document.querySelectorAll(
-        'div[class*="popup"], div[class*="modal"][style*="z-index"], ' +
-        'div[id*="popup"], div[id*="modal"][style*="z-index"]'
+        'div[class*="popup"][class*="ad"], div[class*="modal"][class*="ad"], ' +
+        'div[id*="popup"][class*="ad"], div[id*="modal"][class*="ad"], ' +
+        'div[class*="popunder"], div[class*="clickunder"]'
       ).forEach(el => {
         const z = parseInt(window.getComputedStyle(el).zIndex) || 0;
         if (z > 1000) el.remove();
@@ -1580,64 +1606,6 @@
   }
 
   // ==========================================
-  // 38. FORCE DARK MODE
-  // ==========================================
-  function forceDarkMode() {
-    const style = document.createElement('style');
-    style.id = 'brave-shield-dark-mode';
-    style.textContent = `
-      @media (prefers-color-scheme: light) {
-        :root {
-          color-scheme: dark !important;
-        }
-        body, html {
-          background-color: #1a1a1a !important;
-          color: #e0e0e0 !important;
-        }
-        a { color: #6ea8fe !important; }
-        img { opacity: 0.9; }
-      }
-    `;
-    (document.head || document.documentElement).appendChild(style);
-    console.log('[BraveShield Bypass] Dark mode forced');
-  }
-
-  // ==========================================
-  // 39. READER MODE
-  // ==========================================
-  function readerMode() {
-    // Remove common clutter elements
-    const CLUTTER_SELECTORS = [
-      '.advertisement', '.ad', '.ads', '.ad-container',
-      '.social-share', '.share-buttons', '.related-articles',
-      '.newsletter-signup', '.cookie-banner',
-      '[class*="promo"]', '[class*="banner"]', '[id*="ad-"]'
-    ];
-
-    function cleanPage() {
-      CLUTTER_SELECTORS.forEach(sel => {
-        try {
-          document.querySelectorAll(sel).forEach(el => {
-            if (el.querySelector('article') || el.querySelector('.article-body')) return;
-            el.style.display = 'none';
-          });
-        } catch(e) {}
-      });
-
-      const main = document.querySelector('article, .article, .content');
-      if (main) {
-        main.style.maxWidth = '800px';
-        main.style.margin = '0 auto';
-        main.style.padding = '20px';
-      }
-    }
-
-    cleanPage();
-    setTimeout(cleanPage, 1000);
-    console.log('[BraveShield Bypass] Reader mode active');
-  }
-
-  // ==========================================
   // RUN ALL MODULES
   // ==========================================
   const modules = [
@@ -1677,9 +1645,7 @@
     ['Module 34: Block Clipboard Read', blockClipboardRead],
     ['Module 35: Block Notification Spam', blockNotificationSpam],
     ['Module 36: Timezone Spoofing', timezoneSpoof],
-    ['Module 37: Geolocation Spoofing', geolocationSpoof],
-    ['Module 38: Force Dark Mode', forceDarkMode],
-    ['Module 39: Reader Mode', readerMode]
+    ['Module 37: Geolocation Spoofing', geolocationSpoof]
   ];
 
   modules.forEach(([name, fn]) => {

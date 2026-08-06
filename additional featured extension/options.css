@@ -7,11 +7,22 @@ body{background:#111;color:#E5E5E5;font-family:system-ui,-apple-system,'Segoe UI
 .brand-icon svg{width:18px;height:18px;fill:#111}
 .hdr-t h1{font-size:16px;font-weight:600;color:#F5F5F5;letter-spacing:-0.01em;line-height:1.2}
 .hdr-t span{font-size:11px;color:#787774}
-.tabs{display:flex;gap:1px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.06);border-radius:8px;padding:3px;margin-bottom:24px}
-.tab{flex:1;padding:8px;text-align:center;font-size:12px;font-weight:500;color:#787774;cursor:pointer;border:none;border-radius:6px;background:transparent;font-family:inherit;transition:background-color 150ms ease,color 150ms ease}
+.tabs{display:flex;gap:1px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.06);border-radius:8px;padding:3px;margin-bottom:24px;flex-wrap:wrap}
+.tab{flex:1;padding:8px;text-align:center;font-size:12px;font-weight:500;color:#787774;cursor:pointer;border:none;border-radius:6px;background:transparent;font-family:inherit;transition:background-color 150ms ease,color 150ms ease;min-width:90px}
 .tab:hover{color:#A0A0A0}
 .tab.active{background:#1E1E1E;color:#F5F5F5;box-shadow:0 1px 3px rgba(0,0,0,0.2)}
 .panel{display:none}.panel.active{display:block}
+
+.all-modules-header{border:none;background:transparent;padding:0;margin-bottom:16px}
+.all-modules-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+.search-box{flex:1;position:relative;min-width:200px}
+.search-box svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#787774;pointer-events:none}
+.search-box input{width:100%;padding:10px 10px 10px 40px;background:#111;border:1px solid rgba(255,255,255,0.06);border-radius:6px;color:#E5E5E5;font-size:13px;font-family:inherit}
+.search-box input:focus{outline:2px solid #E5E5E5;outline-offset:1px}
+.bulk-actions{display:flex;gap:8px}
+.abtn.sec{background:#1E1E1E;color:#A0A0A0;border-color:rgba(255,255,255,0.06)}
+.abtn.sec:hover{background:#2A2A2A;color:#E5E5E5}
+
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 .card{border:1px solid rgba(255,255,255,0.06);border-radius:8px;padding:16px;background:#1E1E1E;transition:border-color 200ms ease}
 .card:hover{border-color:rgba(255,255,255,0.1)}

@@ -31,3 +31,8 @@ package-lock.json
 *.tmp
 *.bak
 *.log
+
+# Memory files (local only, never commit)
+MEMORY.md
+MEMORY_MAP.md
+FUTURE-PROJECTS.md

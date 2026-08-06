@@ -5,20 +5,31 @@
     "action": {
       "type": "modifyHeaders",
       "requestHeaders": [
-        {
-          "header": "Sec-CH-UA-Arch",
-          "operation": "set",
-          "value": "\"x86\""
-        },
-        {
-          "header": "Sec-CH-UA-Brave",
-          "operation": "remove"
-        }
+        { "header": "Sec-CH-UA-Arch", "operation": "set", "value": "\"x86\"" },
+        { "header": "Sec-CH-UA-Brave", "operation": "remove" },
+        { "header": "Sec-CH-UA-Platform", "operation": "set", "value": "\"Windows\"" },
+        { "header": "Sec-CH-UA-Model", "operation": "remove" },
+        { "header": "X-Brave-Tracking", "operation": "remove" },
+        { "header": "Sec-CH-UA-Full-Version-List", "operation": "set", "value": "\"Chromium\";v=\"124.0.0.0\", \"Google Chrome\";v=\"124.0.0.0\", \"Not-A.Brand\";v=\"99.0.0.0\"" }
       ]
     },
     "condition": {
       "urlFilter": "*",
-      "resourceTypes": ["main_frame", "sub_frame", "stylesheet", "script", "image", "xmlhttprequest"]
+      "resourceTypes": ["main_frame", "sub_frame", "stylesheet", "script", "image", "xmlhttprequest", "font", "media", "websocket"]
+    }
+  },
+  {
+    "id": 2,
+    "priority": 1,
+    "action": {
+      "type": "modifyHeaders",
+      "responseHeaders": [
+        { "header": "X-Brave-Shields", "operation": "remove" }
+      ]
+    },
+    "condition": {
+      "urlFilter": "*",
+      "resourceTypes": ["main_frame"]
     }
   }
 ]

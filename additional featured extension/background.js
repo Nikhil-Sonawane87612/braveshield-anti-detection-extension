@@ -4,7 +4,7 @@
  */
 
 chrome.runtime.onInstalled.addListener(() => {
-  console.log('[BraveShield Bypass] v4.6.0 installed/updated.');
+  console.log('[BraveShield Bypass] v4.6.1 installed/updated.');
   chrome.storage.local.set({
     enabled: true,
     autoBypassLinks: true,
@@ -50,7 +50,7 @@ chrome.runtime.onInstalled.addListener(() => {
     bypassedSites: [],
     whitelist: [],
     blacklist: [],
-    version: '4.6.0'
+    version: '4.6.1'
   });
 });
 

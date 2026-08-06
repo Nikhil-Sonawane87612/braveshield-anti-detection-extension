@@ -1,6 +1,15 @@
-# BraveShield Bypass Pro v4.6 - Complete Anti-Detection Engine
+# BraveShield Bypass Pro v4.6.1 - Complete Anti-Detection Engine
 
 **37 modules** that bypass everything: Brave Shields, adblock traps, link shorteners, cookie consents, countdown timers, click-image-wait patterns, WebRTC leaks, and auto-clicks download buttons.
+
+---
+
+## New in v4.6.1
+
+### ✅ Icons Fixed (Load-Error Resolved)
+- Replaced the corrupt/tiny extension icons with valid, logo-based PNGs (icon16 / icon48 / icon128)
+- This resolves the Brave load error: *"Could not load icon 'icons/icon16.png' specified in 'action'"*
+- All 40 module options now default to **ON** (recommended "Maximum" configuration) on both the Options page and in `background.js`
 
 ---
 

@@ -237,8 +237,11 @@ document.addEventListener('DOMContentLoaded', () => {
       if (matchingSettings.length === 0) return;
 
       html += `
-        <div class="card">
-          <div class="card-t"><div class="ci">${cat.icon}</div><h3>${cat.label}</h3><span>${matchingSettings.length}</span></div>
+        <div class="card cat-acc">
+          <button type="button" class="card-t cat-acc-head" data-cat="${catId}" aria-expanded="true">
+            <div class="ci">${cat.icon}</div><h3>${cat.label}</h3><span>${matchingSettings.length}</span>
+          </button>
+          <div class="cat-acc-body">
       `;
 
       matchingSettings.forEach(id => {
@@ -251,10 +254,23 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
       });
 
-      html += '</div>';
+      html += `
+          </div>
+        </div>
+      `;
     });
 
     allModulesGrid.innerHTML = html;
+
+    // Accordion: click a category header to collapse/expand its modules
+    allModulesGrid.querySelectorAll('.cat-acc-head').forEach(head => {
+      head.addEventListener('click', () => {
+        const collapsed = head.classList.toggle('collapsed');
+        head.setAttribute('aria-expanded', String(!collapsed));
+        const body = head.nextElementSibling;
+        if (body) body.style.display = collapsed ? 'none' : '';
+      });
+    });
 
     // Attach change listeners
     allModulesGrid.querySelectorAll('input[type="checkbox"]').forEach(cb => {
@@ -292,20 +308,68 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 150);
   });
 
-  // Bulk actions
+// Bulk actions
   function setAllModules(enabled) {
     const settings = {};
+    const enabledMap = {};
     Object.entries(SETTINGS_MAP).forEach(([id, key]) => {
       settings[key] = enabled;
+      enabledMap[key] = enabled;
       const el = document.getElementById(id);
       if (el) el.checked = enabled;
     });
     chrome.storage.local.set(settings);
+    chrome.runtime.sendMessage({ type: 'TOGGLE_ALL_MODULES', enabled, enabledMap });
     showToast(enabled ? 'All modules enabled' : 'All modules disabled');
   }
 
   toggleAllOn.addEventListener('click', () => setAllModules(true));
   toggleAllOff.addEventListener('click', () => setAllModules(false));
+
+  // Per-category Enable All / Disable All buttons
+  function setCategoryModules(category, enabled) {
+    const settingIds = MODULE_CATEGORIES_FLAT[category] || [];
+    if (settingIds.length === 0) {
+      showToast('This tab has no module toggles');
+      return;
+    }
+    const settings = {};
+    const modulesPayload = {};
+    settingIds.forEach(id => {
+      const key = SETTINGS_MAP[id];
+      if (key) {
+        settings[key] = enabled;
+        modulesPayload[key] = enabled;
+        document.querySelectorAll('#' + id).forEach(el => { el.checked = enabled; });
+      }
+    });
+    chrome.storage.local.set(settings);
+    chrome.runtime.sendMessage({ type: 'TOGGLE_CATEGORY_MODULES', category, enabled, modules: modulesPayload });
+    showToast(category + ' ' + (enabled ? 'enabled' : 'disabled'));
+  }
+
+  // Flat category map for options page (uses MODULE_CATEGORIES keys which are more granular)
+  const MODULE_CATEGORIES_FLAT = {};
+  Object.entries(MODULE_CATEGORIES).forEach(([catId, cat]) => {
+    MODULE_CATEGORIES_FLAT[catId] = cat.settings;
+  });
+
+  // Extra category aliases referenced by options.html card/panel bulk buttons
+  MODULE_CATEGORIES_FLAT['page-auto'] = ['auto-cookies', 'auto-scroll', 'auto-redirects', 'auto-popunder'];
+  MODULE_CATEGORIES_FLAT['adblock-det'] = ['adblock-detect', 'fake-bait'];
+  MODULE_CATEGORIES_FLAT['youtube-bypass'] = ['yt-ads', 'yt-sponsor'];
+  // Non-module tabs (Sites, Profile) have no module toggles
+  MODULE_CATEGORIES_FLAT['sites'] = [];
+  MODULE_CATEGORIES_FLAT['profile'] = [];
+
+  // Wire up cat-btn-sm buttons (both mini card buttons and panel bulk buttons)
+  document.querySelectorAll('.cat-btn-sm[data-category]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const category = btn.dataset.category;
+      const enable = btn.dataset.enable === 'true';
+      setCategoryModules(category, enable);
+    });
+  });
 
   // Load all settings
   const storageKeys = Object.values(SETTINGS_MAP);
@@ -329,6 +393,203 @@ document.addEventListener('DOMContentLoaded', () => {
     settings.webglRenderer = document.getElementById('webgl-renderer').value;
     chrome.storage.local.set(settings, () => {
       showToast('Saved');
+    });
+  });
+
+// === Export / Import settings as JSON ===
+  const exportBtn = document.getElementById('btn-export');
+  const importBtn = document.getElementById('btn-import');
+  const importFile = document.getElementById('import-file');
+
+  function gatherAllSettings(cb) {
+    chrome.storage.local.get(Object.values(SETTINGS_MAP), (res) => {
+      const data = { version: chrome.runtime.getManifest ? chrome.runtime.getManifest().version : '4.6.0', exportedAt: new Date().toISOString(), settings: res };
+      cb(data);
+    });
+  }
+
+  if (exportBtn) {
+    exportBtn.addEventListener('click', () => {
+      gatherAllSettings((data) => {
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'braveshield-settings.json';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        showToast('Settings exported');
+      });
+    });
+  }
+
+  if (importBtn && importFile) {
+    importBtn.addEventListener('click', () => importFile.click());
+    importFile.addEventListener('change', (e) => {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const parsed = JSON.parse(reader.result);
+          const settings = parsed.settings || parsed;
+          // Only import known keys
+          const clean = {};
+          Object.values(SETTINGS_MAP).forEach(key => {
+            if (settings[key] !== undefined) clean[key] = !!settings[key];
+          });
+          if (settings.webglVendor) clean.webglVendor = settings.webglVendor;
+          if (settings.webglRenderer) clean.webglRenderer = settings.webglRenderer;
+          chrome.storage.local.set(clean, () => {
+            // Refresh checkboxes
+            Object.entries(SETTINGS_MAP).forEach(([id, key]) => {
+              const el = document.getElementById(id);
+              if (el && clean[key] !== undefined) el.checked = clean[key];
+            });
+            const wv = document.getElementById('webgl-vendor');
+            const wr = document.getElementById('webgl-renderer');
+            if (wv && clean.webglVendor) wv.value = clean.webglVendor;
+            if (wr && clean.webglRenderer) wr.value = clean.webglRenderer;
+            buildAllModulesGrid();
+            showToast('Settings imported');
+          });
+        } catch(err) {
+          showToast('Import failed: invalid JSON');
+        }
+      };
+      reader.readAsText(file);
+      e.target.value = '';
+    });
+  }
+
+  // === Stats Dashboard ===
+  function loadStats() {
+    const storageKeys = Object.values(SETTINGS_MAP);
+    chrome.storage.local.get(['blockedCounter', 'bypassedSites', 'sessionStart', ...storageKeys], (res) => {
+      const statModules = document.getElementById('stat-modules');
+      const statBypassed = document.getElementById('stat-bypassed');
+      const statTraps = document.getElementById('stat-traps');
+      const statTime = document.getElementById('stat-time');
+
+      if (statModules) {
+        const active = storageKeys.filter(k => res[k] === true).length;
+        statModules.textContent = active;
+      }
+      if (statBypassed) statBypassed.textContent = (res.bypassedSites || []).length;
+      if (statTraps) statTraps.textContent = res.blockedCounter || 0;
+
+      // Session time tracking
+      let sessionStart = res.sessionStart;
+      if (!sessionStart) {
+        sessionStart = Date.now();
+        chrome.storage.local.set({ sessionStart });
+      } else {
+        const elapsed = Math.floor((Date.now() - sessionStart) / 60000);
+        if (statTime) statTime.textContent = elapsed + 'm';
+      }
+    });
+  }
+  loadStats();
+
+  // === Profile Presets (per site) ===
+  const presetSiteInput = document.getElementById('preset-site');
+  const presetList = document.getElementById('preset-list');
+  const btnSavePreset = document.getElementById('btn-save-preset');
+
+  function renderPresets() {
+    if (!presetList) return;
+    chrome.storage.local.get(['presets'], (res) => {
+      const presets = res.presets || {};
+      const entries = Object.keys(presets);
+      if (entries.length === 0) {
+        presetList.innerHTML = '<div class="empty">No presets saved</div>';
+        return;
+      }
+      presetList.innerHTML = '';
+      entries.forEach(site => {
+        const div = document.createElement('div');
+        div.className = 'litem';
+        const applied = Object.values(presets[site]).filter(v => v === true).length;
+        div.innerHTML = '<span>' + site + ' (' + applied + ' on)</span><span class="rm" data-site="' + site + '">Remove</span>';
+        presetList.appendChild(div);
+        // Click to apply
+        div.addEventListener('click', (e) => {
+          if (e.target.className === 'rm') return;
+          const config = presets[site];
+          chrome.storage.local.set(config, () => {
+            Object.entries(SETTINGS_MAP).forEach(([id, key]) => {
+              const el = document.getElementById(id);
+              if (el && config[key] !== undefined) el.checked = config[key];
+            });
+            buildAllModulesGrid();
+            loadStats();
+            showToast('Preset applied: ' + site);
+          });
+        });
+      });
+      presetList.querySelectorAll('.rm').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const site = btn.dataset.site;
+          chrome.storage.local.get(['presets'], (res) => {
+            const presets = res.presets || {};
+            delete presets[site];
+            chrome.storage.local.set({ presets }, () => renderPresets());
+          });
+        });
+      });
+    });
+  }
+  renderPresets();
+
+  if (btnSavePreset && presetSiteInput) {
+    btnSavePreset.addEventListener('click', () => {
+      const site = presetSiteInput.value.trim();
+      if (!site) { showToast('Enter a site'); return; }
+      gatherAllSettings((data) => {
+        chrome.storage.local.get(['presets'], (res) => {
+          const presets = res.presets || {};
+          presets[site] = data.settings;
+          chrome.storage.local.set({ presets }, () => {
+            presetSiteInput.value = '';
+            renderPresets();
+            showToast('Preset saved: ' + site);
+          });
+        });
+      });
+    });
+  }
+
+  // === Keyboard Shortcuts ===
+  document.addEventListener('keydown', (e) => {
+    // Ctrl+Shift+E -> Enable all
+    if (e.ctrlKey && e.shiftKey && (e.key === 'E' || e.key === 'e')) {
+      e.preventDefault();
+      setAllModules(true);
+    }
+    // Ctrl+Shift+D -> Disable all
+    else if (e.ctrlKey && e.shiftKey && (e.key === 'D' || e.key === 'd')) {
+      e.preventDefault();
+      setAllModules(false);
+    }
+    // Ctrl+Shift+F -> focus search
+    else if (e.ctrlKey && e.shiftKey && (e.key === 'F' || e.key === 'f')) {
+      e.preventDefault();
+      if (searchInput) searchInput.focus();
+    }
+  });
+
+  // === Real-time sync ===
+  // Reflect changes made in the popup (or any other context) immediately.
+  chrome.storage.onChanged.addListener((changes, area) => {
+    if (area !== 'local') return;
+    Object.entries(SETTINGS_MAP).forEach(([id, key]) => {
+      if (changes[key] && changes[key].newValue !== undefined) {
+        const el = document.getElementById(id);
+        if (el) el.checked = !!changes[key].newValue;
+      }
     });
   });
 

@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -22,7 +22,12 @@
     <button class="tab" data-tab="all">All Modules</button>
   </div>
 
-  <div class="panel active" id="panel-bypass">
+<div class="panel active" id="panel-bypass">
+    <div class="panel-bulk">
+      <span class="panel-bulk-label">Auto Bypass</span>
+      <button class="cat-btn-sm" data-category="auto-bypass" data-enable="true">Enable All</button>
+      <button class="cat-btn-sm" data-category="auto-bypass" data-enable="false">Disable All</button>
+    </div>
     <div class="grid">
       <div class="card">
         <div class="card-t"><div class="ci">Z</div><h3>Link &amp; Timer</h3><span>3</span></div>
@@ -31,26 +36,31 @@
         <div class="row"><div class="rinfo"><h4>Click Image Wait Bypass</h4><span>Ad click-and-wait patterns</span></div><label class="sw"><input type="checkbox" id="click-wait" checked><span class="sl"></span></label></div>
       </div>
       <div class="card">
-        <div class="card-t"><div class="ci">A</div><h3>Page Automation</h3><span>4</span></div>
+        <div class="card-t"><div class="ci">A</div><h3>Page Automation</h3><span>4</span><div class="card-bulk"><button class="cat-btn-sm" data-category="page-auto" data-enable="true">On</button><button class="cat-btn-sm" data-category="page-auto" data-enable="false">Off</button></div></div>
         <div class="row"><div class="rinfo"><h4>Cookie Consent Auto-Dismiss</h4><span>20+ frameworks</span></div><label class="sw"><input type="checkbox" id="auto-cookies" checked><span class="sl"></span></label></div>
         <div class="row"><div class="rinfo"><h4>Smart Auto-Scroll</h4><span>Scroll-lock pages</span></div><label class="sw"><input type="checkbox" id="auto-scroll" checked><span class="sl"></span></label></div>
         <div class="row"><div class="rinfo"><h4>Redirect Chain Follower</h4><span>Meta refresh + click-throughs</span></div><label class="sw"><input type="checkbox" id="auto-redirects" checked><span class="sl"></span></label></div>
         <div class="row"><div class="rinfo"><h4>Popunder Interceptor</h4><span>Blocks ad windows</span></div><label class="sw"><input type="checkbox" id="auto-popunder" checked><span class="sl"></span></label></div>
       </div>
       <div class="card">
-        <div class="card-t"><div class="ci">D</div><h3>Adblock Detection</h3><span>2</span></div>
+        <div class="card-t"><div class="ci">D</div><h3>Adblock Detection</h3><span>2</span><div class="card-bulk"><button class="cat-btn-sm" data-category="adblock-det" data-enable="true">On</button><button class="cat-btn-sm" data-category="adblock-det" data-enable="false">Off</button></div></div>
         <div class="row"><div class="rinfo"><h4>Adblock Detection Bypass</h4><span>Hispanoads, Admiral, BlockAdBlock</span></div><label class="sw"><input type="checkbox" id="adblock-detect" checked><span class="sl"></span></label></div>
         <div class="row"><div class="rinfo"><h4>Network Bait Faking</h4><span>200 OK for ad probes</span></div><label class="sw"><input type="checkbox" id="fake-bait" checked><span class="sl"></span></label></div>
       </div>
       <div class="card">
-        <div class="card-t"><div class="ci">Y</div><h3>YouTube</h3><span>2</span></div>
+        <div class="card-t"><div class="ci">Y</div><h3>YouTube</h3><span>2</span><div class="card-bulk"><button class="cat-btn-sm" data-category="youtube-bypass" data-enable="true">On</button><button class="cat-btn-sm" data-category="youtube-bypass" data-enable="false">Off</button></div></div>
         <div class="row"><div class="rinfo"><h4>YouTube Ad Blocking</h4><span>Video, display, overlay ads</span></div><label class="sw"><input type="checkbox" id="yt-ads" checked><span class="sl"></span></label></div>
         <div class="row"><div class="rinfo"><h4>SponsorBlock</h4><span>Skip sponsored segments</span></div><label class="sw"><input type="checkbox" id="yt-sponsor" checked><span class="sl"></span></label></div>
       </div>
     </div>
   </div>
 
-  <div class="panel" id="panel-stealth">
+<div class="panel" id="panel-stealth">
+    <div class="panel-bulk">
+      <span class="panel-bulk-label">Stealth</span>
+      <button class="cat-btn-sm" data-category="stealth" data-enable="true">Enable All</button>
+      <button class="cat-btn-sm" data-category="stealth" data-enable="false">Disable All</button>
+    </div>
     <div class="grid">
       <div class="card">
         <div class="card-t"><div class="ci">B</div><h3>Core Stealth</h3><span>6</span></div>
@@ -85,7 +95,12 @@
     </div>
   </div>
 
-  <div class="panel" id="panel-extra">
+<div class="panel" id="panel-extra">
+    <div class="panel-bulk">
+      <span class="panel-bulk-label">Extra</span>
+      <button class="cat-btn-sm" data-category="extra" data-enable="true">Enable All</button>
+      <button class="cat-btn-sm" data-category="extra" data-enable="false">Disable All</button>
+    </div>
     <div class="grid">
       <div class="card">
         <div class="card-t"><div class="ci">X</div><h3>Accessibility</h3><span>4</span></div>
@@ -108,17 +123,27 @@
     </div>
   </div>
 
-  <div class="panel" id="panel-youtube">
+<div class="panel" id="panel-youtube">
+    <div class="panel-bulk">
+      <span class="panel-bulk-label">YouTube</span>
+      <button class="cat-btn-sm" data-category="youtube" data-enable="true">Enable All</button>
+      <button class="cat-btn-sm" data-category="youtube" data-enable="false">Disable All</button>
+    </div>
     <div class="grid">
       <div class="card">
-        <div class="card-t"><div class="ci">Y</div><h3>YouTube</h3><span>2</span></div>
-        <div class="row"><div class="rinfo"><h4>YouTube Ad Blocking</h4><span>Video, display, overlays, promoted</span></div><label class="sw"><input type="checkbox" id="yt-ads2" checked><span class="sl"></span></label></div>
-        <div class="row"><div class="rinfo"><h4>SponsorBlock</h4><span>Skip sponsored segments</span></div><label class="sw"><input type="checkbox" id="yt-sponsor2" checked><span class="sl"></span></label></div>
+        <div class="card-t"><div class="ci">Y</div><h3>YouTube</h3><span>2</span><div class="card-bulk"><button class="cat-btn-sm" data-category="youtube" data-enable="true">On</button><button class="cat-btn-sm" data-category="youtube" data-enable="false">Off</button></div></div>
+        <div class="row"><div class="rinfo"><h4>YouTube Ad Blocking</h4><span>Video, display, overlays, promoted</span></div><label class="sw"><input type="checkbox" id="yt-ads" checked><span class="sl"></span></label></div>
+        <div class="row"><div class="rinfo"><h4>SponsorBlock</h4><span>Skip sponsored segments</span></div><label class="sw"><input type="checkbox" id="yt-sponsor" checked><span class="sl"></span></label></div>
       </div>
     </div>
   </div>
 
-  <div class="panel" id="panel-sites">
+<div class="panel" id="panel-sites">
+    <div class="panel-bulk">
+      <span class="panel-bulk-label">Sites</span>
+      <button class="cat-btn-sm" data-category="sites" data-enable="true">Enable All</button>
+      <button class="cat-btn-sm" data-category="sites" data-enable="false">Disable All</button>
+    </div>
     <div class="grid">
       <div class="card">
         <div class="card-t"><div class="ci">+</div><h3>Whitelist</h3><span>Active on these</span></div>
@@ -137,7 +162,19 @@
     </div>
   </div>
 
-  <div class="panel" id="panel-profile">
+<div class="panel" id="panel-profile">
+    <div class="panel-bulk">
+      <span class="panel-bulk-label">Profile</span>
+      <button class="cat-btn-sm" data-category="profile" data-enable="true">Enable All</button>
+      <button class="cat-btn-sm" data-category="profile" data-enable="false">Disable All</button>
+    </div>
+    <!-- Stats Dashboard -->
+    <div class="stats-grid">
+      <div class="scard"><div class="sval" id="stat-modules">37</div><div class="slbl">Modules Active</div></div>
+      <div class="scard"><div class="sval" id="stat-bypassed">0</div><div class="slbl">Sites Bypassed</div></div>
+      <div class="scard"><div class="sval" id="stat-traps">0</div><div class="slbl">Traps Bypassed</div></div>
+      <div class="scard"><div class="sval" id="stat-time">0m</div><div class="slbl">Time Spent</div></div>
+    </div>
     <div class="grid">
       <div class="card">
         <div class="card-t"><div class="ci">G</div><h3>WebGL Profile</h3><span>GPU strings</span></div>
@@ -157,7 +194,24 @@
           </select>
         </div>
       </div>
-</div>
+      <div class="card">
+        <div class="card-t"><div class="ci">P</div><h3>Profile Presets</h3><span>Per-site configs</span></div>
+        <div class="fgroup"><label>Site</label>
+          <div class="add-row"><input type="text" id="preset-site" placeholder="example.com"><button id="btn-save-preset">Save</button></div>
+        </div>
+        <div class="listBox" id="preset-list"><div class="empty">No presets saved</div></div>
+      </div>
+      <div class="card">
+        <div class="card-t"><div class="ci">&#8596;</div><h3>Backup &amp; Restore</h3><span>JSON</span></div>
+        <div class="fgroup"><label>Export / Import settings</label>
+          <div class="add-row">
+            <button id="btn-export">Export JSON</button>
+            <button id="btn-import">Import JSON</button>
+          </div>
+          <input type="file" id="import-file" accept="application/json" style="display:none">
+        </div>
+      </div>
+    </div>
   </div>
 
   <div class="panel" id="panel-all">

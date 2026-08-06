@@ -55,7 +55,10 @@ input:checked+.sl:before{transform:translateX(16px);background:#111}
 .litem:last-child{border-bottom:none}
 .litem .rm{color:#787774;cursor:pointer;font-size:10px;font-weight:500;transition:color 150ms ease}.litem .rm:hover{color:#F87171}
 .add-row{display:flex;gap:6px;margin-top:8px}
+.add-row select{flex:1;padding:7px 10px;background:#111;border:1px solid rgba(255,255,255,0.06);border-radius:6px;color:#E5E5E5;font-size:12px;font-family:inherit}
+.add-row select:focus{outline:2px solid #E5E5E5;outline-offset:1px}
 .add-row input{flex:1;padding:7px 10px;background:#111;border:1px solid rgba(255,255,255,0.06);border-radius:6px;color:#E5E5E5;font-size:12px;font-family:inherit}
+.preset-desc{font-size:11px;color:#787774;margin-top:8px;line-height:1.4;min-height:16px}
 .add-row input:focus{outline:2px solid #E5E5E5;outline-offset:1px}
 .add-row button{background:#E5E5E5;color:#111;border:none;padding:7px 14px;border-radius:6px;font-size:11px;font-weight:600;font-family:inherit;cursor:pointer;transition:background-color 150ms ease}
 .add-row button:hover{background:#D4D4D4}

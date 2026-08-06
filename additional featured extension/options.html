@@ -113,12 +113,12 @@
         <div class="card-t"><div class="ci">P</div><h3>Privacy</h3><span>3</span></div>
         <div class="row"><div class="rinfo"><h4>Block Clipboard Read</h4><span>Prevent site access</span></div><label class="sw"><input type="checkbox" id="anti-clipboard-read" checked><span class="sl"></span></label></div>
         <div class="row"><div class="rinfo"><h4>Block Notification Spam</h4><span>Auto-deny requests</span></div><label class="sw"><input type="checkbox" id="anti-notification-spam" checked><span class="sl"></span></label></div>
-        <div class="row"><div class="rinfo"><h4>Anti-Screenshot Detection</h4><span>Block detection</span></div><label class="sw"><input type="checkbox" id="anti-screenshot-detect"><span class="sl"></span></label></div>
+        <div class="row"><div class="rinfo"><h4>Anti-Screenshot Detection</h4><span>Block detection</span></div><label class="sw"><input type="checkbox" id="anti-screenshot-detect" checked><span class="sl"></span></label></div>
       </div>
       <div class="card">
         <div class="card-t"><div class="ci">G</div><h3>Region</h3><span>2</span></div>
-        <div class="row"><div class="rinfo"><h4>Timezone Spoofing</h4><span>Match UA region</span></div><label class="sw"><input type="checkbox" id="timezone-spoof"><span class="sl"></span></label></div>
-        <div class="row"><div class="rinfo"><h4>Geolocation Spoofing</h4><span>Fake GPS coordinates</span></div><label class="sw"><input type="checkbox" id="geolocation-spoof"><span class="sl"></span></label></div>
+<div class="row"><div class="rinfo"><h4>Timezone Spoofing</h4><span>Match UA region</span></div><label class="sw"><input type="checkbox" id="timezone-spoof" checked><span class="sl"></span></label></div>
+        <div class="row"><div class="rinfo"><h4>Geolocation Spoofing</h4><span>Fake GPS coordinates</span></div><label class="sw"><input type="checkbox" id="geolocation-spoof" checked><span class="sl"></span></label></div>
       </div>
     </div>
   </div>
@@ -176,6 +176,21 @@
       <div class="scard"><div class="sval" id="stat-time">0m</div><div class="slbl">Time Spent</div></div>
     </div>
     <div class="grid">
+      <div class="card">
+        <div class="card-t"><div class="ci">R</div><h3>Quick Presets</h3><span>One-click profiles</span></div>
+        <div class="fgroup"><label>User Level</label>
+          <div class="add-row">
+            <select id="preset-select">
+              <option value="">-- Select preset --</option>
+              <option value="normal">Normal - Balanced</option>
+              <option value="moderate">Pro - Strong</option>
+              <option value="pro">Maximum - Aggressive</option>
+            </select>
+            <button id="btn-apply-preset">Apply</button>
+          </div>
+        </div>
+        <div class="preset-desc" id="preset-desc">Choose a preset to instantly configure all modules for your needs.</div>
+      </div>
       <div class="card">
         <div class="card-t"><div class="ci">G</div><h3>WebGL Profile</h3><span>GPU strings</span></div>
         <div class="fgroup"><label>Vendor</label><input type="text" id="webgl-vendor" value="Google Inc. (NVIDIA)"></div>

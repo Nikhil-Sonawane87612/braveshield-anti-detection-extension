@@ -1,37 +1,30 @@
-# BraveShield Bypass Pro v4.6.0 — Implementation TODO
+# BraveShield Bypass Pro v4.6.1 — Implementation TODO
 
-## Critical Fixes
-- [x] Module 17: Override only `Navigator.prototype` (remove instance override)
-- [x] Module 20: Keep `isYouTubeAPI()` skip (already present)
-- [x] Module 27: Add YouTube API guard to fetch/XHR overrides
-- [x] Module 5: Null guard `document.head || document.documentElement`
-- [x] Module 15: Null guard for `document.createElement('a')` (verify present)
+## Icon Fix (Critical)
+- [x] Regenerate icons/icon16.png, icon48.png, icon128.png from `C:\Users\hinik\Downloads\logo.png`
+- [x] Verify all 3 icons are valid PNGs and loadable
 
-## Safe-List
-- [x] `isSafelistedHost()` for AI sites (already present)
-- [x] Disable modules 5, 8, 27, 28, 31, 32 on those hosts (already present)
+## Recommended Options
+- [ ] Confirm all 39 module defaults are `true` in background.js onInstalled
+- [ ] Ensure non-default toggles (anti-screenshot-detect, timezone-spoof, geolocation-spoof) are enabled
 
-## UI & Options
-- [x] All Modules tab: search, bulk enable/disable, category accordion groups
-- [x] Popup: bulk enable/disable in header (already present)
-- [x] Per-category Enable All/Disable All buttons in popup + options
-- [x] Fix sync: global/category toggles reflect in All Modules + category tabs
+## New: User-Level Presets (Normal / Pro)
+- [ ] Define preset configs: Normal, Moderate, Pro, Maximum (module mapping)
+- [ ] Add preset dropdown in options.html (Profile tab)
+- [ ] Add preset parsing/applying logic in options.js + settings.js
 
-## Performance
-- [x] Defer SponsorBlock hooks until video element ready
-- [x] Batch/debounce YouTube DOM mutations
-- [x] Rate-limit periodic DOM scans
+## Testing
+- [ ] Fix brittle regexes in _test.js (YouTube API guard, category mapping)
+- [ ] Run node _test.js and confirm all tests pass
+- [ ] Run node --check on all JS files
 
-## Redirect Fix
-- [x] Fallback navigation logic for simulated clicks (TG mod APK sites)
+## Packaging
+- [ ] Remove _metadata/ folder
+- [ ] Bump version in manifest.json + background.js to 4.6.1
+- [ ] Update README.md + TODO.md
 
-## Extra Features
-- [x] Export/import settings as JSON
-- [x] Profile presets per site
-- [x] Keyboard shortcuts for toggles
-- [x] Stats dashboard (time spent, modules active)
+## Release
+- [ ] Rebuild BraveShield-Bypass-Pro-4.6.1.zip
+- [ ] Commit changes, push to origin/main
+- [ ] Create tag v4.6.1 + GitHub release with zip attached
 
-## Deployment
-- [x] Bump version in manifest.json to 4.6.0
-- [x] Remove `_metadata/` before packaging
-- [x] Update README.md + MEMORY files

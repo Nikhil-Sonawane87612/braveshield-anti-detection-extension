@@ -4,16 +4,24 @@
  */
 
 chrome.runtime.onInstalled.addListener(() => {
-  console.log('[BraveShield Bypass] v4.0 installed/updated.');
+  console.log('[BraveShield Bypass] v4.6.0 installed/updated.');
   chrome.storage.local.set({
     enabled: true,
-    bypassShieldsTraps: true,
-    maskBraveApi: true,
-    spoofChromeUA: true,
     autoBypassLinks: true,
+    autoBypassTimers: true,
+    clickImageWait: true,
     autoDismissCookies: true,
     autoScroll: true,
+    autoRedirects: true,
     interceptPopunders: true,
+    bypassAdblockDetection: true,
+    fakeNetworkBait: true,
+    maskBraveApi: true,
+    maskClientHints: true,
+    maskGPC: true,
+    stubAnalytics: true,
+    bypassShieldsTraps: true,
+    normalizeWebgl: true,
     fixBraveLeak: true,
     fixStorageLeak: true,
     normalizeAudio: true,
@@ -21,15 +29,28 @@ chrome.runtime.onInstalled.addListener(() => {
     hideWebdriver: true,
     preventWebRTC: true,
     autoDenyPermissions: true,
-    fakeNetworkBait: true,
     clampTimers: true,
     spoofNavigator: true,
     screenConsistency: true,
+    spoofFonts: true,
+    cleanCSS: true,
+    youtubeAds: true,
+    sponsorBlock: true,
+    forceRightClick: true,
+    forceTextSelect: true,
+    antiScrollLock: true,
+    autoClosePopups: true,
+    blockClipboardRead: true,
+    blockNotificationSpam: true,
+    antiScreenshotDetect: true,
+    timezoneSpoof: true,
+    geolocationSpoof: true,
+    selectedUA: 'random',
     blockedCounter: 0,
     bypassedSites: [],
     whitelist: [],
     blacklist: [],
-    version: '4.0.0'
+    version: '4.6.0'
   });
 });
 

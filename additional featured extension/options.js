@@ -131,6 +131,66 @@ const SETTING_LABELS = {
 
 const ALL_SETTING_IDS = Object.keys(SETTINGS_MAP);
 
+// User-level presets: which modules are enabled for each profile tier.
+const USER_PRESETS = {
+  'normal': {
+    label: 'Normal',
+    desc: 'Balanced protection for everyday browsing',
+    settings: {
+      autoBypassLinks: true, autoBypassTimers: true, clickImageWait: true,
+      autoDismissCookies: true, autoScroll: true, autoRedirects: true,
+      interceptPopunders: true, bypassAdblockDetection: true, fakeNetworkBait: true,
+      maskBraveApi: true, maskClientHints: true, maskGPC: true, stubAnalytics: true,
+      bypassShieldsTraps: true, fixBraveLeak: true, fixStorageLeak: true,
+      hideWebdriver: true, preventWebRTC: true, autoDenyPermissions: true,
+      spoofNavigator: true, forceRightClick: true, forceTextSelect: true,
+      antiScrollLock: true, blockClipboardRead: true, blockNotificationSpam: true,
+      youtubeAds: true,
+      normalizeWebgl: false, normalizeAudio: false, normalizeCanvas: false,
+      clampTimers: false, cleanCSS: false, spoofFonts: false, screenConsistency: false,
+      sponsorBlock: false, autoClosePopups: false,
+      antiScreenshotDetect: false, timezoneSpoof: false, geolocationSpoof: false
+    }
+  },
+  'moderate': {
+    label: 'Pro',
+    desc: 'Strong anti-detection with system consistency',
+    settings: {
+      autoBypassLinks: true, autoBypassTimers: true, clickImageWait: true,
+      autoDismissCookies: true, autoScroll: true, autoRedirects: true,
+      interceptPopunders: true, bypassAdblockDetection: true, fakeNetworkBait: true,
+      maskBraveApi: true, maskClientHints: true, maskGPC: true, stubAnalytics: true,
+      bypassShieldsTraps: true, normalizeWebgl: true, fixBraveLeak: true,
+      fixStorageLeak: true, normalizeAudio: true, normalizeCanvas: true,
+      hideWebdriver: true, preventWebRTC: true, autoDenyPermissions: true,
+      clampTimers: true, spoofNavigator: true, cleanCSS: true, spoofFonts: true,
+      youtubeAds: true, sponsorBlock: true, forceRightClick: true,
+      forceTextSelect: true, antiScrollLock: true, autoClosePopups: true,
+      blockClipboardRead: true, blockNotificationSpam: true,
+      screenConsistency: false, antiScreenshotDetect: false,
+      timezoneSpoof: false, geolocationSpoof: false
+    }
+  },
+  'pro': {
+    label: 'Maximum',
+    desc: 'Aggressive anti-detection for maximum stealth',
+    settings: {
+      autoBypassLinks: true, autoBypassTimers: true, clickImageWait: true,
+      autoDismissCookies: true, autoScroll: true, autoRedirects: true,
+      interceptPopunders: true, bypassAdblockDetection: true, fakeNetworkBait: true,
+      maskBraveApi: true, maskClientHints: true, maskGPC: true, stubAnalytics: true,
+      bypassShieldsTraps: true, normalizeWebgl: true, fixBraveLeak: true,
+      fixStorageLeak: true, normalizeAudio: true, normalizeCanvas: true,
+      hideWebdriver: true, preventWebRTC: true, autoDenyPermissions: true,
+      clampTimers: true, spoofNavigator: true, cleanCSS: true, spoofFonts: true,
+      screenConsistency: true, youtubeAds: true, sponsorBlock: true,
+      forceRightClick: true, forceTextSelect: true, antiScrollLock: true,
+      autoClosePopups: true, blockClipboardRead: true, blockNotificationSpam: true,
+      antiScreenshotDetect: true, timezoneSpoof: true, geolocationSpoof: true
+    }
+  }
+};
+
 document.addEventListener('DOMContentLoaded', () => {
   const toast = document.getElementById('toast');
   const saveBtn = document.getElementById('save-settings');
@@ -358,6 +418,17 @@ document.addEventListener('DOMContentLoaded', () => {
   MODULE_CATEGORIES_FLAT['page-auto'] = ['auto-cookies', 'auto-scroll', 'auto-redirects', 'auto-popunder'];
   MODULE_CATEGORIES_FLAT['adblock-det'] = ['adblock-detect', 'fake-bait'];
   MODULE_CATEGORIES_FLAT['youtube-bypass'] = ['yt-ads', 'yt-sponsor'];
+  MODULE_CATEGORIES_FLAT['auto-bypass'] = MODULE_CATEGORIES['auto-bypass'].settings;
+  MODULE_CATEGORIES_FLAT['stealth'] = Object.values(MODULE_CATEGORIES).filter(c => ['stealth-core','stealth-fingerprint','stealth-anti-auto','stealth-consistency'].includes(Object.keys(MODULE_CATEGORIES).find(k => MODULE_CATEGORIES[k] === c))).flatMap(c => c.settings);
+  MODULE_CATEGORIES_FLAT['extra'] = [...MODULE_CATEGORIES['accessibility'].settings, ...MODULE_CATEGORIES['privacy'].settings];
+  MODULE_CATEGORIES_FLAT['stealth-core'] = MODULE_CATEGORIES['stealth-core'].settings;
+  MODULE_CATEGORIES_FLAT['stealth-fingerprint'] = MODULE_CATEGORIES['stealth-fingerprint'].settings;
+  MODULE_CATEGORIES_FLAT['stealth-anti-auto'] = MODULE_CATEGORIES['stealth-anti-auto'].settings;
+  MODULE_CATEGORIES_FLAT['stealth-consistency'] = MODULE_CATEGORIES['stealth-consistency'].settings;
+  MODULE_CATEGORIES_FLAT['accessibility'] = MODULE_CATEGORIES['accessibility'].settings;
+  MODULE_CATEGORIES_FLAT['privacy'] = MODULE_CATEGORIES['privacy'].settings;
+  MODULE_CATEGORIES_FLAT['youtube'] = MODULE_CATEGORIES['youtube'].settings;
+  MODULE_CATEGORIES_FLAT['region'] = MODULE_CATEGORIES['region'].settings;
   // Non-module tabs (Sites, Profile) have no module toggles
   MODULE_CATEGORIES_FLAT['sites'] = [];
   MODULE_CATEGORIES_FLAT['profile'] = [];
@@ -544,7 +615,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   renderPresets();
 
-  if (btnSavePreset && presetSiteInput) {
+if (btnSavePreset && presetSiteInput) {
     btnSavePreset.addEventListener('click', () => {
       const site = presetSiteInput.value.trim();
       if (!site) { showToast('Enter a site'); return; }
@@ -558,6 +629,41 @@ document.addEventListener('DOMContentLoaded', () => {
             showToast('Preset saved: ' + site);
           });
         });
+      });
+    });
+  }
+
+  // === User-Level Quick Presets (Normal / Pro / Maximum) ===
+  const presetSelect = document.getElementById('preset-select');
+  const btnApplyPreset = document.getElementById('btn-apply-preset');
+  const presetDesc = document.getElementById('preset-desc');
+
+  if (presetSelect) {
+    presetSelect.addEventListener('change', () => {
+      const preset = USER_PRESETS[presetSelect.value];
+      if (presetDesc) {
+        presetDesc.textContent = preset ? (preset.label + ' - ' + preset.desc) : 'Choose a preset to instantly configure all modules for your needs.';
+      }
+    });
+  }
+
+  if (btnApplyPreset) {
+    btnApplyPreset.addEventListener('click', () => {
+      const presetKey = presetSelect ? presetSelect.value : '';
+      const preset = USER_PRESETS[presetKey];
+      if (!preset) { showToast('Select a preset first'); return; }
+
+      // Apply preset settings to storage
+      chrome.storage.local.set(preset.settings, () => {
+        // Update all checkboxes in the UI
+        Object.entries(SETTINGS_MAP).forEach(([id, key]) => {
+          if (preset.settings[key] !== undefined) {
+            document.querySelectorAll('#' + id).forEach(el => { el.checked = preset.settings[key]; });
+          }
+        });
+        buildAllModulesGrid();
+        loadStats();
+        showToast('Preset applied: ' + preset.label);
       });
     });
   }

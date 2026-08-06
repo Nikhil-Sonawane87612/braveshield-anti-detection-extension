@@ -146,7 +146,147 @@ const SETTING_LABELS = {
 // All setting IDs in order
 const ALL_SETTING_IDS = Object.keys(SETTINGS_MAP);
 
+// User-level presets: which modules are enabled for each profile tier.
+// Each preset maps a storage key -> boolean.
+const USER_PRESETS = {
+  'normal': {
+    label: 'Normal',
+    desc: 'Balanced protection for everyday browsing',
+    // Core auto-bypass + basic stealth + privacy, no aggressive fingerprint changes
+    settings: {
+      autoBypassLinks: true,
+      autoBypassTimers: true,
+      clickImageWait: true,
+      autoDismissCookies: true,
+      autoScroll: true,
+      autoRedirects: true,
+      interceptPopunders: true,
+      bypassAdblockDetection: true,
+      fakeNetworkBait: true,
+      maskBraveApi: true,
+      maskClientHints: true,
+      maskGPC: true,
+      stubAnalytics: true,
+      bypassShieldsTraps: true,
+      fixBraveLeak: true,
+      fixStorageLeak: true,
+      hideWebdriver: true,
+      preventWebRTC: true,
+      autoDenyPermissions: true,
+      spoofNavigator: true,
+      forceRightClick: true,
+      forceTextSelect: true,
+      antiScrollLock: true,
+      blockClipboardRead: true,
+      blockNotificationSpam: true,
+      // Disabled in Normal (less aggressive)
+      normalizeWebgl: false,
+      normalizeAudio: false,
+      normalizeCanvas: false,
+      clampTimers: false,
+      cleanCSS: false,
+      spoofFonts: false,
+      screenConsistency: false,
+      youtubeAds: true,
+      sponsorBlock: false,
+      autoClosePopups: false,
+      antiScreenshotDetect: false,
+      timezoneSpoof: false,
+      geolocationSpoof: false
+    }
+  },
+  'moderate': {
+    label: 'Pro',
+    desc: 'Strong anti-detection with system consistency',
+    settings: {
+      autoBypassLinks: true,
+      autoBypassTimers: true,
+      clickImageWait: true,
+      autoDismissCookies: true,
+      autoScroll: true,
+      autoRedirects: true,
+      interceptPopunders: true,
+      bypassAdblockDetection: true,
+      fakeNetworkBait: true,
+      maskBraveApi: true,
+      maskClientHints: true,
+      maskGPC: true,
+      stubAnalytics: true,
+      bypassShieldsTraps: true,
+      normalizeWebgl: true,
+      fixBraveLeak: true,
+      fixStorageLeak: true,
+      normalizeAudio: true,
+      normalizeCanvas: true,
+      hideWebdriver: true,
+      preventWebRTC: true,
+      autoDenyPermissions: true,
+      clampTimers: true,
+      spoofNavigator: true,
+      cleanCSS: true,
+      spoofFonts: true,
+      youtubeAds: true,
+      sponsorBlock: true,
+      forceRightClick: true,
+      forceTextSelect: true,
+      antiScrollLock: true,
+      autoClosePopups: true,
+      blockClipboardRead: true,
+      blockNotificationSpam: true,
+      // Disabled in Pro (keep screen/geo realistic)
+      screenConsistency: false,
+      antiScreenshotDetect: false,
+      timezoneSpoof: false,
+      geolocationSpoof: false
+    }
+  },
+  'pro': {
+    label: 'Maximum',
+    desc: 'Aggressive anti-detection for maximum stealth',
+    settings: {
+      autoBypassLinks: true,
+      autoBypassTimers: true,
+      clickImageWait: true,
+      autoDismissCookies: true,
+      autoScroll: true,
+      autoRedirects: true,
+      interceptPopunders: true,
+      bypassAdblockDetection: true,
+      fakeNetworkBait: true,
+      maskBraveApi: true,
+      maskClientHints: true,
+      maskGPC: true,
+      stubAnalytics: true,
+      bypassShieldsTraps: true,
+      normalizeWebgl: true,
+      fixBraveLeak: true,
+      fixStorageLeak: true,
+      normalizeAudio: true,
+      normalizeCanvas: true,
+      hideWebdriver: true,
+      preventWebRTC: true,
+      autoDenyPermissions: true,
+      clampTimers: true,
+      spoofNavigator: true,
+      cleanCSS: true,
+      spoofFonts: true,
+      screenConsistency: true,
+      youtubeAds: true,
+      sponsorBlock: true,
+      forceRightClick: true,
+      forceTextSelect: true,
+      antiScrollLock: true,
+      autoClosePopups: true,
+      blockClipboardRead: true,
+      blockNotificationSpam: true,
+      antiScreenshotDetect: true,
+      timezoneSpoof: true,
+      geolocationSpoof: true
+    }
+  }
+};
+
 // Export for use in popup.js and options.js
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { SETTINGS_MAP, MODULE_CATEGORIES, SETTING_LABELS, ALL_SETTING_IDS };
+  module.exports = { SETTINGS_MAP, MODULE_CATEGORIES, SETTING_LABELS, ALL_SETTING_IDS, USER_PRESETS };
 }

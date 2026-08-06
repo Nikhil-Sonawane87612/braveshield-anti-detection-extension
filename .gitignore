@@ -8,6 +8,9 @@ _metadata/
 # Exclude other zips
 additional featured extension.zip
 
+# Tooling artifact
+.opencode/
+
 # OS files
 .DS_Store
 Thumbs.db

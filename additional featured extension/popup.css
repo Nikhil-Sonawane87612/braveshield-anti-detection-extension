@@ -34,6 +34,15 @@ body::-webkit-scrollbar{width:5px}body::-webkit-scrollbar-track{background:trans
 .bulk-actions-popup{display:flex;gap:6px;padding:0 16px 8px}
 .bulk-actions-popup .abtn{flex:1;padding:6px 10px;font-size:10px}
 
+.cat-bulk-popup{display:flex;flex-wrap:wrap;gap:4px;padding:0 16px 8px;justify-content:center}
+.cat-group{display:flex;flex-direction:column;gap:2px;flex:1;min-width:70px}
+.cat-bulk-popup .cat-btn{width:100%;padding:5px 8px;font-size:10px;font-weight:500;font-family:inherit;cursor:pointer;background:#1E1E1E;color:#A0A0A0;border:1px solid rgba(255,255,255,0.06);border-radius:4px;transition:background-color 150ms ease,color 150ms ease,border-color 150ms ease}
+.cat-bulk-popup .cat-btn:hover{background:#2A2A2A;color:#E5E5E5;border-color:rgba(255,255,255,0.1)}
+.cat-bulk-popup .cat-btn.active{background:#E5E5E5;color:#111;border-color:#E5E5E5}
+.cat-mini{display:flex;gap:2px}
+.cat-btn-sm{flex:1;padding:2px 4px;font-size:9px;font-weight:500;font-family:inherit;cursor:pointer;background:#1E1E1E;color:#787774;border:1px solid rgba(255,255,255,0.06);border-radius:3px;transition:background-color 150ms ease,color 150ms ease}
+.cat-btn-sm:hover{background:#2A2A2A;color:#E5E5E5}
+
 .mti{display:flex;align-items:center;gap:10px}
 .mtico{width:32px;height:32px;border-radius:8px;background:#2A2A2A;display:flex;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,0.06)}
 .mtico svg{width:16px;height:16px;fill:#A0A0A0}

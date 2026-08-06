@@ -40,6 +40,18 @@ const SETTINGS_MAP = {
   'geolocation-spoof': 'geolocationSpoof'
 };
 
+// Category mapping for bulk toggles
+const POPUP_CATEGORIES = {
+  'auto-bypass': ['auto-links', 'auto-timers', 'click-wait', 'auto-cookies', 'auto-scroll', 'auto-redirects', 'auto-popunder', 'adblock-detect', 'fake-bait'],
+  'stealth': ['mask-brave', 'mask-brands', 'mask-gpc', 'stub-vars', 'bypass-traps', 'normalize-webgl', 'fix-braveleak', 'fix-storageleak', 'normalize-audio', 'normalize-canvas', 'hide-webdriver', 'prevent-webrtc', 'deny-permissions', 'clamp-timers', 'spoof-navigator', 'clean-css', 'spoof-fonts', 'screen-consistency'],
+  'extra': ['enable-rightclick', 'enable-text-select', 'anti-scroll-lock', 'auto-close-popups', 'anti-clipboard-read', 'anti-notification-spam', 'anti-screenshot-detect'],
+  'youtube': ['yt-ads', 'yt-sponsor'],
+  'accessibility': ['enable-rightclick', 'enable-text-select', 'anti-scroll-lock', 'auto-close-popups'],
+  'privacy-region': ['anti-clipboard-read', 'anti-notification-spam', 'anti-screenshot-detect', 'timezone-spoof', 'geolocation-spoof'],
+  'sites': [],
+  'profile': []
+};
+
 const ALL_SETTING_IDS = Object.keys(SETTINGS_MAP);
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -229,11 +241,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Bulk actions
+// Bulk actions
   function setAllModules(enabled) {
     const settings = {};
+    const enabledMap = {};
     Object.entries(SETTINGS_MAP).forEach(([id, key]) => {
       settings[key] = enabled;
+      enabledMap[key] = enabled;
       // Update popup toggles if they exist
       const popupToggleId = Object.entries(POPUP_TOGGLE_MAP).find(([, v]) => v === id);
       if (popupToggleId) {
@@ -242,11 +256,102 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
     chrome.storage.local.set(settings);
-    chrome.runtime.sendMessage({ type: 'TOGGLE_ALL_MODULES', enabled });
+    chrome.runtime.sendMessage({ type: 'TOGGLE_ALL_MODULES', enabled, enabledMap });
+    // Update category button active states
+    applyCategoryButtonStates(settings);
   }
 
   toggleAllOn.addEventListener('click', () => setAllModules(true));
   toggleAllOff.addEventListener('click', () => setAllModules(false));
+
+  // Per-category bulk toggles (Enable All / Disable All for each category)
+  function setCategoryModules(category, enabled) {
+    const settingIds = POPUP_CATEGORIES[category] || [];
+    if (settingIds.length === 0) {
+      statusLabel.textContent = 'No module toggles here';
+      return;
+    }
+    const settings = {};
+    const modulesPayload = {};
+    settingIds.forEach(id => {
+      const key = SETTINGS_MAP[id];
+      if (key) {
+        settings[key] = enabled;
+        modulesPayload[key] = enabled;
+        // Update popup toggle if exists
+        const popupToggleId = Object.entries(POPUP_TOGGLE_MAP).find(([, v]) => v === id);
+        if (popupToggleId) {
+          const el = document.getElementById(popupToggleId[0]);
+          if (el) el.checked = enabled;
+        }
+      }
+    });
+    chrome.storage.local.set(settings);
+    chrome.runtime.sendMessage({ type: 'TOGGLE_CATEGORY_MODULES', category, enabled, modules: modulesPayload });
+    // Update category button active state
+    const catBtn = document.querySelector('.cat-btn[data-category="' + category + '"]');
+    if (catBtn) catBtn.classList.toggle('active', enabled);
+  }
+
+document.querySelectorAll('.cat-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const category = btn.dataset.category;
+      const isActive = btn.classList.contains('active');
+      setCategoryModules(category, !isActive);
+    });
+  });
+
+  // Per-category Enable All / Disable All buttons (cat-btn-sm)
+  document.querySelectorAll('.cat-btn-sm[data-category]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const category = btn.dataset.category;
+      const enable = btn.dataset.enable === 'true';
+      setCategoryModules(category, enable);
+    });
+  });
+
+  // Helper to refresh category button active/partial states from a settings object
+  function applyCategoryButtonStates(settingsObj) {
+    Object.entries(POPUP_CATEGORIES).forEach(([category, settingIds]) => {
+      const resolved = settingIds.map(id => {
+        const key = SETTINGS_MAP[id];
+        return settingsObj[key] !== undefined ? settingsObj[key] : null;
+      }).filter(v => v !== null);
+      if (resolved.length === 0) return;
+      const catBtn = document.querySelector('.cat-btn[data-category="' + category + '"]');
+      if (!catBtn) return;
+      const allEnabled = resolved.every(v => v === true);
+      const anyEnabled = resolved.some(v => v === true);
+      catBtn.classList.toggle('active', allEnabled);
+      catBtn.style.opacity = (anyEnabled && !allEnabled) ? '0.6' : '';
+    });
+  }
+
+  // Initialize category button states
+  function initCategoryButtons() {
+    chrome.storage.local.get(Object.values(SETTINGS_MAP), (res) => {
+      Object.entries(POPUP_CATEGORIES).forEach(([category, settingIds]) => {
+        const allEnabled = settingIds.every(id => {
+          const key = SETTINGS_MAP[id];
+          return res[key] === true;
+        });
+        const anyEnabled = settingIds.some(id => {
+          const key = SETTINGS_MAP[id];
+          return res[key] === true;
+        });
+        const catBtn = document.querySelector('.cat-btn[data-category="' + category + '"]');
+        if (catBtn) {
+          catBtn.classList.toggle('active', allEnabled);
+          // Set indeterminate state visually if needed
+          if (anyEnabled && !allEnabled) {
+            catBtn.style.opacity = '0.6';
+          }
+        }
+      });
+    });
+  }
+
+  initCategoryButtons();
 
   btnWhitelist.addEventListener('click', () => {
     if (currentHostname) {

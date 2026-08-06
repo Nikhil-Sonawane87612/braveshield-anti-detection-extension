@@ -115,8 +115,28 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       sendResponse(res);
     });
     return true;
-  } else if (message.type === 'TOGGLE_ENABLED') {
+} else if (message.type === 'TOGGLE_ENABLED') {
     chrome.storage.local.set({ enabled: message.enabled }, () => {
+      sendResponse({ success: true });
+    });
+    return true;
+  } else if (message.type === 'TOGGLE_ALL_MODULES') {
+    // Persist all module settings to true/false in one shot.
+    const allSettings = {};
+    Object.keys(message.enabledMap || {}).forEach((key) => {
+      allSettings[key] = message.enabled;
+    });
+    chrome.storage.local.set(allSettings, () => {
+      sendResponse({ success: true });
+    });
+    return true;
+  } else if (message.type === 'TOGGLE_CATEGORY_MODULES') {
+    // Persist a category batch of module settings.
+    const catSettings = {};
+    Object.keys(message.modules || {}).forEach((key) => {
+      catSettings[key] = message.modules[key];
+    });
+    chrome.storage.local.set(catSettings, () => {
       sendResponse({ success: true });
     });
     return true;

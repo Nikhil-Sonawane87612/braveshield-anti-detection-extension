@@ -1,4 +1,4 @@
-/**
+ /**
  * BraveShield Bypass Pro v4.0 - Complete Stealth Engine
  * 20+ Modules: Navigator, Client Hints, GPC, Ad Stubs, DOM Traps, WebGL,
  * Link Shortener Bypass, Cookie Consent, Timer Auto-Click, Auto-Scroll,
@@ -155,6 +155,9 @@
     return SAFELIST_HOSTS.some(function(s) { return host.includes(s); });
   }
 
+  // Modules to disable on safelisted hosts
+  var SAFELIST_DISABLED_MODULES = ['bypass-traps', 'auto-timers', 'adblock-detect', 'click-wait', 'enable-text-select', 'anti-scroll-lock'];
+
   var AD_TRAP_PATTERNS = [
     /ad[s]?[-_]?google/i, /ad[-_]?banner/i, /ad[-_]?unit/i,
     /ad[-_]?container/i, /ad[-_]?wrapper/i, /adblock/i,
@@ -176,6 +179,7 @@
   if (origOffsetHeight) {
     Object.defineProperty(HTMLElement.prototype, 'offsetHeight', {
       get: function() {
+        if (isSafelistedHost() || SAFELIST_DISABLED_MODULES.includes('bypass-traps')) return origOffsetHeight.get.call(this);
         const actual = origOffsetHeight.get.call(this);
         if (actual === 0 && isAdTrapElement(this)) return 250;
         return actual;
@@ -186,6 +190,7 @@
   if (origOffsetWidth) {
     Object.defineProperty(HTMLElement.prototype, 'offsetWidth', {
       get: function() {
+        if (isSafelistedHost() || SAFELIST_DISABLED_MODULES.includes('bypass-traps')) return origOffsetWidth.get.call(this);
         const actual = origOffsetWidth.get.call(this);
         if (actual === 0 && isAdTrapElement(this)) return 300;
         return actual;
@@ -194,6 +199,7 @@
   }
   const origGetBCR = Element.prototype.getBoundingClientRect;
   Element.prototype.getBoundingClientRect = function() {
+    if (isSafelistedHost() || SAFELIST_DISABLED_MODULES.includes('bypass-traps')) return origGetBCR.call(this);
     const rect = origGetBCR.call(this);
     if (rect.width === 0 && rect.height === 0 && isAdTrapElement(this)) {
       return { top: 100, bottom: 350, left: 100, right: 400, width: 300, height: 250, x: 100, y: 100, toJSON() { return this; } };
@@ -202,6 +208,7 @@
   };
   const origGCS = window.getComputedStyle;
   window.getComputedStyle = function(el, pseudoElt) {
+    if (isSafelistedHost() || SAFELIST_DISABLED_MODULES.includes('bypass-traps')) return origGCS.call(this, el, pseudoElt);
     const style = origGCS.call(this, el, pseudoElt);
     if (isAdTrapElement(el)) {
       return new Proxy(style, {
@@ -273,6 +280,7 @@
   // then restores normal speed so the server gets the request at
   // natural timing. No auto-click — user clicks "Get Link" manually.
   function bypassCountdownTimers() {
+    if (isSafelistedHost() || SAFELIST_DISABLED_MODULES.includes('auto-timers')) return;
     const COUNTDOWN_KEYWORDS = /countdown|timer|second|wait|delay|interval|tick|progress|clock|remaining|time/i;
 
     // === Speed up setInterval ===
@@ -329,16 +337,59 @@
     return rect.width > 0 && rect.height > 0;
   }
 
-  function safeClick(el) {
+function safeClick(el) {
+    if (!el) return;
+    // Only trigger navigation fallback on anchor/download-like elements.
+    var isNavTarget = el.tagName === 'A' || (el.getAttribute && el.getAttribute('href')) ||
+                      /download|get\s*link|continue|proceed|next/i.test((el.textContent || ''));
+
+    // Capture the target href / location BEFORE clicking so we can fall back
+    // to a direct navigation if the simulated click does not trigger a redirect.
+    var targetHref = null;
+    if (el.tagName === 'A') {
+      targetHref = el.getAttribute('href');
+    } else {
+      var parentLink = el.closest ? el.closest('a[href]') : null;
+      if (parentLink) targetHref = parentLink.getAttribute('href');
+    }
+
+    // Try simulating a click first (this fixes the "click animation but no
+    // redirect" problem on TG mod APK download sites that rely on synthetic
+    // clicks to open the download link).
+    var clicked = false;
     if (el && typeof el.click === 'function') {
       el.click();
+      clicked = true;
     } else if (el && el.dispatchEvent) {
       var evt = new MouseEvent('click', { view: window, bubbles: true, cancelable: true });
       el.dispatchEvent(evt);
+      clicked = true;
+    }
+
+    // Fallback: if the element is a navigation target and the simulated click
+    // did not cause navigation, force a reliable navigation.
+    if (isNavTarget && targetHref && clicked) {
+      setTimeout(function() {
+        try {
+          // If we're still on the same page after the click, trigger the
+          // redirect manually via window.location.href.
+          if (window.location.href.indexOf(targetHref) === -1) {
+            if (/^(https?:|mailto:|tel:)/i.test(targetHref) || targetHref.indexOf('//') === 0) {
+              window.location.href = targetHref;
+            } else if (targetHref.charAt(0) === '/' || targetHref.indexOf('.') !== -1) {
+              // Relative or extension-less URL: dispatch a fresh bubbling click
+              // as a final fallback (some sites only listen to bubbles:true clicks).
+              var evt2 = new MouseEvent('click', { view: window, bubbles: true, cancelable: true });
+              el.dispatchEvent(evt2);
+            }
+          }
+        } catch(e) {}
+      }, isNavTarget && /download|get\s*link|continue|proceed|next/i.test((el.textContent || '')) ? 1200 : 400);
     }
   }
 
   function autoDismissCookieConsent() {
+    if (isSafelistedHost()) return;
     const CONSENT_SELECTORS = [
       '#onetrust-accept-btn-handler', '.onetrust-accept-btn-handler',
       '#CybotCookiebotDialogBodyLevelButtonLevelOptinAllowAll',
@@ -421,6 +472,7 @@
   // 11. REDIRECT CHAIN FOLLOWER
   // ==========================================
   function followRedirects() {
+    if (isSafelistedHost()) return;
     const metaRefresh = document.querySelector('meta[http-equiv="refresh"]');
     if (metaRefresh) {
       const content = metaRefresh.getAttribute('content') || '';
@@ -441,6 +493,7 @@
   // 12. POPUNDER INTERCEPTOR
   // ==========================================
   function interceptPopunders() {
+    if (isSafelistedHost()) return;
     const origOpen = window.open;
     window.open = function(url, target, features) {
       const urlStr = (typeof url === 'string') ? url : (url ? url.toString() : '');
@@ -460,6 +513,8 @@
     const origCreateElement = document.createElement.bind(document);
     document.createElement = function(tag) {
       const el = origCreateElement(tag);
+      // Null guard for document.createElement('a')
+      if (!el) return el;
       if (tag.toLowerCase() === 'a') {
         const origHref = Object.getOwnPropertyDescriptor(HTMLAnchorElement.prototype, 'href');
         if (origHref) {
@@ -578,8 +633,11 @@
   // ==========================================
   // 17. NAVIGATOR.WEBDRIVER HIDE
   // ==========================================
-  function hideWebdriver() {
+function hideWebdriver() {
     try {
+      // Override ONLY on Navigator.prototype (NOT the navigator instance).
+      // Defining on both prototype AND instance causes YouTube to detect the
+      // double override and break the header/search bar.
       const desc = Object.getOwnPropertyDescriptor(Navigator.prototype, 'webdriver');
       if (desc && desc.get && desc.get.toString().includes('native')) {
         Object.defineProperty(Navigator.prototype, 'webdriver', {
@@ -653,9 +711,17 @@
   // 20. NETWORK BAIT RESPONSE FAKING
   // ==========================================
   function fakeNetworkBait() {
+    // Check if this is a YouTube API call and skip interception
+    function isYouTubeAPI(url) {
+      return /youtube\.com\/api\/|youtube\.com\/youtubei\/|youtube\.com\/embed\/|googlevideo\.com|ytimg\.com|youtube\.com\/player\//i.test(url);
+    }
+
     const origFetch = window.fetch;
     window.fetch = function(input, init) {
       const url = (typeof input === 'string') ? input : (input instanceof Request ? input.url : '');
+      if (isYouTubeAPI(url)) {
+        return origFetch.call(this, input, init);
+      }
       if (/\/ads\/|\/adserver\/|\/ad\/|\.gif\?|doubleclick|adsystem|advertising/i.test(url)) {
         console.log('[BraveShield Bypass] Faking ad-bait response: ' + url);
         return Promise.resolve(new Response('', { status: 200, statusText: 'OK', headers: { 'Content-Type': 'image/gif' } }));
@@ -671,6 +737,9 @@
     };
     const origXHRSend = XMLHttpRequest.prototype.send;
     XMLHttpRequest.prototype.send = function(body) {
+      if (this._braveShieldUrl && isYouTubeAPI(this._braveShieldUrl)) {
+        return origXHRSend.call(this, body);
+      }
       if (this._braveShieldUrl && /\/ads\/|\/adserver\/|\/ad\/|\.gif\?|doubleclick|adsystem/i.test(this._braveShieldUrl)) {
         console.log('[BraveShield Bypass] Faking XHR ad-bait: ' + this._braveShieldUrl);
         Object.defineProperty(this, 'status', { value: 200 });
@@ -936,6 +1005,7 @@
   // ==========================================
   // Bypasses common adblock detection scripts (hispanoads, Admiral, BlockAdBlock, etc.)
   function bypassAdblockDetection() {
+    if (isSafelistedHost() || SAFELIST_DISABLED_MODULES.includes('adblock-detect')) return;
     // Pattern 1: Override common adblock detection variables
     const DETECTION_VARS = [
       'adBlockDetected', 'adblock', 'adBlockEnabled', 'isAdBlockActive',
@@ -1048,10 +1118,18 @@
       return el;
     };
 
-    // Pattern 6: Override fetch/XHR to handle ad-bait probe requests
+// Pattern 6: Override fetch/XHR to handle ad-bait probe requests
+    // IMPORTANT: Never intercept YouTube API calls (would break YouTube player).
+    function isYouTubeAPI(url) {
+      return /youtube\.com\/api\/|youtube\.com\/youtubei\/|youtube\.com\/embed\/|googlevideo\.com|ytimg\.com|youtube\.com\/player\//i.test(url);
+    }
+
     const origFetch = window.fetch;
     window.fetch = function(input, init) {
       const url = (typeof input === 'string') ? input : (input instanceof Request ? input.url : '');
+      if (isYouTubeAPI(url)) {
+        return origFetch.call(this, input, init);
+      }
       if (/\/ads\/|\/adserver\/|\/ad\/|\.gif\?|doubleclick|adsystem|advertising|\/ad-bait|\/bait|adblock-detect/i.test(url)) {
         console.log('[BraveShield Bypass] Faking ad-bait fetch: ' + url);
         return Promise.resolve(new Response('', { status: 200, statusText: 'OK', headers: { 'Content-Type': 'image/gif', 'Content-Length': '43' } }));
@@ -1061,7 +1139,8 @@
 
     const origXHROpen2 = XMLHttpRequest.prototype.open;
     XMLHttpRequest.prototype.open = function(method, url, ...args) {
-      this._braveShieldAdBait = /\/ads\/|\/adserver\/|\/ad\/|\.gif\?|doubleclick|adsystem|advertising|\/ad-bait|\/bait|adblock-detect/i.test(url);
+      this._braveShieldAdBaitUrl = url || '';
+      this._braveShieldAdBait = !isYouTubeAPI(this._braveShieldAdBaitUrl) && /\/ads\/|\/adserver\/|\/ad\/|\.gif\?|doubleclick|adsystem|advertising|\/ad-bait|\/bait|adblock-detect/i.test(this._braveShieldAdBaitUrl);
       return origXHROpen2.call(this, method, url, ...args);
     };
 
@@ -1142,7 +1221,7 @@
   // Handles "CLICK IMAGE WAIT 10 SECOND" patterns where ads appear
   // after clicking an image and can only be removed after 10-15 seconds.
   function bypassClickImageWait() {
-    if (isSafelistedHost()) return;
+    if (isSafelistedHost() || SAFELIST_DISABLED_MODULES.includes('click-wait')) return;
     // Detect "click image" / "wait 10 seconds" text patterns
     const WAIT_PATTERNS = /click\s+(?:the\s+)?image|wait\s+\d+\s*sec|click\s+(?:on\s+)?(?:the\s+)?(?:image|photo|picture|ad)|wait\s+(?:for\s+)?\d+|despues\s+de\s+\d+|espera\s+\d+/i;
 
@@ -1387,32 +1466,60 @@
       });
     }
 
-    // === Run all YouTube ad blocking ===
+// === Run all YouTube ad blocking ===
+    // SponsorBlock (skipSponsoredSegments) is deferred until the video element
+    // actually initializes (readyState >= 1) to avoid slowing down YouTube
+    // startup. This is the key performance fix for slow video loads when both
+    // the Adblocker (27) and SponsorBlock (29) modules are active.
     function runYouTubeAdBlock() {
       skipVideoAds();
-      skipSponsoredSegments();
       blockDisplayAds();
     }
 
     // Hook player on page load
     hookYouTubePlayer();
 
-    // Run on interval
-    const ytInterval = setInterval(runYouTubeAdBlock, 1000);
+    // Run on a slower, debounced interval (every 2s instead of 1s) to reduce
+    // DOM mutation churn and CPU usage during startup.
+    const ytInterval = setInterval(() => {
+      runYouTubeAdBlock();
+      const video = document.querySelector('video');
+      if (video && video.readyState >= 1) {
+        skipSponsoredSegments();
+      }
+    }, 2000);
 
-    // Watch for SPA navigation (YouTube is a SPA)
+    // Watch for SPA navigation (YouTube is a SPA) — debounced to batch DOM
+    // mutations and avoid running heavy scans on every single mutation.
+    let ytDebounceTimer = null;
     const ytObserver = new MutationObserver(() => {
-      setTimeout(runYouTubeAdBlock, 500);
+      if (ytDebounceTimer) return;
+      ytDebounceTimer = setTimeout(() => {
+        ytDebounceTimer = null;
+        runYouTubeAdBlock();
+        const video = document.querySelector('video');
+        if (video && video.readyState >= 1) {
+          skipSponsoredSegments();
+        }
+      }, 800);
     });
 
     if (document.body) {
       ytObserver.observe(document.body, { childList: true, subtree: true });
     }
 
+    // Hook the video 'timeupdate' event for SponsorBlock so we only check
+    // sponsor segments while the video is actually playing.
+    document.addEventListener('timeupdate', (e) => {
+      if (e && e.target && e.target.tagName === 'VIDEO' && e.target.readyState >= 1) {
+        skipSponsoredSegments();
+      }
+    }, true);
+
     // Stop after 2 hours
     setTimeout(() => clearInterval(ytInterval), 7200000);
 
-    console.log('[BraveShield Bypass] YouTube ad blocking + SponsorBlock active');
+    console.log('[BraveShield Bypass] YouTube ad blocking + SponsorBlock active (deferred sponsor hooks)');
   }
 
   // ==========================================
@@ -1435,6 +1542,7 @@
   // 31. FORCE ENABLE TEXT SELECTION
   // ==========================================
   function forceEnableTextSelect() {
+    if (isSafelistedHost() || SAFELIST_DISABLED_MODULES.includes('enable-text-select')) return;
     const style = document.createElement('style');
     style.textContent = `
       *, *::before, *::after {
@@ -1458,7 +1566,7 @@
   // 32. ANTI-SCROLL LOCK
   // ==========================================
   function antiScrollLock() {
-    if (isSafelistedHost()) return;
+    if (isSafelistedHost() || SAFELIST_DISABLED_MODULES.includes('anti-scroll-lock')) return;
     const style = document.createElement('style');
     style.textContent = `
       html, body {

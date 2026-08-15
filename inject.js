@@ -6,6 +6,27 @@
  */
 
 // ─────────────────────────────────────────────────────
+// Master Kill Switch Check & Telemetry
+// ─────────────────────────────────────────────────────
+try {
+  if (sessionStorage.getItem('bs_master_disabled') === 'true') {
+    console.log('[Extension] BraveShield Bypass Pro is disabled via Master Kill Switch.');
+    window.addEventListener('message', (e) => {
+      if (e.data?.type === 'bs-set-master-state' && e.data.enabled) {
+        try { sessionStorage.removeItem('bs_master_disabled'); } catch (_) {}
+        window.location.reload();
+      }
+    });
+  }
+} catch (_) {}
+
+window.__bs_audit = {
+  blockedTrackers: 0,
+  sanitizedFingerprints: 0,
+  trapsBypassed: 0
+};
+
+// ─────────────────────────────────────────────────────
 // Module 0: Brave-Specific Detection Bypass
 // ─────────────────────────────────────────────────────
 (() => {
@@ -1741,4 +1762,112 @@
   });
 })();
 
-console.log('[Extension] Stealth engine v5.0.0 loaded. 30 modules active.');
+// ─────────────────────────────────────────────────────
+// Module 31: Video Turbo Engine (Option C: 16x Ad Skip, Background Play, PiP)
+// ─────────────────────────────────────────────────────
+(() => {
+  // 1. Background Video Playback (Anti-Tab-Switch Freeze)
+  try {
+    const origHidden = Object.getOwnPropertyDescriptor(Document.prototype, 'hidden');
+    const origVisibility = Object.getOwnPropertyDescriptor(Document.prototype, 'visibilityState');
+
+    Object.defineProperty(document, 'hidden', {
+      get: function () {
+        const playing = Array.from(document.querySelectorAll('video, audio')).some(m => !m.paused);
+        if (playing) return false;
+        return origHidden && origHidden.get ? origHidden.get.call(this) : false;
+      },
+      configurable: true
+    });
+
+    Object.defineProperty(document, 'visibilityState', {
+      get: function () {
+        const playing = Array.from(document.querySelectorAll('video, audio')).some(m => !m.paused);
+        if (playing) return 'visible';
+        return origVisibility && origVisibility.get ? origVisibility.get.call(this) : 'visible';
+      },
+      configurable: true
+    });
+
+    document.addEventListener('visibilitychange', (e) => {
+      const playing = Array.from(document.querySelectorAll('video, audio')).some(m => !m.paused);
+      if (playing) {
+        e.stopImmediatePropagation();
+      }
+    }, true);
+  } catch (_) {}
+
+  // 2. 16x Video Ad Fast-Forwarder & Auto-Mute
+  function handleVideoAds() {
+    const videos = document.querySelectorAll('video');
+    videos.forEach((video) => {
+      // Remove Picture-in-Picture restrictions
+      if (video.hasAttribute('disablepictureinpicture')) {
+        video.removeAttribute('disablepictureinpicture');
+      }
+      try {
+        if ('disablePictureInPicture' in video) {
+          video.disablePictureInPicture = false;
+        }
+      } catch (_) {}
+
+      // Identify ad player wrapper or ad classes
+      const isAdShowing = video.closest('.ad-showing') !== null ||
+                          video.closest('.ad-interrupting') !== null ||
+                          video.classList.contains('ad-interrupting') ||
+                          document.querySelector('.ad-showing, .ad-interrupting, .video-ads .ad-container') !== null;
+
+      if (isAdShowing) {
+        try {
+          if (video.playbackRate < 16.0) video.playbackRate = 16.0;
+          if (!video.muted) {
+            video._bsOriginalMuted = video.muted;
+            video.muted = true;
+          }
+          if (video.duration && isFinite(video.duration) && video.currentTime < video.duration - 0.1) {
+            video.currentTime = video.duration;
+          }
+          if (window.__bs_audit) window.__bs_audit.blockedTrackers++;
+        } catch (_) {}
+      } else if (video.playbackRate > 2.0) {
+        video.playbackRate = 1.0;
+        if (video._bsOriginalMuted === false) {
+          video.muted = false;
+          delete video._bsOriginalMuted;
+        }
+      }
+    });
+  }
+
+  setInterval(handleVideoAds, 400);
+
+  // 3. Message handlers for PiP and Master Kill Switch
+  window.addEventListener('message', (e) => {
+    if (e.data?.type === 'bs-trigger-pip') {
+      const mainVideo = document.querySelector('video');
+      if (mainVideo) {
+        if (document.pictureInPictureElement) {
+          document.exitPictureInPicture().catch(() => {});
+        } else {
+          mainVideo.requestPictureInPicture().catch(() => {});
+        }
+      }
+    } else if (e.data?.type === 'bs-set-master-state') {
+      try {
+        if (!e.data.enabled) {
+          sessionStorage.setItem('bs_master_disabled', 'true');
+        } else {
+          sessionStorage.removeItem('bs_master_disabled');
+        }
+        window.location.reload();
+      } catch (_) {}
+    } else if (e.data?.type === 'bs-clear-storage') {
+      try {
+        sessionStorage.clear();
+        localStorage.clear();
+      } catch (_) {}
+    }
+  });
+})();
+
+console.log('[Extension] Stealth engine v5.1.0 loaded. 31 modules active.');

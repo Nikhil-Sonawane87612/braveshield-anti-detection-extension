@@ -9,7 +9,11 @@
 <div class="page">
   <div class="hdr">
     <div class="brand-icon"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
-    <div class="hdr-t"><h1>BraveShield Bypass Pro</h1><span>30 module configuration</span></div>
+    <div class="hdr-t"><h1>BraveShield Bypass Pro</h1><span>31 module configuration (v5.1.0)</span></div>
+    <div class="hdr-master" style="margin-left:auto; display:flex; align-items:center; gap:10px;">
+      <span style="font-size:12px; font-weight:700; color:#00d26a;" id="options-master-label">ENGINE ARMED</span>
+      <label class="sw"><input type="checkbox" id="options-master-toggle" checked><span class="sl"></span></label>
+    </div>
   </div>
 
 <div class="tabs">
@@ -125,15 +129,21 @@
 
 <div class="panel" id="panel-youtube">
     <div class="panel-bulk">
-      <span class="panel-bulk-label">YouTube</span>
+      <span class="panel-bulk-label">Video &amp; YouTube</span>
       <button class="cat-btn-sm" data-category="youtube" data-enable="true">Enable All</button>
       <button class="cat-btn-sm" data-category="youtube" data-enable="false">Disable All</button>
     </div>
     <div class="grid">
       <div class="card">
-        <div class="card-t"><div class="ci">Y</div><h3>YouTube</h3><span>2</span><div class="card-bulk"><button class="cat-btn-sm" data-category="youtube" data-enable="true">On</button><button class="cat-btn-sm" data-category="youtube" data-enable="false">Off</button></div></div>
+        <div class="card-t"><div class="ci">Y</div><h3>YouTube Protections</h3><span>2</span><div class="card-bulk"><button class="cat-btn-sm" data-category="youtube" data-enable="true">On</button><button class="cat-btn-sm" data-category="youtube" data-enable="false">Off</button></div></div>
         <div class="row"><div class="rinfo"><h4>YouTube Ad Blocking</h4><span>Video, display, overlays, promoted</span></div><label class="sw"><input type="checkbox" id="yt-ads" checked><span class="sl"></span></label></div>
         <div class="row"><div class="rinfo"><h4>SponsorBlock</h4><span>Skip sponsored segments</span></div><label class="sw"><input type="checkbox" id="yt-sponsor" checked><span class="sl"></span></label></div>
+      </div>
+      <div class="card">
+        <div class="card-t"><div class="ci">⚡</div><h3>Video Turbo Engine</h3><span>3</span></div>
+        <div class="row"><div class="rinfo"><h4>16x Video Ad Fast-Forward</h4><span>Accelerates and auto-mutes video ads</span></div><label class="sw"><input type="checkbox" id="video-turbo-ad" checked><span class="sl"></span></label></div>
+        <div class="row"><div class="rinfo"><h4>Background Video Playback</h4><span>Prevents pause when switching tabs</span></div><label class="sw"><input type="checkbox" id="video-turbo-bg" checked><span class="sl"></span></label></div>
+        <div class="row"><div class="rinfo"><h4>Universal Picture-in-Picture</h4><span>Unlock PiP on all video elements</span></div><label class="sw"><input type="checkbox" id="video-turbo-pip" checked><span class="sl"></span></label></div>
       </div>
     </div>
   </div>
@@ -170,7 +180,7 @@
     </div>
     <!-- Stats Dashboard -->
     <div class="stats-grid">
-      <div class="scard"><div class="sval" id="stat-modules">30</div><div class="slbl">Modules Active</div></div>
+      <div class="scard"><div class="sval" id="stat-modules">31</div><div class="slbl">Modules Active</div></div>
       <div class="scard"><div class="sval" id="stat-bypassed">0</div><div class="slbl">Sites Bypassed</div></div>
       <div class="scard"><div class="sval" id="stat-traps">0</div><div class="slbl">Traps Bypassed</div></div>
       <div class="scard"><div class="sval" id="stat-time">0m</div><div class="slbl">Time Spent</div></div>

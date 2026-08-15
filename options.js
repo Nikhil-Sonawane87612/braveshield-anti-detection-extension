@@ -29,6 +29,9 @@ const SETTINGS_MAP = {
   'clean-css': 'cleanCSS',
   'yt-ads': 'youtubeAds',
   'yt-sponsor': 'sponsorBlock',
+  'video-turbo-ad': 'videoTurboAdSpeed',
+  'video-turbo-bg': 'videoTurboBgPlay',
+  'video-turbo-pip': 'videoTurboPip',
   'devmode': 'devMode',
   'enable-rightclick': 'forceRightClick',
   'enable-text-select': 'forceTextSelect',
@@ -68,9 +71,9 @@ const MODULE_CATEGORIES = {
     settings: ['clean-css', 'spoof-fonts', 'screen-consistency']
   },
   'youtube': {
-    label: 'YouTube',
+    label: 'Video & YouTube',
     icon: 'Y',
-    settings: ['yt-ads', 'yt-sponsor']
+    settings: ['yt-ads', 'yt-sponsor', 'video-turbo-ad', 'video-turbo-bg', 'video-turbo-pip']
   },
   'dev-tools': {
     label: 'Developer Tools',
@@ -124,6 +127,9 @@ const SETTING_LABELS = {
   'screen-consistency': { title: 'Screen/Viewport', desc: 'Realistic dimensions' },
   'yt-ads': { title: 'YouTube Ad Blocking', desc: 'Video, display, overlays, promoted' },
   'yt-sponsor': { title: 'SponsorBlock', desc: 'Skip sponsored segments' },
+  'video-turbo-ad': { title: '16x Video Ad Fast-Forward', desc: 'Accelerates and auto-mutes video ads' },
+  'video-turbo-bg': { title: 'Background Video Playback', desc: 'Prevents pause when switching tabs' },
+  'video-turbo-pip': { title: 'Universal Picture-in-Picture', desc: 'Unlock PiP on all video elements' },
   'devmode': { title: 'Undetectable Developer Mode', desc: 'Bypass CSP, anti-debug' },
   'enable-rightclick': { title: 'Force Right-Click', desc: 'Override site blocks' },
   'enable-text-select': { title: 'Force Text Selection', desc: 'Override copy blocks' },
@@ -280,6 +286,21 @@ document.addEventListener('DOMContentLoaded', () => {
   const webglProfileSelect = document.getElementById('webgl-profile-select');
   const webglVendorInput = document.getElementById('webgl-vendor');
   const webglRendererInput = document.getElementById('webgl-renderer');
+  const optionsMasterToggle = document.getElementById('options-master-toggle');
+  const optionsMasterLabel = document.getElementById('options-master-label');
+
+  if (optionsMasterToggle) {
+    optionsMasterToggle.addEventListener('change', () => {
+      const isEnabled = optionsMasterToggle.checked;
+      chrome.runtime.sendMessage({ type: 'TOGGLE_MASTER', enabled: isEnabled }, () => {
+        if (optionsMasterLabel) {
+          optionsMasterLabel.textContent = isEnabled ? 'ENGINE ARMED' : 'ENGINE DISABLED';
+          optionsMasterLabel.style.color = isEnabled ? '#00d26a' : '#ef4444';
+        }
+        showToast(isEnabled ? 'Master Engine Armed' : 'Master Engine Disabled');
+      });
+    });
+  }
 
   // Helper: Synchronize any checkbox for a given setting ID across all panels and grids
   function syncCheckboxesForSetting(id, checked) {
@@ -532,7 +553,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   MODULE_CATEGORIES_FLAT['page-auto'] = ['auto-cookies', 'auto-scroll', 'auto-redirects', 'auto-popunder'];
   MODULE_CATEGORIES_FLAT['adblock-det'] = ['adblock-detect', 'fake-bait'];
-  MODULE_CATEGORIES_FLAT['youtube-bypass'] = ['yt-ads', 'yt-sponsor'];
+  MODULE_CATEGORIES_FLAT['youtube-bypass'] = ['yt-ads', 'yt-sponsor', 'video-turbo-ad', 'video-turbo-bg', 'video-turbo-pip'];
   MODULE_CATEGORIES_FLAT['auto-bypass'] = MODULE_CATEGORIES['auto-bypass'].settings;
   MODULE_CATEGORIES_FLAT['stealth'] = Object.values(MODULE_CATEGORIES).filter(c => ['stealth-core','stealth-fingerprint','stealth-anti-auto','stealth-consistency'].includes(Object.keys(MODULE_CATEGORIES).find(k => MODULE_CATEGORIES[k] === c))).flatMap(c => c.settings);
   MODULE_CATEGORIES_FLAT['extra'] = [...MODULE_CATEGORIES['accessibility'].settings, ...MODULE_CATEGORIES['privacy'].settings, ...MODULE_CATEGORIES['region'].settings];
@@ -618,9 +639,17 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // Load all settings on startup
-  const storageKeys = [...Object.values(SETTINGS_MAP), 'webglVendor', 'webglRenderer', 'webglProfile', 'uaCategory'];
+  const storageKeys = [...Object.values(SETTINGS_MAP), 'masterEnabled', 'webglVendor', 'webglRenderer', 'webglProfile', 'uaCategory'];
   chrome.storage.local.get(storageKeys, (res) => {
     syncAllCheckboxes(res);
+
+    if (optionsMasterToggle) {
+      optionsMasterToggle.checked = res.masterEnabled !== false;
+      if (optionsMasterLabel) {
+        optionsMasterLabel.textContent = res.masterEnabled !== false ? 'ENGINE ARMED' : 'ENGINE DISABLED';
+        optionsMasterLabel.style.color = res.masterEnabled !== false ? '#00d26a' : '#ef4444';
+      }
+    }
 
     if (res.webglVendor && webglVendorInput) {
       webglVendorInput.value = res.webglVendor;

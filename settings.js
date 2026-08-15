@@ -35,9 +35,12 @@ const SETTINGS_MAP = {
   'clean-css': 'cleanCSS',
   'spoof-fonts': 'spoofFonts',
   'screen-consistency': 'screenConsistency',
-  // YouTube
+  // YouTube & Video Turbo
   'yt-ads': 'youtubeAds',
   'yt-sponsor': 'sponsorBlock',
+  'video-turbo-ad': 'videoTurboAdSpeed',
+  'video-turbo-bg': 'videoTurboBgPlay',
+  'video-turbo-pip': 'videoTurboPip',
   'devmode': 'devMode',
   // Extra - Accessibility
   'enable-rightclick': 'forceRightClick',
@@ -81,9 +84,9 @@ const MODULE_CATEGORIES = {
     settings: ['clean-css', 'spoof-fonts', 'screen-consistency']
   },
   'youtube': {
-    label: 'YouTube',
+    label: 'Video & YouTube',
     icon: 'Y',
-    settings: ['yt-ads', 'yt-sponsor']
+    settings: ['yt-ads', 'yt-sponsor', 'video-turbo-ad', 'video-turbo-bg', 'video-turbo-pip']
   },
   'dev-tools': {
     label: 'Developer Tools',

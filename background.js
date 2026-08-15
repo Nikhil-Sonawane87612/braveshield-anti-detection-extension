@@ -1,12 +1,13 @@
 /**
- * BraveShield Bypass Pro v5.0.0 - Service Worker
- * Stealth-enhanced badge management, storage, messaging, tab tracking.
+ * BraveShield Bypass Pro v5.1.0 - Service Worker
+ * Master Kill Switch, Video Turbo Engine, Disposable Identity, Badge management.
  */
 
 chrome.runtime.onInstalled.addListener(() => {
-  console.log('[Extension] v5.0.0 installed/updated.');
+  console.log('[Extension] BraveShield Bypass Pro v5.1.0 installed/updated.');
   chrome.storage.local.set({
     enabled: true,
+    masterEnabled: true,
     autoBypassLinks: true,
     autoBypassTimers: true,
     clickImageWait: true,
@@ -37,6 +38,9 @@ chrome.runtime.onInstalled.addListener(() => {
     youtubeAds: true,
     sponsorBlock: true,
     devMode: false,
+    videoTurboAdSpeed: true,
+    videoTurboPip: true,
+    videoTurboBgPlay: true,
     forceRightClick: true,
     forceTextSelect: true,
     antiScrollLock: true,
@@ -54,125 +58,192 @@ chrome.runtime.onInstalled.addListener(() => {
     bypassedSites: [],
     whitelist: [],
     blacklist: [],
-    version: '5.0.0'
+    version: '5.1.0'
   });
 });
 
-function updateBadge(tabId, text, color) {
-  if (chrome.action) {
-    chrome.action.setBadgeText({ tabId, text: text || 'ON' });
-    chrome.action.setBadgeBackgroundColor({ tabId, color: color || '#10B981' });
+const RANDOM_PROFILES = [
+  {
+    profile: 'nv_rtx4090',
+    vendor: 'Google Inc. (NVIDIA)',
+    renderer: 'ANGLE (NVIDIA, NVIDIA GeForce RTX 4090 Direct3D11 vs_5_0 ps_5_0, D3D11)',
+    ua: 'chrome_win131'
+  },
+  {
+    profile: 'nv_rtx3080',
+    vendor: 'Google Inc. (NVIDIA)',
+    renderer: 'ANGLE (NVIDIA, NVIDIA GeForce RTX 3080 Direct3D11 vs_5_0 ps_5_0, D3D11)',
+    ua: 'edge131'
+  },
+  {
+    profile: 'nv_rtx3060',
+    vendor: 'Google Inc. (NVIDIA)',
+    renderer: 'ANGLE (NVIDIA, NVIDIA GeForce RTX 3060 Direct3D11 vs_5_0 ps_5_0, D3D11)',
+    ua: 'chrome_win131'
+  },
+  {
+    profile: 'amd_rx7900',
+    vendor: 'Google Inc. (AMD)',
+    renderer: 'ANGLE (AMD, AMD Radeon RX 7900 XTX Direct3D11 vs_5_0 ps_5_0, D3D11)',
+    ua: 'chrome_lin131'
+  },
+  {
+    profile: 'intel_iris_xe',
+    vendor: 'Google Inc. (Intel)',
+    renderer: 'ANGLE (Intel, Intel(R) Iris(R) Xe Graphics Direct3D11 vs_5_0 ps_5_0, D3D11)',
+    ua: 'chrome_win131'
+  },
+  {
+    profile: 'apple_m3_max',
+    vendor: 'Apple Inc.',
+    renderer: 'Apple M3 Max',
+    ua: 'safari18'
+  },
+  {
+    profile: 'apple_m2_pro',
+    vendor: 'Apple Inc.',
+    renderer: 'Apple M2 Pro',
+    ua: 'chrome_mac131'
   }
+];
+
+function updateBadge(tabId, text, color) {
+  if (!chrome.action) return;
+  chrome.storage.local.get(['masterEnabled'], (res) => {
+    if (res.masterEnabled === false) {
+      chrome.action.setBadgeText({ tabId, text: 'OFF' });
+      chrome.action.setBadgeBackgroundColor({ tabId, color: '#4B5563' });
+    } else {
+      chrome.action.setBadgeText({ tabId, text: text || 'ON' });
+      chrome.action.setBadgeBackgroundColor({ tabId, color: color || '#10B981' });
+    }
+  });
+}
+
+function setMasterState(enabled) {
+  chrome.storage.local.set({ masterEnabled: enabled, enabled: enabled }, () => {
+    if (chrome.declarativeNetRequest) {
+      if (enabled) {
+        chrome.declarativeNetRequest.updateEnabledRulesets({ enableRulesetIds: ['ruleset_1'] });
+      } else {
+        chrome.declarativeNetRequest.updateEnabledRulesets({ disableRulesetIds: ['ruleset_1'] });
+      }
+    }
+    chrome.tabs.query({}, (tabs) => {
+      tabs.forEach((tab) => {
+        if (tab.id) {
+          updateBadge(tab.id, enabled ? 'ON' : 'OFF', enabled ? '#10B981' : '#4B5563');
+          chrome.tabs.sendMessage(tab.id, { type: 'SET_MASTER_STATE', enabled }).catch(() => {});
+        }
+      });
+    });
+  });
 }
 
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
   if (changeInfo.status === 'complete' && tab.url && !tab.url.startsWith('chrome://') && !tab.url.startsWith('brave://')) {
-    // Check if site is blacklisted
-    chrome.storage.local.get(['blacklist', 'whitelist'], (res) => {
+    chrome.storage.local.get(['blacklist', 'whitelist', 'masterEnabled'], (res) => {
+      if (res.masterEnabled === false) {
+        updateBadge(tabId, 'OFF', '#4B5563');
+        return;
+      }
+
       const blacklist = res.blacklist || [];
       const whitelist = res.whitelist || [];
       try {
         const url = new URL(tab.url);
         const hostname = url.hostname;
 
-        // Check blacklist
-        const isBlacklisted = blacklist.some(b => hostname.includes(b));
-        if (isBlacklisted) {
+        if (blacklist.some(b => hostname.includes(b))) {
           updateBadge(tabId, 'OFF', '#EF4444');
           return;
         }
 
-        // Check whitelist (if whitelist is not empty, only work on whitelisted sites)
-        if (whitelist.length > 0) {
-          const isWhitelisted = whitelist.some(w => hostname.includes(w));
-          if (!isWhitelisted) {
-            updateBadge(tabId, '--', '#6B7280');
-            return;
-          }
+        if (whitelist.length > 0 && !whitelist.some(w => hostname.includes(w))) {
+          updateBadge(tabId, '--', '#6B7280');
+          return;
         }
 
-        // Check link shortener
         const SHORTENER_HOSTS = [
           'ouo.io', 'ouo.us', 'bc.vc', 'sh.st', 'adf.ly', 'shorte.st',
           'linkvertise.com', 'linkvertise.de', 'clk.sh', 'tp.st', 'lr.in',
           'rekonise.com', 'work.ink', 'lootlinks.co', 'megalink.pro',
           'linksfire.com', 'exe.io', 'droplink.co', 'gplinks.co',
-          'xpshort.com', 'tnlink.in', 'za.gl', 'safelinku.com',
-          'shrink.to', 'shrink.gg', 'shrink.fun', 'shorturl.at',
-          'ultra.link', 'go.kg', 'go2l.ink', 'anylinks.xyz',
-          'linktr.ee', 'linkhub.cc', 'linkhub.lol', 'sk8.sh',
-          'shorturl.co', 's-url.site'
+          'xpshort.com', 'tnlink.in', 'za.gl', 'safelinku.com'
         ];
-        const isShortener = SHORTENER_HOSTS.some(h => hostname.includes(h));
-        if (isShortener) {
-          updateBadge(tabId, 'BYPASS', '#F59E0B');
-        } else {
-          updateBadge(tabId);
+        if (SHORTENER_HOSTS.some(h => hostname.includes(h))) {
+          updateBadge(tabId, '⚡', '#3B82F6');
+          return;
         }
+
+        if (hostname.includes('youtube.com')) {
+          updateBadge(tabId, 'YT', '#EF4444');
+          return;
+        }
+
+        updateBadge(tabId, 'ON', '#10B981');
       } catch(e) {
-        updateBadge(tabId);
+        updateBadge(tabId, 'ON', '#10B981');
       }
     });
   }
 });
 
-// Track blocked requests
-let requestCounts = {};
-
+const requestCounts = {};
 if (chrome.webRequest && chrome.webRequest.onBeforeRequest) {
   chrome.webRequest.onBeforeRequest.addListener(
     (details) => {
-      if (details.tabId >= 0) {
-        if (!requestCounts[details.tabId]) requestCounts[details.tabId] = 0;
-        requestCounts[details.tabId]++;
+      if (details.tabId > 0) {
+        requestCounts[details.tabId] = (requestCounts[details.tabId] || 0) + 1;
       }
     },
     { urls: ['<all_urls>'] }
   );
 }
 
-// Listen for messages
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  if (message.type === 'GET_STATS') {
-    chrome.storage.local.get([
-      'enabled', 'blockedCounter', 'bypassedSites', 'whitelist', 'blacklist',
-      'autoBypassLinks', 'autoDismissCookies', 'autoScroll', 'interceptPopunders',
-      'fixBraveLeak', 'fixStorageLeak', 'normalizeAudio', 'normalizeCanvas',
-      'hideWebdriver', 'preventWebRTC', 'autoDenyPermissions', 'fakeNetworkBait',
-      'clampTimers', 'spoofNavigator', 'screenConsistency'
-    ], (res) => {
-      res.currentTabBlocked = (sender.tab && requestCounts[sender.tab.id]) || 0;
-      sendResponse(res);
+  if (message.type === 'GET_TAB_STATS') {
+    const tabId = message.tabId || sender.tab?.id;
+    sendResponse({
+      requestCount: requestCounts[tabId] || 0,
+      tabId: tabId
     });
     return true;
-} else if (message.type === 'TOGGLE_ENABLED') {
-    chrome.storage.local.set({ enabled: message.enabled }, () => {
-      sendResponse({ success: true });
+  } else if (message.type === 'TOGGLE_MASTER') {
+    setMasterState(Boolean(message.enabled));
+    sendResponse({ success: true, masterEnabled: Boolean(message.enabled) });
+    return true;
+  } else if (message.type === 'NEW_IDENTITY') {
+    // Pick random identity from pool
+    const pick = RANDOM_PROFILES[Math.floor(Math.random() * RANDOM_PROFILES.length)];
+    chrome.storage.local.set({
+      webglProfile: pick.profile,
+      webglVendor: pick.vendor,
+      webglRenderer: pick.renderer,
+      selectedUA: pick.ua,
+      uaCategory: pick.ua
+    }, () => {
+      // Reload active tab
+      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        if (tabs[0]?.id) {
+          chrome.tabs.sendMessage(tabs[0].id, { type: 'CLEAR_SITE_STORAGE' }).catch(() => {});
+          setTimeout(() => {
+            chrome.tabs.reload(tabs[0].id);
+          }, 150);
+        }
+      });
+      sendResponse({ success: true, identity: pick });
     });
     return true;
-  } else if (message.type === 'TOGGLE_ALL_MODULES') {
-    // Persist all module settings to true/false in one shot.
-    const allSettings = {};
-    Object.keys(message.enabledMap || {}).forEach((key) => {
-      allSettings[key] = message.enabled;
-    });
-    chrome.storage.local.set(allSettings, () => {
-      sendResponse({ success: true });
-    });
-    return true;
-  } else if (message.type === 'TOGGLE_CATEGORY_MODULES') {
-    // Persist a category batch of module settings.
-    const catSettings = {};
-    Object.keys(message.modules || {}).forEach((key) => {
-      catSettings[key] = message.modules[key];
-    });
-    chrome.storage.local.set(catSettings, () => {
-      sendResponse({ success: true });
-    });
-    return true;
-  } else if (message.type === 'TOGGLE_MODULE') {
-    chrome.storage.local.set({ [message.key]: message.value }, () => {
-      sendResponse({ success: true });
+  } else if (message.type === 'TOGGLE_PIP') {
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      if (tabs[0]?.id) {
+        chrome.tabs.sendMessage(tabs[0].id, { type: 'TRIGGER_PIP' }, (res) => {
+          sendResponse(res || { success: true });
+        });
+      } else {
+        sendResponse({ success: false });
+      }
     });
     return true;
   } else if (message.type === 'TOGGLE_DEV_MODE') {
@@ -182,7 +253,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           chrome.tabs.sendMessage(tabs[0].id, {
             type: 'TOGGLE_DEV_MODE',
             enabled: message.enabled
-          });
+          }).catch(() => {});
         }
       });
       sendResponse({ success: true });
@@ -246,7 +317,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     });
     return true;
   } else if (message.type === 'GET_SITE_STATUS') {
-    chrome.storage.local.get(['blacklist', 'whitelist'], (res) => {
+    chrome.storage.local.get(['blacklist', 'whitelist', 'masterEnabled'], (res) => {
       try {
         const url = new URL(message.url);
         const hostname = url.hostname;
@@ -254,9 +325,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         const whitelist = res.whitelist || [];
         const isBlacklisted = blacklist.some(b => hostname.includes(b));
         const isWhitelisted = whitelist.some(w => hostname.includes(w));
-        sendResponse({ isBlacklisted, isWhitelisted, hostname });
+        sendResponse({ isBlacklisted, isWhitelisted, hostname, masterEnabled: res.masterEnabled !== false });
       } catch(e) {
-        sendResponse({ isBlacklisted: false, isWhitelisted: false, hostname: '' });
+        sendResponse({ isBlacklisted: false, isWhitelisted: false, hostname: '', masterEnabled: true });
       }
     });
     return true;

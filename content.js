@@ -1,6 +1,6 @@
 /**
- * BraveShield Bypass Pro v5.0.0 - Content Script Bridge
- * Anti-detection stealth engine, status bridge, link shortener detection.
+ * BraveShield Bypass Pro v5.1.0 - Content Script Bridge
+ * Master Kill Switch, Video Turbo, Live Privacy Audit, Disposable Identity bridge.
  */
 
 (function() {
@@ -8,9 +8,14 @@
 
   // Sync WebGL profile strings into sessionStorage/localStorage for inject.js
   try {
-    chrome.storage.local.get(['webglVendor', 'webglRenderer'], (res) => {
+    chrome.storage.local.get(['webglVendor', 'webglRenderer', 'masterEnabled'], (res) => {
       if (res && res.webglVendor) sessionStorage.setItem('bs_webgl_vendor', res.webglVendor);
       if (res && res.webglRenderer) sessionStorage.setItem('bs_webgl_renderer', res.webglRenderer);
+      if (res && res.masterEnabled === false) {
+        sessionStorage.setItem('bs_master_disabled', 'true');
+      } else {
+        sessionStorage.removeItem('bs_master_disabled');
+      }
     });
   } catch (_) {}
 
@@ -26,8 +31,19 @@
       });
     } else if (request.type === 'PING') {
       sendResponse({ pong: true });
+    } else if (request.type === 'SET_MASTER_STATE') {
+      window.postMessage({
+        type: 'bs-set-master-state',
+        enabled: request.enabled
+      }, '*');
+      sendResponse({ status: 'ok' });
+    } else if (request.type === 'TRIGGER_PIP') {
+      window.postMessage({ type: 'bs-trigger-pip' }, '*');
+      sendResponse({ status: 'ok' });
+    } else if (request.type === 'CLEAR_SITE_STORAGE') {
+      window.postMessage({ type: 'bs-clear-storage' }, '*');
+      sendResponse({ status: 'ok' });
     } else if (request.type === 'TOGGLE_DEV_MODE') {
-      // Forward dev mode toggle to main world via custom event
       window.postMessage({
         type: 'bs-toggle-dev-mode',
         enabled: request.enabled

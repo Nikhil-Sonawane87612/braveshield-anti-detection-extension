@@ -1,8 +1,8 @@
-# 🛡️ BraveShield Bypass Pro — Anti-Detection Engine v5.0.0
+# 🛡️ BraveShield Bypass Pro — Anti-Detection Engine v5.1.0
 
-**31 modules** that bypass everything: Brave Shields, adblock traps, link shorteners, cookie consents, countdown timers, click-image-wait patterns, WebRTC leaks, and auto-clicks download buttons — all from a single lightweight extension. Plus YouTube ad blocking, SponsorBlock, video downloading, and developer mode.
+**31 modules** that bypass everything: Brave Shields, adblock traps, link shorteners, cookie consents, countdown timers, click-image-wait patterns, WebRTC leaks, and auto-clicks download buttons — all from a single lightweight extension. Plus Master Kill Switch, Video Turbo Engine (16x ad fast-forward, background video playback, universal PiP), Live Privacy Audit Score (Grade A+), 1-Click Disposable Identity, and 14 WebGL GPU profiles.
 
-> **v5.0.0** — YouTube tools expansion. Added YT AdBlocker (Module 28), SponsorBlock (Module 29), Video-to-MP3/MP4 Downloader (Module 30), and Undetectable Developer Mode (Module 31). Extended popup UI with YouTube Tools section and quality selectors. All 31 module toggles default to **ON** (recommended "Maximum" configuration).
+> **v5.1.0** — Master Kill Switch & Video Turbo update. Added emergency Master Kill Switch, Option C (Video Turbo Engine with 16x ad acceleration, anti-tab-switch pause defeat, universal PiP), Option D (Live Privacy & Stealth Audit Score Grade A+, 1-Click Disposable Identity Switcher), 14 WebGL GPU profiles, and full Obsidian Glassmorphic UI redesign.
 
 ---
 
@@ -10,15 +10,18 @@
 
 | Area                          | Capabilities                                                                                                                                                                             |
 | ----------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Master Kill Switch**        | 1-click global emergency toggle in popup and options headers to instantly pause/arm all 31 stealth modules, DNR rules, and network hooks                                               |
+| **Video Turbo Engine**        | 16x video ad fast-forwarder & auto-mute, background video playback (prevents pause on tab switch), universal Picture-in-Picture (PiP) on all players                                    |
+| **Live Privacy & Stealth**    | Real-time Privacy & Stealth Audit Grade (A+ / 100%) in popup, live counter of defused traps, sanitized fingerprints, and bypassed sites                                                  |
+| **Disposable Identity**       | 1-click "New Identity" HUD button that rolls random realistic modern User-Agent + WebGL GPU profiles and clears site tracking storage                                                    |
+| **WebGL GPU Profiles**        | 14 authentic GPU profiles (RTX 4090, RTX 3080, RTX 3060, RX 7900 XTX, Apple M3 Max, Intel Iris Xe, Adreno 740) with dynamic unmasked vendor/renderer farbling                              |
 | **Auto Bypass**               | Link shorteners (50+ services), countdown/timer bypass, click-image-wait, cookie consent auto-dismiss (20+ frameworks), smart auto-scroll, redirect chain follower, popunder interceptor |
 | **Adblock Detection**         | Bypass Hispanoads, Admiral, BlockAdBlock, FuckAdBlock; fake ad-bait network requests                                                                                                     |
 | **Stealth - Core**            | Remove `navigator.brave`, sanitize client-hint brands, mask Global Privacy Control, stub analytics, neutralize DOM traps, normalize WebGL                                                |
 | **Stealth - Fingerprint**     | Fix `brave://` protocol leak, storage quota leak, AudioContext & Canvas fingerprint normalization                                                                                        |
 | **Stealth - Anti-Automation** | Hide `webdriver`, WebRTC IP-leak prevention, permission auto-deny, performance timer clamp, navigator consistency                                                                        |
-| **YouTube**                   | Ad blocking (video/display/overlays/promoted), SponsorBlock segment skipping, video-to-MP3/MP4 downloader                                                                               |
-| **Accessibility**             | Force right-click, force text selection, anti-scroll-lock, auto-close popups                                                                                                             |
-| **Privacy**                   | Block clipboard read, block notification spam, anti-screenshot detection, timezone & geolocation spoofing                                                                                |
-| **Developer Tools**           | Undetectable developer mode — bypass CSP, disable anti-debugging, override devtools restrictions                                                                                         |
+| **YouTube Tools**             | Ad blocking (video/display/overlays/promoted), SponsorBlock auto-skip                                                                                                                    |
+| **Accessibility & Extra**     | Force right-click, force text selection, anti-scroll-lock, block clipboard read, block notification spam, timezone & geolocation spoofing, Undetectable Developer Mode                     |
 
 ---
 

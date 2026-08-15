@@ -187,31 +187,71 @@
             target.style.setProperty('opacity', '0', 'important');
             target.style.setProperty('pointer-events', 'none', 'important');
           }
-
-          // Remove backdrops & blur overlays
-          document.querySelectorAll('.modal-backdrop, .swal2-backdrop, .swal2-container, .overlay-backdrop, [class*="backdrop"], [class*="overlay"]').forEach(b => {
-            try { b.remove(); } catch (_) { b.style.display = 'none'; }
-          });
-
-          // Restore Page Scrolling & Interactivity
-          document.body.style.setProperty('overflow', 'auto', 'important');
-          document.body.style.setProperty('position', 'static', 'important');
-          document.body.style.setProperty('filter', 'none', 'important');
-          document.body.style.setProperty('pointer-events', 'auto', 'important');
-          document.documentElement.style.setProperty('overflow', 'auto', 'important');
-          document.documentElement.style.setProperty('filter', 'none', 'important');
-
-          // Remove blur from main content
-          document.querySelectorAll('*').forEach(node => {
-            if (node.style && node.style.filter && node.style.filter.includes('blur')) {
-              node.style.setProperty('filter', 'none', 'important');
-            }
-            if (node.style && node.style.backdropFilter && node.style.backdropFilter.includes('blur')) {
-              node.style.setProperty('backdrop-filter', 'none', 'important');
-            }
-          });
         }
       }
+
+      // Unconditionally remove all dark backdrops and dimmed overlays
+      const backdropSelectors = [
+        '.modal-backdrop', '.swal2-backdrop', '.swal2-container', '.overlay-backdrop',
+        '[class*="backdrop"]', '[class*="overlay"]', '#overlay', '.overlay',
+        '.popup-overlay', '#popup-overlay', '.fade.show', '.sk-overlay', '#sk-overlay',
+        '[class*="adb-overlay"]', '#adb-overlay'
+      ];
+      
+      for (const sel of backdropSelectors) {
+        document.querySelectorAll(sel).forEach(b => {
+          if (b && !b.querySelector('h1, h2, form, video, article, #stat-modules')) {
+            try { b.remove(); } catch (_) { b.style.display = 'none'; }
+          }
+        });
+      }
+
+      // Remove fixed fullscreen dark dimmers
+      document.querySelectorAll('div, section').forEach(el => {
+        try {
+          const style = window.getComputedStyle(el);
+          if (style.position === 'fixed' || style.position === 'absolute') {
+            const zIndex = parseInt(style.zIndex, 10) || 0;
+            const rect = el.getBoundingClientRect();
+            const isFullscreen = rect.width >= (window.innerWidth * 0.85) && rect.height >= (window.innerHeight * 0.85);
+            if (isFullscreen && zIndex >= 10 && !el.querySelector('header, nav, main, article, footer, video, form, h1, h2')) {
+              const bg = style.backgroundColor;
+              if (bg && (bg.includes('rgba') || bg.includes('rgb(0, 0, 0)') || bg.includes('rgb(30,') || bg.includes('#000'))) {
+                try { el.remove(); } catch (_) { el.style.display = 'none'; }
+              }
+            }
+          }
+        } catch (_) {}
+      });
+
+      // Restore Page Scrolling & Interactivity
+      document.body.style.setProperty('overflow', 'auto', 'important');
+      document.body.style.setProperty('position', 'static', 'important');
+      document.body.style.setProperty('filter', 'none', 'important');
+      document.body.style.setProperty('opacity', '1', 'important');
+      document.body.style.setProperty('pointer-events', 'auto', 'important');
+      document.documentElement.style.setProperty('overflow', 'auto', 'important');
+      document.documentElement.style.setProperty('filter', 'none', 'important');
+      document.documentElement.style.setProperty('opacity', '1', 'important');
+      document.documentElement.style.setProperty('pointer-events', 'auto', 'important');
+
+      // Remove blur and dimming from main content
+      document.querySelectorAll('main, #main, .container, .card, body > div').forEach(node => {
+        if (node.style) {
+          if (node.style.filter && (node.style.filter.includes('blur') || node.style.filter.includes('brightness'))) {
+            node.style.setProperty('filter', 'none', 'important');
+          }
+          if (node.style.backdropFilter) {
+            node.style.setProperty('backdrop-filter', 'none', 'important');
+          }
+          if (node.style.opacity && parseFloat(node.style.opacity) < 0.9 && !node.id.includes('stat-')) {
+            node.style.setProperty('opacity', '1', 'important');
+          }
+          if (node.style.pointerEvents === 'none') {
+            node.style.setProperty('pointer-events', 'auto', 'important');
+          }
+        }
+      });
     } catch (_) {}
   }
 

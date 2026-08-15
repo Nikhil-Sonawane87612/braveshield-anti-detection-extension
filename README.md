@@ -10,7 +10,6 @@
 [![Android](https://img.shields.io/badge/Android-55%2B%20Features-3ddc84?style=for-the-badge&logo=android&logoColor=white)](#-android-super-suite-setup)
 [![Modules](https://img.shields.io/badge/modules-55%2B%20Armed-8b5cf6?style=for-the-badge&logo=shield&logoColor=white)](#-the-core-stealth-modules)
 [![Privacy Grade](https://img.shields.io/badge/Privacy%20Grade-A%2B%20(100%25)-06b6d4?style=for-the-badge&logo=safari&logoColor=white)](#-live-privacy-audit-score)
-[![License](https://img.shields.io/badge/license-MIT-f59e0b?style=for-the-badge&logo=open-source-initiative&logoColor=white)](LICENSE)
 
 <p align="center">
   <b>The definitive stealth & ad-blocking engine for Desktop (PC/Mac) and Android devices.</b><br>
@@ -208,8 +207,6 @@ Developed and maintained with ❤️ by **Nikhil Sonawane** ([@Nikhil-Sonawane87
 
 ---
 
-## ⚖️ License & Disclaimer
-
-This project is licensed under the **MIT License** — see the [LICENSE](LICENSE) file for details.
+## ⚖️ Disclaimer
 
 *Disclaimer: This extension and userscript suite is intended for educational, privacy research, and personal web accessibility purposes. Please adhere to the terms of service of the websites you visit.*

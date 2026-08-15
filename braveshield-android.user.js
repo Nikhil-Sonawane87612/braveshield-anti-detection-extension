@@ -143,7 +143,7 @@
     WIN.is_ad_clicked = true;
     WIN.click_status = 1;
 
-    // B5: Fake DOM Bait Dimensions
+    // B5: Fake DOM Bait Dimensions & getComputedStyle Proxy
     const origOffsetHeight = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'offsetHeight');
     if (origOffsetHeight) {
       Object.defineProperty(HTMLElement.prototype, 'offsetHeight', {
@@ -157,6 +157,39 @@
         configurable: true
       });
     }
+
+    const origGetComputedStyle = WIN.getComputedStyle;
+    WIN.getComputedStyle = function(el, pseudo) {
+      const style = origGetComputedStyle.call(this, el, pseudo);
+      if (el && /ad[_-]?banner|ad[_-]?container|ad[_-]?wrapper|adsbox|ad[_-]?slot|sponsor|advertisement/i.test((el.className || '') + ' ' + (el.id || ''))) {
+        return new Proxy(style, {
+          get(target, prop) {
+            if (prop === 'display') return 'block';
+            if (prop === 'visibility') return 'visible';
+            if (prop === 'opacity') return '1';
+            if (prop === 'height') return '250px';
+            if (prop === 'width') return '300px';
+            if (prop === 'getPropertyValue') return (n) => (n === 'display' ? 'block' : n === 'visibility' ? 'visible' : n === 'opacity' ? '1' : target.getPropertyValue(n));
+            const val = target[prop];
+            return typeof val === 'function' ? val.bind(target) : val;
+          }
+        });
+      }
+      return style;
+    };
+
+    WIN.addEventListener('error', function(e) {
+      try {
+        const target = e.target;
+        if (target && (target.tagName === 'SCRIPT' || target.tagName === 'IMG' || target.tagName === 'LINK')) {
+          const src = (target.src || target.href || '').toLowerCase();
+          if (/pagead|googlesyndication|doubleclick|adservice|adnxs|prebid|\/ads?\.js|adblock/i.test(src)) {
+            e.stopImmediatePropagation();
+            e.preventDefault();
+          }
+        }
+      } catch (_) {}
+    }, true);
   } catch (_) {}
 
   const ADBLOCK_MODAL_REGEX = /adblock(?:er)?\s+detected|disable\s+(?:your\s+)?ad\s*blocker|disable\s+(?:your\s+)?private\s+dns|brave\s+browser\s+is\s+not\s+supported|ad\s*blocker\/vpn\/proxy|vpn\/proxy\/custom\s+dns|using\s+an\s+ad\s*blocker|custom\s+dns|please\s+consider\s+disabling\s+it|turn\s+off\s+adblock|ad\s*block\s+detected|please\s+whitelist|adblocker\s+is\s+detected|i've\s+disabled\s+adblocker/i;

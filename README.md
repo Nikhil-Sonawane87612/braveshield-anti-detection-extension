@@ -48,7 +48,7 @@
 
 ---
 
-## 🧩 All 31 Modules
+## 🧩 All 30 Modules
 
 ### Core Anti-Detection (1–6)
 
@@ -86,16 +86,14 @@
 23. **Performance Timer Clamp** — reduces timing precision
 24. **Navigator Consistency Spoofing** — `productSub`, `platform`, `languages`, `hardwareConcurrency`
 
-### Consistency Spoofing (25–31)
+### Consistency & YouTube Spoofing (25–30)
 
 25. **CSS Custom Property Cleanup** — removes browser-injected CSS variables
 26. **Font Fingerprint Spoofing** — consistent `document.fonts.check()`
 27. **Screen/Viewport Consistency** — realistic screen dimensions
-28. **WebGL Vendor/Renderer Spoofing** — customizable GPU strings
-29. **YouTube AdBlocker** — blocks video ads, player overlays, promoted videos, and intercepts ad requests
-30. **YouTube SponsorBlock** — fetches sponsor segments from public API (sponsor.ajay.app) and auto-skips
-31. **Video-to-MP3/MP4 Downloader** — downloads YouTube video/audio with quality selection
-32. **Undetectable Developer Mode** — bypasses CSP, disables anti-debug, overrides devtools restrictions
+28. **YouTube AdBlocker** — blocks video ads, player overlays, promoted videos, and intercepts ad requests
+29. **YouTube SponsorBlock** — fetches sponsor segments from public API (sponsor.ajay.app) and auto-skips
+30. **Undetectable Developer Mode** — bypasses CSP, disables anti-debug, overrides devtools restrictions
 
 ---
 
@@ -108,12 +106,12 @@
 - **Enable All / Disable All** bulk actions
 - Real-time bypass status
 - Per-site Whitelist / Blacklist buttons
-- YouTube Tools section: YT AdBlocker, SponsorBlock, Video Downloader with format & quality selectors
+- YouTube Tools section: YT AdBlocker, SponsorBlock
 - Developer Mode toggle (Extra Features)
 
 ### Options Page
 
-- All 31 module toggles organized in categorized tabs
+- All 30 module toggles organized in categorized tabs
 - **"All Modules"** tab with live search + bulk actions
 - Collapsible category accordions
 - WebGL vendor/renderer customization
@@ -175,14 +173,13 @@
 
 - ✅ **New Module 28**: YouTube AdBlocker — blocks video ads, player overlays, promoted videos, ad breaks, and network ad requests on youtube.com
 - ✅ **New Module 29**: YouTube SponsorBlock — integrates with public SponsorBlock API (sponsor.ajay.app), fetches sponsor segments, and auto-skips with 5s buffer
-- ✅ **New Module 30**: Video-to-MP3/MP4 Downloader — adds download button to YouTube player, supports format and quality selection
-- ✅ **New Module 31**: Undetectable Developer Mode — bypasses Content-Security-Policy, disables anti-debugging, unblocks DevTools shortcuts behind a localStorage flag
-- ✅ **Popup UI**: Added YouTube Tools section with dedicated toggles for AdBlocker, SponsorBlock, and Video Downloader
+- ✅ **New Module 30**: Undetectable Developer Mode — bypasses Content-Security-Policy, disables anti-debugging, unblocks DevTools shortcuts behind a localStorage flag
+- ✅ **Popup UI**: Added YouTube Tools section with dedicated toggles for AdBlocker and SponsorBlock
 - ✅ **Popup UI**: Added Developer Mode toggle in Extra Features section
-- ✅ **Popup UI**: Added format selector (MP3/MP4) and quality dropdowns for video downloader
-- ✅ **Messaging**: Added `TOGGLE_DEV_MODE` and `BS_VIDEO_DOWNLOAD` message handlers in content.js
-- ✅ **Updated**: All module counts bumped from 28 to 31 across popup.html, README, and inject.js
-- ✅ All 28 module toggles default to **ON** (recommended configuration)
+- ✅ **Popup UI**: Collapsible accordion sections with live counter badges and micro-animations
+- ✅ **Messaging**: Added `TOGGLE_DEV_MODE` message handlers in content.js
+- ✅ **Updated**: All module counts unified to 30 across popup.html, options.html, README, and inject.js
+- ✅ All core module toggles default to **ON** (recommended configuration)
 
 ---
 

@@ -29,8 +29,6 @@ const SETTINGS_MAP = {
   'clean-css': 'cleanCSS',
   'yt-ads': 'youtubeAds',
   'yt-sponsor': 'sponsorBlock',
-  'yt-downloader-mp3': 'videoDownloaderMp3',
-  'yt-downloader-mp4': 'videoDownloaderMp4',
   'devmode': 'devMode',
   'enable-rightclick': 'forceRightClick',
   'enable-text-select': 'forceTextSelect',
@@ -47,13 +45,26 @@ const SETTINGS_MAP = {
 const POPUP_CATEGORIES = {
   'auto-bypass': ['auto-links', 'auto-timers', 'click-wait', 'auto-cookies', 'auto-scroll', 'auto-redirects', 'auto-popunder', 'adblock-detect', 'fake-bait'],
   'stealth': ['mask-brave', 'mask-brands', 'mask-gpc', 'stub-vars', 'bypass-traps', 'normalize-webgl', 'fix-braveleak', 'fix-storageleak', 'normalize-audio', 'normalize-canvas', 'hide-webdriver', 'prevent-webrtc', 'deny-permissions', 'clamp-timers', 'spoof-navigator', 'clean-css', 'spoof-fonts', 'screen-consistency'],
-  'extra': ['enable-rightclick', 'enable-text-select', 'anti-scroll-lock', 'auto-close-popups', 'anti-clipboard-read', 'anti-notification-spam', 'anti-screenshot-detect', 'devmode'],
-  'youtube': ['yt-ads', 'yt-sponsor', 'yt-downloader-mp3', 'yt-downloader-mp4'],
-  'youtube-tools': ['yt-ads', 'yt-sponsor', 'yt-downloader-mp4'],
+  'extra': ['enable-rightclick', 'enable-text-select', 'anti-scroll-lock', 'auto-close-popups', 'anti-clipboard-read', 'anti-notification-spam', 'anti-screenshot-detect', 'timezone-spoof', 'geolocation-spoof', 'devmode'],
+  'youtube': ['yt-ads', 'yt-sponsor'],
   'accessibility': ['enable-rightclick', 'enable-text-select', 'anti-scroll-lock', 'auto-close-popups'],
-  'privacy-region': ['anti-clipboard-read', 'anti-notification-spam', 'anti-screenshot-detect', 'timezone-spoof', 'geolocation-spoof'],
-  'sites': [],
-  'profile': []
+  'privacy-region': ['anti-clipboard-read', 'anti-notification-spam', 'anti-screenshot-detect', 'timezone-spoof', 'geolocation-spoof']
+};
+
+const CATEGORY_SECTION_SCROLL = {
+  'auto-bypass': 'sec-auto-bypass',
+  'youtube': 'sec-youtube',
+  'stealth': 'sec-stealth',
+  'extra': 'sec-extra',
+  'accessibility': 'sec-extra',
+  'privacy-region': 'sec-extra'
+};
+
+const SECTION_MAP = {
+  'cnt-auto-bypass': ['toggle-links', 'toggle-timers', 'toggle-cookies', 'toggle-scroll', 'toggle-popunder', 'toggle-adblock', 'toggle-youtube'],
+  'cnt-youtube': ['toggle-youtube-ads', 'toggle-sponsorblock'],
+  'cnt-stealth': ['toggle-webr', 'toggle-webrtc', 'toggle-permissions', 'toggle-bait', 'toggle-canvas', 'toggle-navigator'],
+  'cnt-extra': ['toggle-rightclick', 'toggle-textsel', 'toggle-scrolllock', 'toggle-clipboard', 'toggle-timezone', 'toggle-devmode']
 };
 
 const ALL_SETTING_IDS = Object.keys(SETTINGS_MAP);
@@ -79,9 +90,9 @@ document.addEventListener('DOMContentLoaded', () => {
     'toggle-scroll': 'auto-scroll',
     'toggle-popunder': 'auto-popunder',
     'toggle-adblock': 'adblock-detect',
+    'toggle-youtube': 'yt-ads',
     'toggle-youtube-ads': 'yt-ads',
     'toggle-sponsorblock': 'yt-sponsor',
-    'toggle-video-downloader': 'yt-downloader-mp4',
     'toggle-devmode': 'devmode',
     'toggle-webr': 'hide-webdriver',
     'toggle-webrtc': 'prevent-webrtc',
@@ -134,8 +145,20 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   let currentHostname = '';
-
   const storageKeys = Object.values(SETTINGS_MAP);
+
+  function updateSectionCounters() {
+    Object.entries(SECTION_MAP).forEach(([counterId, toggleIds]) => {
+      const el = document.getElementById(counterId);
+      if (!el) return;
+      const activeCount = toggleIds.filter(id => {
+        const toggle = document.getElementById(id);
+        return toggle && toggle.checked;
+      }).length;
+      el.textContent = `${activeCount}/${toggleIds.length}`;
+      el.style.color = activeCount > 0 ? '#34D399' : '#787774';
+    });
+  }
 
   function loadAllSettings() {
     chrome.storage.local.get([
@@ -153,20 +176,43 @@ document.addEventListener('DOMContentLoaded', () => {
       if (res.blockedCounter) trapsVal.textContent = res.blockedCounter;
       if (res.bypassedSites) sitesBypassed.textContent = res.bypassedSites.length;
       updateUI(res.enabled !== false);
+      updateSectionCounters();
+      initCategoryButtons();
     });
   }
 
   loadAllSettings();
 
+  // Accordion Expand/Collapse Event Listeners
+  document.querySelectorAll('.shdr[data-target]').forEach(header => {
+    const targetId = header.dataset.target;
+    // Restore saved state
+    try {
+      if (localStorage.getItem('sec_collapsed_' + targetId) === '1') {
+        header.classList.add('collapsed');
+        const list = document.getElementById(targetId);
+        if (list) list.classList.add('collapsed');
+      }
+    } catch (e) {}
+
+    header.addEventListener('click', () => {
+      const list = document.getElementById(targetId);
+      if (!list) return;
+      const isCollapsed = header.classList.toggle('collapsed');
+      list.classList.toggle('collapsed', isCollapsed);
+      try {
+        localStorage.setItem('sec_collapsed_' + targetId, isCollapsed ? '1' : '0');
+      } catch (e) {}
+    });
+  });
+
   // Listen for storage changes to sync with options page
   chrome.storage.onChanged.addListener((changes, area) => {
     if (area === 'local') {
       Object.keys(changes).forEach(key => {
-        // Find setting ID
         const settingId = Object.entries(SETTINGS_MAP).find(([, v]) => v === key);
         if (settingId) {
           const [id] = settingId;
-          // Update popup toggle if exists
           const popupToggleId = Object.entries(POPUP_TOGGLE_MAP).find(([, v]) => v === id);
           if (popupToggleId) {
             const el = document.getElementById(popupToggleId[0]);
@@ -178,6 +224,8 @@ document.addEventListener('DOMContentLoaded', () => {
           updateUI(changes[key].newValue !== false);
         }
       });
+      updateSectionCounters();
+      initCategoryButtons();
     }
   });
 
@@ -223,7 +271,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function updateUI(enabled) {
     if (enabled) {
       statusLabel.textContent = 'SHIELDS ON - SAFE';
-      statusBar.className = 'sbar';
+      statusBar.className = 'sbar green';
     } else {
       statusLabel.textContent = 'DISABLED';
       statusBar.className = 'sbar off';
@@ -244,6 +292,8 @@ document.addEventListener('DOMContentLoaded', () => {
       el.addEventListener('change', () => {
         chrome.storage.local.set({ [key]: el.checked });
         chrome.runtime.sendMessage({ type: 'TOGGLE_MODULE', key, value: el.checked });
+        updateSectionCounters();
+        initCategoryButtons();
       });
     }
   });
@@ -277,14 +327,13 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-// Bulk actions
+  // Bulk actions
   function setAllModules(enabled) {
     const settings = {};
     const enabledMap = {};
     Object.entries(SETTINGS_MAP).forEach(([id, key]) => {
       settings[key] = enabled;
       enabledMap[key] = enabled;
-      // Update popup toggles if they exist
       const popupToggleId = Object.entries(POPUP_TOGGLE_MAP).find(([, v]) => v === id);
       if (popupToggleId) {
         const el = document.getElementById(popupToggleId[0]);
@@ -293,8 +342,8 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     chrome.storage.local.set(settings);
     chrome.runtime.sendMessage({ type: 'TOGGLE_ALL_MODULES', enabled, enabledMap });
-    // Update category button active states
     applyCategoryButtonStates(settings);
+    updateSectionCounters();
   }
 
   toggleAllOn.addEventListener('click', () => setAllModules(true));
@@ -303,10 +352,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Per-category bulk toggles (Enable All / Disable All for each category)
   function setCategoryModules(category, enabled) {
     const settingIds = POPUP_CATEGORIES[category] || [];
-    if (settingIds.length === 0) {
-      statusLabel.textContent = 'No module toggles here';
-      return;
-    }
+    if (settingIds.length === 0) return;
     const settings = {};
     const modulesPayload = {};
     settingIds.forEach(id => {
@@ -314,7 +360,6 @@ document.addEventListener('DOMContentLoaded', () => {
       if (key) {
         settings[key] = enabled;
         modulesPayload[key] = enabled;
-        // Update popup toggle if exists
         const popupToggleId = Object.entries(POPUP_TOGGLE_MAP).find(([, v]) => v === id);
         if (popupToggleId) {
           const el = document.getElementById(popupToggleId[0]);
@@ -324,12 +369,28 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     chrome.storage.local.set(settings);
     chrome.runtime.sendMessage({ type: 'TOGGLE_CATEGORY_MODULES', category, enabled, modules: modulesPayload });
-    // Update category button active state
+    
+    // Expand section accordion and scroll smoothly to it
+    const targetSection = CATEGORY_SECTION_SCROLL[category];
+    if (targetSection) {
+      const sec = document.getElementById(targetSection);
+      if (sec) {
+        const shdr = sec.querySelector('.shdr');
+        const tlist = sec.querySelector('.tlist');
+        if (shdr && tlist && shdr.classList.contains('collapsed')) {
+          shdr.classList.remove('collapsed');
+          tlist.classList.remove('collapsed');
+        }
+        sec.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+    }
+
     const catBtn = document.querySelector('.cat-btn[data-category="' + category + '"]');
     if (catBtn) catBtn.classList.toggle('active', enabled);
+    updateSectionCounters();
   }
 
-document.querySelectorAll('.cat-btn').forEach(btn => {
+  document.querySelectorAll('.cat-btn[data-category]').forEach(btn => {
     btn.addEventListener('click', () => {
       const category = btn.dataset.category;
       const isActive = btn.classList.contains('active');
@@ -337,7 +398,6 @@ document.querySelectorAll('.cat-btn').forEach(btn => {
     });
   });
 
-  // Per-category Enable All / Disable All buttons (cat-btn-sm)
   document.querySelectorAll('.cat-btn-sm[data-category]').forEach(btn => {
     btn.addEventListener('click', () => {
       const category = btn.dataset.category;
@@ -346,7 +406,15 @@ document.querySelectorAll('.cat-btn').forEach(btn => {
     });
   });
 
-  // Helper to refresh category button active/partial states from a settings object
+  // Link buttons (Sites & Profile) that open options page at that tab
+  document.querySelectorAll('.link-btn[data-tab]').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      const tab = btn.dataset.tab;
+      chrome.tabs.create({ url: `options.html?tab=${tab}` });
+    });
+  });
+
   function applyCategoryButtonStates(settingsObj) {
     Object.entries(POPUP_CATEGORIES).forEach(([category, settingIds]) => {
       const resolved = settingIds.map(id => {
@@ -359,11 +427,10 @@ document.querySelectorAll('.cat-btn').forEach(btn => {
       const allEnabled = resolved.every(v => v === true);
       const anyEnabled = resolved.some(v => v === true);
       catBtn.classList.toggle('active', allEnabled);
-      catBtn.style.opacity = (anyEnabled && !allEnabled) ? '0.6' : '';
+      catBtn.style.opacity = (anyEnabled && !allEnabled) ? '0.7' : '';
     });
   }
 
-  // Initialize category button states
   function initCategoryButtons() {
     chrome.storage.local.get(Object.values(SETTINGS_MAP), (res) => {
       Object.entries(POPUP_CATEGORIES).forEach(([category, settingIds]) => {
@@ -378,9 +445,10 @@ document.querySelectorAll('.cat-btn').forEach(btn => {
         const catBtn = document.querySelector('.cat-btn[data-category="' + category + '"]');
         if (catBtn) {
           catBtn.classList.toggle('active', allEnabled);
-          // Set indeterminate state visually if needed
           if (anyEnabled && !allEnabled) {
-            catBtn.style.opacity = '0.6';
+            catBtn.style.opacity = '0.7';
+          } else {
+            catBtn.style.opacity = '';
           }
         }
       });
@@ -394,7 +462,7 @@ document.querySelectorAll('.cat-btn').forEach(btn => {
       chrome.runtime.sendMessage({ type: 'ADD_WHITELIST', site: currentHostname }, (res) => {
         if (res && res.success) {
           statusLabel.textContent = 'WHITELISTED';
-          statusBar.className = 'sbar';
+          statusBar.className = 'sbar green';
         }
       });
     }

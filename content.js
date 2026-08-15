@@ -6,18 +6,6 @@
 (function() {
   'use strict';
 
-  // Forward messages from inject.js (main world) to background script
-  window.addEventListener('message', (event) => {
-    if (event.data?.type === 'bs-video-download') {
-      chrome.runtime.sendMessage({
-        type: 'BS_VIDEO_DOWNLOAD',
-        format: event.data.format,
-        quality: event.data.quality,
-        videoId: event.data.videoId
-      });
-    }
-  });
-
   chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.type === 'CHECK_STATUS') {
       sendResponse({
@@ -37,15 +25,6 @@
         enabled: request.enabled
       }, '*');
       sendResponse({ status: 'ok' });
-     } else if (request.type === 'BS_VIDEO_DOWNLOAD') {
-      // Handle video download request from popup
-      const urlParams = new URLSearchParams(window.location.search);
-      let videoId = urlParams.get('v');
-      if (!videoId) {
-        const match = window.location.pathname.match(/\/embed\/([^/?&]+)/);
-        if (match) videoId = match[1];
-      }
-      sendResponse({ status: 'queued', videoId: videoId });
     }
     return true;
   });

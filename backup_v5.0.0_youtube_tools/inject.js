@@ -1,6 +1,6 @@
 /**
  * inject.js — BraveShield Bypass Pro Stealth Engine
- * Version: 4.7.0
+ * Version: 5.0.0
  * Injected into the MAIN world via a <script> tag in the page.
  * Purpose: Anti-detection, adblock bypass, brave:// leak prevention, and stealth hardening.
  */
@@ -776,8 +776,8 @@
       return Promise.resolve(new Response(JSON.stringify({
         success: true,
         ads: [],
-       孔 Impressions: 0,
-        clicktroughs: 0
+        impressions: 0,
+        clickthroughs: 0
       }), {
         status: 200,
         statusText: 'OK',
@@ -1521,154 +1521,7 @@
 })();
 
 // ─────────────────────────────────────────────────────
-// Module 30: Video-to-MP3/MP4 Downloader Module
-// ─────────────────────────────────────────────────────
-(() => {
-  function isYouTube() {
-    return window.location.hostname.includes('youtube.com');
-  }
-  if (!isYouTube()) return;
-
-  // Quality options for download
-  const QUALITY_OPTIONS = {
-    mp3: ['64', '128', '192', '256', '320'],
-    mp4: ['144', '240', '360', '480', '720', '1080', '1440', '2160']
-  };
-
-  // Create download button UI
-  function createDownloadButton() {
-    const container = document.createElement('div');
-    container.id = 'bs-video-downloader';
-    container.innerHTML = `
-      <style>
-        #bs-video-downloader {
-          position: fixed;
-          bottom: 80px;
-          right: 20px;
-          z-index: 99999;
-          display: none;
-        }
-        #bs-video-downloader.visible {
-          display: block;
-        }
-        #bs-video-downloader button {
-          background: #ff0000;
-          color: white;
-          border: none;
-          border-radius: 4px;
-          padding: 8px 16px;
-          margin-left: 8px;
-          cursor: pointer;
-          font-size: 14px;
-          transition: all 0.2s;
-        }
-        #bs-video-downloader button:hover {
-          background: #cc0000;
-          transform: scale(1.05);
-        }
-        #bs-video-downloader select {
-          background: #1a1a1a;
-          color: white;
-          border: 1px solid #333;
-          border-radius: 4px;
-          padding: 6px;
-          margin-left: 8px;
-          cursor: pointer;
-        }
-      </style>
-      <select id="bs-download-format">
-        <option value="mp3">MP3 Audio</option>
-        <option value="mp4">MP4 Video</option>
-      </select>
-      <select id="bs-download-quality-mp3" style="display:none;">
-        ${QUALITY_OPTIONS.mp3.map(q => `<option value="${q}">${q} kbps</option>`).join('')}
-      </select>
-      <select id="bs-download-quality-mp4" style="display:none;">
-        ${QUALITY_OPTIONS.mp4.map(q => `<option value="${q}">${q}p</option>`).join('')}
-      </select>
-      <button id="bs-download-btn">Download</button>
-    `;
-    document.body.appendChild(container);
-
-    const formatSelect = container.querySelector('#bs-download-format');
-    const qualityMp3 = container.querySelector('#bs-download-quality-mp3');
-    const qualityMp4 = container.querySelector('#bs-download-quality-mp4');
-
-    formatSelect.addEventListener('change', function () {
-      const fmt = this.value;
-      qualityMp3.style.display = fmt === 'mp3' ? 'inline-block' : 'none';
-      qualityMp4.style.display = fmt === 'mp4' ? 'inline-block' : 'none';
-    });
-
-    container.querySelector('#bs-download-btn').addEventListener('click', function () {
-      const format = formatSelect.value;
-      const quality = format === 'mp3'
-        ? container.querySelector('#bs-download-quality-mp3').value
-        : container.querySelector('#bs-download-quality-mp4').value;
-
-      const videoUrl = window.location.href;
-      const downloadLink = `https://yt1s.com/en1?q=${encodeURIComponent(videoUrl)}&f=${format}&q=${quality}`;
-
-      // Send message to background script for download
-      window.postMessage({
-        type: 'bs-video-download',
-        url: downloadLink,
-        format: format,
-        quality: quality,
-        videoId: getVideoId()
-      }, '*');
-    });
-
-    return container;
-  }
-
-  function getVideoId() {
-    const params = new URLSearchParams(window.location.search);
-    let vid = params.get('v');
-    if (!vid) {
-      const match = window.location.pathname.match(/\/embed\/([^/?&]+)/);
-      if (match) vid = match[1];
-    }
-    return vid;
-  }
-
-  // Show/hide download button based on video page
-  function toggleDownloadButton() {
-    if (!document.querySelector('video')) return;
-
-    let container = document.getElementById('bs-video-downloader');
-    if (!container) {
-      container = createDownloadButton();
-    }
-    container.classList.add('visible');
-  }
-
-  // Listen for messages from background script
-  window.addEventListener('message', (event) => {
-    if (event.data?.type === 'bs-download-status') {
-      // Update button text with status if needed
-    }
-  });
-
-  // Poll for video element and show button
-  setInterval(() => {
-    toggleDownloadButton();
-  }, 1000);
-
-  // Also show on URL change (YouTube SPA navigation)
-  const origPushState = history.pushState;
-  const origReplaceState = history.replaceState;
-  history.pushState = function () {
-    origPushState.apply(this, arguments);
-    setTimeout(toggleDownloadButton, 500);
-  };
-  history.replaceState = function () {
-    origReplaceState.apply(this, arguments);
-  };
-})();
-
-// ─────────────────────────────────────────────────────
-// Module 31: Undetectable Developer Mode
+// Module 30: Undetectable Developer Mode
 // ─────────────────────────────────────────────────────
 (() => {
   // Check if developer mode flag is set via localStorage
@@ -1822,7 +1675,8 @@
         } catch (e) {
           // Silently swallow devtools-related errors
         }
-    });
+      });
+    };
   }
 
   // Remove detection scripts that check for DevTools
@@ -1864,4 +1718,4 @@
   });
 })();
 
-console.log('[Extension] Stealth engine v4.7.0 loaded. 31 modules active.');
+console.log('[Extension] Stealth engine v5.0.0 loaded. 30 modules active.');

@@ -29,8 +29,6 @@ const SETTINGS_MAP = {
   'clean-css': 'cleanCSS',
   'yt-ads': 'youtubeAds',
   'yt-sponsor': 'sponsorBlock',
-  'yt-downloader-mp3': 'videoDownloaderMp3',
-  'yt-downloader-mp4': 'videoDownloaderMp4',
   'devmode': 'devMode',
   'enable-rightclick': 'forceRightClick',
   'enable-text-select': 'forceTextSelect',
@@ -159,7 +157,7 @@ const USER_PRESETS = {
       youtubeAds: true,
       normalizeWebgl: false, normalizeAudio: false, normalizeCanvas: false,
       clampTimers: false, cleanCSS: false, spoofFonts: false, screenConsistency: false,
-      sponsorBlock: false, videoDownloaderMp3: false, videoDownloaderMp4: false, devMode: false,
+      sponsorBlock: false, devMode: false,
       autoClosePopups: false, antiScreenshotDetect: false, timezoneSpoof: false, geolocationSpoof: false
     }
   },
@@ -178,7 +176,7 @@ const USER_PRESETS = {
       youtubeAds: true, sponsorBlock: true, forceRightClick: true,
       forceTextSelect: true, antiScrollLock: true, autoClosePopups: true,
       blockClipboardRead: true, blockNotificationSpam: true,
-      screenConsistency: false, videoDownloaderMp3: false,
+      screenConsistency: false,
       antiScreenshotDetect: false, timezoneSpoof: false, geolocationSpoof: false
     }
   },
@@ -195,7 +193,7 @@ const USER_PRESETS = {
       hideWebdriver: true, preventWebRTC: true, autoDenyPermissions: true,
       clampTimers: true, spoofNavigator: true, cleanCSS: true, spoofFonts: true,
       screenConsistency: true, youtubeAds: true, sponsorBlock: true,
-      videoDownloaderMp3: true, videoDownloaderMp4: true, devMode: true,
+      devMode: true,
       forceRightClick: true, forceTextSelect: true, antiScrollLock: true,
       autoClosePopups: true, blockClipboardRead: true, blockNotificationSpam: true,
       antiScreenshotDetect: true, timezoneSpoof: true, geolocationSpoof: true
@@ -215,14 +213,29 @@ document.addEventListener('DOMContentLoaded', () => {
   const toggleAllOff = document.getElementById('toggle-all-off');
 
   // Tab navigation
-  document.querySelectorAll('.tab').forEach(tab => {
-    tab.addEventListener('click', () => {
+  function activateTab(tabName) {
+    const tabBtn = document.querySelector(`.tab[data-tab="${tabName}"]`);
+    const panel = document.getElementById('panel-' + tabName);
+    if (tabBtn && panel) {
       document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
       document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-      tab.classList.add('active');
-      document.getElementById('panel-' + tab.dataset.tab).classList.add('active');
+      tabBtn.classList.add('active');
+      panel.classList.add('active');
+    }
+  }
+
+  document.querySelectorAll('.tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      activateTab(tab.dataset.tab);
     });
   });
+
+  // Check URL query param or hash (e.g. ?tab=sites or #sites)
+  const urlParams = new URLSearchParams(window.location.search);
+  const requestedTab = urlParams.get('tab') || window.location.hash.replace('#', '');
+  if (requestedTab) {
+    activateTab(requestedTab);
+  }
 
   function renderList(container, items, type) {
     if (!items || items.length === 0) {

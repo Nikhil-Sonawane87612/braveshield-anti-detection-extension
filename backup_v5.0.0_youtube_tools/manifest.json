@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "BraveShield Bypass Pro - Anti-Detection Engine v4",
   "version": "5.0.0",
-  "description": "31-module anti-detection engine with 60+ user agents: bypasses Brave Shields, adblock traps, link shorteners, countdown timers, WebRTC leaks, UA spoofing, right-click, text select, scroll lock, clipboard, notifications, timezone, geolocation. Includes YouTube AdBlocker, SponsorBlock, Video-to-MP3/MP4 downloader, and undetectable developer mode.",
+  "description": "30-module anti-detection engine with 60+ user agents: bypasses Brave Shields, adblock traps, link shorteners, countdown timers, WebRTC leaks, UA spoofing, right-click, text select, scroll lock, clipboard, notifications, timezone, geolocation. Includes YouTube AdBlocker, SponsorBlock, and undetectable developer mode.",
   "author": "Nikhil Sonawane",
   "permissions": [
     "storage",

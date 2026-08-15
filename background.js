@@ -1,10 +1,10 @@
 /**
- * BraveShield Bypass Pro v4.7.0 - Service Worker
+ * BraveShield Bypass Pro v5.0.0 - Service Worker
  * Stealth-enhanced badge management, storage, messaging, tab tracking.
  */
 
 chrome.runtime.onInstalled.addListener(() => {
-  console.log('[Extension] v4.7.0 installed/updated.');
+  console.log('[Extension] v5.0.0 installed/updated.');
   chrome.storage.local.set({
     enabled: true,
     autoBypassLinks: true,
@@ -36,8 +36,6 @@ chrome.runtime.onInstalled.addListener(() => {
     cleanCSS: true,
     youtubeAds: true,
     sponsorBlock: true,
-    videoDownloaderMp3: false,
-    videoDownloaderMp4: false,
     devMode: false,
     forceRightClick: true,
     forceTextSelect: true,
@@ -187,7 +185,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       sendResponse({ success: true });
     });
     return true;
-  } else if (message.type === 'BS_VIDEO_DOWNLOAD') {
   } else if (message.type === 'ADD_WHITELIST') {
     chrome.storage.local.get(['whitelist'], (res) => {
       const list = res.whitelist || [];
@@ -257,21 +254,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         sendResponse({ isBlacklisted, isWhitelisted, hostname });
       } catch(e) {
         sendResponse({ isBlacklisted: false, isWhitelisted: false, hostname: '' });
-      }
-    });
-    return true;
-  } else if (message.type === 'BS_VIDEO_DOWNLOAD') {
-    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-      if (tabs[0]?.id) {
-        chrome.tabs.sendMessage(tabs[0].id, {
-          type: 'BS_VIDEO_DOWNLOAD',
-          format: message.format,
-          quality: message.quality
-        }, (response) => {
-          sendResponse(response || { status: 'ok' });
-        });
-      } else {
-        sendResponse({ status: 'error', message: 'No active tab' });
       }
     });
     return true;

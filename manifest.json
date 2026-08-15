@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "BraveShield Bypass Pro - Anti-Detection Engine v4",
+  "name": "BraveShield Bypass Pro — Anti-Detection Stealth Suite v5.1",
   "version": "5.1.0",
-  "description": "Next-gen stealth engine with Master Kill Switch, Video Turbo (16x ad skip, background play, PiP), Live Privacy Audit Score, 1-Click Disposable Identity, 14 WebGL GPU profiles, and 30+ bypass modules.",
+  "description": "Next-gen stealth suite with Master Kill Switch, 42 bypass modules, Google Chrome cloaking, Turbo Timer countdown fast-forward, Video Turbo (16x ad skip, background play, PiP), and Live Privacy Audit Score.",
   "author": "Nikhil Sonawane",
   "icons": {
     "16": "icons/icon16.png",

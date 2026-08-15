@@ -150,7 +150,7 @@
 ## 📦 Project Structure
 
 ```
-├── manifest.json      # MV3 manifest (v4.7.0)
+├── manifest.json      # MV3 manifest (v5.1.0)
 ├── background.js      # Service worker: settings, badges, storage, messaging
 ├── content.js         # Content script (ISOLATED world)
 ├── inject.js          # Injection script (MAIN world)

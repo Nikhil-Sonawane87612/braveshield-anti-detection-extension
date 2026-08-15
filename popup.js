@@ -279,10 +279,33 @@ document.addEventListener('DOMContentLoaded', () => {
       if (uaStatus) uaStatus.textContent = uaCategory.options[uaCategory.selectedIndex]?.text.split('•')[0] || res.uaCategory;
     }
 
+    // Load Theme
+    const activeTheme = res.theme || 'obsidian_noir';
+    const themeSelector = document.getElementById('theme-selector');
+    const themeStatus = document.getElementById('theme-status');
+    if (themeSelector) {
+      themeSelector.value = activeTheme;
+      document.documentElement.setAttribute('data-theme', activeTheme);
+      if (themeStatus) themeStatus.textContent = themeSelector.options[themeSelector.selectedIndex]?.text.split('(')[0] || activeTheme;
+    }
+
     updateLiveAudit(isMaster);
   });
 
-  // 9. User Agent Persona Selection
+  // 9. User Agent Persona & Theme Selection
+  const themeSelector = document.getElementById('theme-selector');
+  const themeStatus = document.getElementById('theme-status');
+  if (themeSelector) {
+    themeSelector.addEventListener('change', () => {
+      const selected = themeSelector.value;
+      const label = themeSelector.options[themeSelector.selectedIndex]?.text.split('(')[0] || selected;
+      document.documentElement.setAttribute('data-theme', selected);
+      chrome.storage.local.set({ theme: selected });
+      if (themeStatus) themeStatus.textContent = label;
+      if (popupTickerFeed) popupTickerFeed.textContent = '🎨 Theme: ' + label;
+    });
+  }
+
   if (uaCategory) {
     uaCategory.addEventListener('change', () => {
       const val = uaCategory.value;

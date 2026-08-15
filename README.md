@@ -83,6 +83,20 @@ A global emergency toggle in popup and options headers to instantly pause or re-
 - **⚡ Direct Media Stream Sniffer**: Auto-detects raw `.mp4`/`.m3u8` video streams with 1-tap VLC streaming.
 - **📰 Paywall & Login-Wall Bypass**: Auto-unhides paywalled articles (Medium, Quora, Pinterest, news sites).
 
+### 🎨 7. 10 Premium Visual Themes Gallery
+| # | Theme Name | Background | Cards | Accent Gradient | Vibe |
+| :-: | :--- | :--- | :--- | :--- | :--- |
+| 🖤 1 | **Obsidian Noir** | `#0A0A0F` deep black | Glassmorphic `rgba(255,255,255,0.04)` | `#8B5CF6` → `#6366F1` | Dark luxury, premium stealth |
+| 💜 2 | **Cyberpunk Neon** | `#0D0221` dark navy | Neon-bordered `rgba(0,255,136,0.06)` | `#00FF88` → `#00D4FF` | Futuristic hacker terminal |
+| 🧊 3 | **Arctic Frost** | `#F0F4FF` icy white | Frosted glass `rgba(255,255,255,0.7)` | `#3B82F6` → `#06B6D4` | Clean, minimal, Apple-esque |
+| 🌅 4 | **Sunset Gradient** | Animated gradient | Warm glass `rgba(255,107,53,0.08)` | `#F72585` → `#FF6B35` | Warm, energetic, vibrant |
+| 🌊 5 | **Ocean Depth** | `#0B1628` deep sea | Aqua glass `rgba(6,182,212,0.06)` | `#06B6D4` → `#0EA5E9` | Calm, deep, mysterious |
+| 🌿 6 | **Forest Emerald** | `#0A1F0A` dark forest | Leaf glass `rgba(16,185,129,0.06)` | `#10B981` → `#059669` | Natural, organic, fresh |
+| 💜 7 | **Lavender Dream** | `#1A1025` soft plum | Lilac glass `rgba(167,139,250,0.08)` | `#A78BFA` → `#C084FC` | Soft, dreamy, premium |
+| 🔥 8 | **Solar Flare** | `#1A0A00` ember black | Flame glass `rgba(249,115,22,0.06)` | `#F97316` → `#EAB308` | Bold, powerful, fiery |
+| 🌌 9 | **Midnight Galaxy** | Animated starfield `#030014` | Cosmic glass `rgba(99,102,241,0.05)` | `#6366F1` → `#8B5CF6` | Space, cosmic, infinite |
+| 🌹 10 | **Rose Gold** | `#1A0F0F` dark rose | Blush glass `rgba(244,114,182,0.06)` | `#F472B6` → `#FB923C` | Elegant, luxurious, refined |
+
 ---
 
 ## 📱 Android Super Suite Setup (Normal Browsers & System-Wide)
@@ -189,6 +203,7 @@ braveshield-anti-detection-extension/
 ├── rules.json                    # Declarative Net Request rules
 ├── popup.html / .css / .js        # Glassmorphic Popup Dashboard
 ├── options.html / .css / .js      # Full-page Configuration Suite
+├── theme.css                      # 10 Premium Visual Themes engine
 ├── icons/                        # High-res extension icons (16, 48, 128)
 ├── filters/
 │   └── rules.txt                 # AdGuard / uBlock Origin formatted filter list

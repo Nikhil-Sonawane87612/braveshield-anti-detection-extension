@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <title>BraveShield Bypass Pro - Control Studio</title>
 <link rel="stylesheet" href="options.css">
+<link rel="stylesheet" href="theme.css">
 </head>
 <body>
 <div class="page-container">
@@ -73,8 +74,9 @@
     <button class="tab-btn active" data-tab="bypass"><span class="tab-ico">⚡</span>Auto Bypass</button>
     <button class="tab-btn" data-tab="youtube"><span class="tab-ico">🚀</span>Video Turbo</button>
     <button class="tab-btn" data-tab="stealth"><span class="tab-ico">🛡️</span>Stealth &amp; Fingerprints</button>
+    <button class="tab-btn" data-tab="themes"><span class="tab-ico">🎨</span>Themes Gallery</button>
     <button class="tab-btn" data-tab="extra"><span class="tab-ico">🔮</span>Extra Protections</button>
-    <button class="tab-btn" data-tab="profile"><span class="tab-ico">🎨</span>GPU &amp; Persona</button>
+    <button class="tab-btn" data-tab="profile"><span class="tab-ico">🎭</span>GPU &amp; Persona</button>
     <button class="tab-btn" data-tab="sites"><span class="tab-ico">🌐</span>Site Rules</button>
     <button class="tab-btn" data-tab="feed"><span class="tab-ico">📡</span>Live Telemetry</button>
     <button class="tab-btn" data-tab="all"><span class="tab-ico">⚙️</span>All Modules</button>
@@ -351,6 +353,85 @@
         <span class="feed-badge badge-purple">VIDEO TURBO</span>
         <span class="feed-msg">BraveShield Bypass Pro Engine initialized (42 modules active)</span>
       </div>
+    </div>
+  <!-- Panel: 10 Premium Visual Themes Gallery -->
+  <div class="panel" id="panel-themes">
+    <div class="panel-bulk">
+      <span class="panel-bulk-label">10 Premium Visual Identity Themes</span>
+      <span style="font-size:12px; color:var(--text-secondary);">1-Click Instant Preview &amp; Auto-Synchronization</span>
+    </div>
+    <div class="grid" style="grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px;">
+      
+      <!-- 1. Obsidian Noir -->
+      <div class="card theme-card" data-theme-id="obsidian_noir" style="border: 1px solid rgba(139, 92, 246, 0.3); background: #0a0a0f;">
+        <div class="card-t"><div class="ci" style="background:#8b5cf6;">🖤</div><h3>Obsidian Noir</h3><span>Default</span></div>
+        <p style="font-size:12px; color:#9ca3af; margin: 8px 0;">Deep black glass with violet-indigo accents. Dark luxury stealth vibe.</p>
+        <button class="abtn pri btn-sm btn-apply-theme" data-theme="obsidian_noir" style="width:100%;">Apply Theme</button>
+      </div>
+
+      <!-- 2. Cyberpunk Neon -->
+      <div class="card theme-card" data-theme-id="cyberpunk_neon" style="border: 1px solid rgba(0, 255, 136, 0.4); background: #0d0221;">
+        <div class="card-t"><div class="ci" style="background:#00ff88; color:#000;">💜</div><h3>Cyberpunk Neon</h3></div>
+        <p style="font-size:12px; color:#00ffcc; margin: 8px 0;">Dark navy terminal with electric cyan &amp; neon matrix borders.</p>
+        <button class="abtn sec btn-sm btn-apply-theme" data-theme="cyberpunk_neon" style="width:100%;">Apply Theme</button>
+      </div>
+
+      <!-- 3. Arctic Frost -->
+      <div class="card theme-card" data-theme-id="arctic_frost" style="border: 1px solid rgba(59, 130, 246, 0.3); background: #f0f4ff;">
+        <div class="card-t"><div class="ci" style="background:#3b82f6;">🧊</div><h3 style="color:#0f172a;">Arctic Frost</h3></div>
+        <p style="font-size:12px; color:#475569; margin: 8px 0;">Frosted icy white glass with electric ice blue. Clean Apple-esque feel.</p>
+        <button class="abtn sec btn-sm btn-apply-theme" data-theme="arctic_frost" style="width:100%;">Apply Theme</button>
+      </div>
+
+      <!-- 4. Sunset Gradient -->
+      <div class="card theme-card" data-theme-id="sunset_gradient" style="border: 1px solid rgba(247, 37, 133, 0.3); background: #1a0814;">
+        <div class="card-t"><div class="ci" style="background:#f72585;">🌅</div><h3>Sunset Gradient</h3></div>
+        <p style="font-size:12px; color:#fda4af; margin: 8px 0;">Warm energetic coral-magenta to sunset orange glassmorphism.</p>
+        <button class="abtn sec btn-sm btn-apply-theme" data-theme="sunset_gradient" style="width:100%;">Apply Theme</button>
+      </div>
+
+      <!-- 5. Ocean Depth -->
+      <div class="card theme-card" data-theme-id="ocean_depth" style="border: 1px solid rgba(6, 182, 212, 0.3); background: #0b1628;">
+        <div class="card-t"><div class="ci" style="background:#06b6d4;">🌊</div><h3>Ocean Depth</h3></div>
+        <p style="font-size:12px; color:#7dd3fc; margin: 8px 0;">Deep abyss sea glass with calm, glowing teal &amp; aqua highlights.</p>
+        <button class="abtn sec btn-sm btn-apply-theme" data-theme="ocean_depth" style="width:100%;">Apply Theme</button>
+      </div>
+
+      <!-- 6. Forest Emerald -->
+      <div class="card theme-card" data-theme-id="forest_emerald" style="border: 1px solid rgba(16, 185, 129, 0.3); background: #0a1f0a;">
+        <div class="card-t"><div class="ci" style="background:#10b981;">🌿</div><h3>Forest Emerald</h3></div>
+        <p style="font-size:12px; color:#6ee7b7; margin: 8px 0;">Dark forest night surfaces with fresh, glowing emerald accents.</p>
+        <button class="abtn sec btn-sm btn-apply-theme" data-theme="forest_emerald" style="width:100%;">Apply Theme</button>
+      </div>
+
+      <!-- 7. Lavender Dream -->
+      <div class="card theme-card" data-theme-id="lavender_dream" style="border: 1px solid rgba(167, 139, 250, 0.3); background: #1a1025;">
+        <div class="card-t"><div class="ci" style="background:#a78bfa;">💜</div><h3>Lavender Dream</h3></div>
+        <p style="font-size:12px; color:#d8b4fe; margin: 8px 0;">Soft plum cosmic surfaces with dreamy, pastel lilac glass glows.</p>
+        <button class="abtn sec btn-sm btn-apply-theme" data-theme="lavender_dream" style="width:100%;">Apply Theme</button>
+      </div>
+
+      <!-- 8. Solar Flare -->
+      <div class="card theme-card" data-theme-id="solar_flare" style="border: 1px solid rgba(249, 115, 22, 0.3); background: #1a0a00;">
+        <div class="card-t"><div class="ci" style="background:#f97316;">🔥</div><h3>Solar Flare</h3></div>
+        <p style="font-size:12px; color:#fdba74; margin: 8px 0;">Ember black surfaces with bold, energetic flame amber accents.</p>
+        <button class="abtn sec btn-sm btn-apply-theme" data-theme="solar_flare" style="width:100%;">Apply Theme</button>
+      </div>
+
+      <!-- 9. Midnight Galaxy -->
+      <div class="card theme-card" data-theme-id="midnight_galaxy" style="border: 1px solid rgba(99, 102, 241, 0.3); background: #030014;">
+        <div class="card-t"><div class="ci" style="background:#6366f1;">🌌</div><h3>Midnight Galaxy</h3></div>
+        <p style="font-size:12px; color:#a5b4fc; margin: 8px 0;">Deep starfield void with infinite cosmic indigo-purple gradients.</p>
+        <button class="abtn sec btn-sm btn-apply-theme" data-theme="midnight_galaxy" style="width:100%;">Apply Theme</button>
+      </div>
+
+      <!-- 10. Rose Gold -->
+      <div class="card theme-card" data-theme-id="rose_gold" style="border: 1px solid rgba(244, 114, 182, 0.3); background: #1a0f0f;">
+        <div class="card-t"><div class="ci" style="background:#f472b6;">🌹</div><h3>Rose Gold</h3></div>
+        <p style="font-size:12px; color:#f472b6; margin: 8px 0;">Elegant dark blush velvet surfaces with luxurious pink-gold tints.</p>
+        <button class="abtn sec btn-sm btn-apply-theme" data-theme="rose_gold" style="width:100%;">Apply Theme</button>
+      </div>
+
     </div>
   </div>
 

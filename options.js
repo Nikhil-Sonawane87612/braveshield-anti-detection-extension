@@ -572,8 +572,48 @@ document.addEventListener('DOMContentLoaded', () => {
     const statBypassed = document.getElementById('stat-bypassed');
     if (statBypassed) statBypassed.textContent = String((res.bypassedSites || []).length);
 
+    // Load active Theme
+    chrome.storage.local.get(['theme'], (tres) => {
+      const activeTheme = tres.theme || 'obsidian_noir';
+      document.documentElement.setAttribute('data-theme', activeTheme);
+      highlightActiveThemeCard(activeTheme);
+    });
+
     renderAllModulesMatrix();
     runWebGLDiagnostic();
+  });
+
+  function highlightActiveThemeCard(themeId) {
+    document.querySelectorAll('.theme-card').forEach(c => {
+      const btn = c.querySelector('.btn-apply-theme');
+      if (c.dataset.themeId === themeId) {
+        c.style.borderColor = 'var(--accent-emerald)';
+        c.style.boxShadow = '0 0 20px var(--border-glow-emerald)';
+        if (btn) {
+          btn.textContent = '✓ Active Theme';
+          btn.className = 'abtn pri btn-sm btn-apply-theme';
+        }
+      } else {
+        c.style.borderColor = 'var(--border-glass)';
+        c.style.boxShadow = 'none';
+        if (btn) {
+          btn.textContent = 'Apply Theme';
+          btn.className = 'abtn sec btn-sm btn-apply-theme';
+        }
+      }
+    });
+  }
+
+  // Theme Apply Click Handlers
+  document.querySelectorAll('.btn-apply-theme').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const theme = btn.dataset.theme;
+      document.documentElement.setAttribute('data-theme', theme);
+      chrome.storage.local.set({ theme });
+      highlightActiveThemeCard(theme);
+      showToast('Theme Applied: ' + theme.replace('_', ' ').toUpperCase());
+      addTelemetryEntry('THEME SWITCH', 'Visual Identity updated to ' + theme, 'badge-purple');
+    });
   });
 
   // 11. Save Button

@@ -1,686 +1,145 @@
 /**
- * BraveShield Bypass Pro v5.1.0 - Options Controller Pro Max
- * Obsidian Glassmorphic Studio, WebGL 3D Diagnostic Canvas, Real-Time Telemetry Stream.
+ * BraveShield Bypass Pro — Control Studio Controller
+ * Version: 5.3.0
  */
 
-const SETTINGS_MAP = {
-  'auto-links': 'autoBypassLinks',
-  'auto-timers': 'autoBypassTimers',
-  'click-wait': 'clickImageWait',
-  'auto-cookies': 'autoDismissCookies',
-  'auto-scroll': 'autoScroll',
-  'auto-redirects': 'autoRedirects',
-  'auto-popunder': 'interceptPopunders',
-  'adblock-detect': 'bypassAdblockDetection',
-  'fake-bait': 'fakeNetworkBait',
-  'mask-brave': 'maskBraveApi',
-  'mask-brands': 'maskClientHints',
-  'mask-gpc': 'maskGPC',
-  'stub-vars': 'stubAnalytics',
-  'bypass-traps': 'bypassShieldsTraps',
-  'normalize-webgl': 'normalizeWebgl',
-  'fix-braveleak': 'fixBraveLeak',
-  'fix-storageleak': 'fixStorageLeak',
-  'normalize-audio': 'normalizeAudio',
-  'normalize-canvas': 'normalizeCanvas',
-  'hide-webdriver': 'hideWebdriver',
-  'prevent-webrtc': 'preventWebRTC',
-  'deny-permissions': 'autoDenyPermissions',
-  'clamp-timers': 'clampTimers',
-  'spoof-navigator': 'spoofNavigator',
-  'screen-consistency': 'screenConsistency',
-  'spoof-fonts': 'spoofFonts',
-  'clean-css': 'cleanCSS',
-  'yt-ads': 'youtubeAds',
-  'yt-sponsor': 'sponsorBlock',
-  'video-turbo-ad': 'videoTurboAdSpeed',
-  'video-turbo-bg': 'videoTurboBgPlay',
-  'video-turbo-pip': 'videoTurboPip',
-  'devmode': 'devMode',
-  'enable-rightclick': 'forceRightClick',
-  'enable-text-select': 'forceTextSelect',
-  'anti-scroll-lock': 'antiScrollLock',
-  'auto-close-popups': 'autoClosePopups',
-  'anti-clipboard-read': 'blockClipboardRead',
-  'anti-notification-spam': 'blockNotificationSpam',
-  'anti-screenshot-detect': 'antiScreenshotDetect',
-  'timezone-spoof': 'timezoneSpoof',
-  'geolocation-spoof': 'geolocationSpoof'
-};
-
-const MODULE_CATEGORIES = {
-  'auto-bypass': {
-    label: 'Auto Bypass',
-    icon: 'Z',
-    settings: ['auto-links', 'auto-timers', 'click-wait', 'auto-cookies', 'auto-scroll', 'auto-redirects', 'auto-popunder', 'adblock-detect', 'fake-bait']
-  },
-  'stealth-core': {
-    label: 'Stealth - Core',
-    icon: 'B',
-    settings: ['mask-brave', 'mask-brands', 'mask-gpc', 'stub-vars', 'bypass-traps', 'normalize-webgl']
-  },
-  'stealth-fingerprint': {
-    label: 'Stealth - Fingerprint',
-    icon: 'F',
-    settings: ['fix-braveleak', 'fix-storageleak', 'normalize-audio', 'normalize-canvas']
-  },
-  'stealth-anti-auto': {
-    label: 'Stealth - Anti-Automation',
-    icon: 'W',
-    settings: ['hide-webdriver', 'prevent-webrtc', 'deny-permissions', 'clamp-timers', 'spoof-navigator']
-  },
-  'stealth-consistency': {
-    label: 'Stealth - Consistency',
-    icon: 'S',
-    settings: ['clean-css', 'spoof-fonts', 'screen-consistency']
-  },
-  'youtube': {
-    label: 'Video & YouTube',
-    icon: 'Y',
-    settings: ['yt-ads', 'yt-sponsor', 'video-turbo-ad', 'video-turbo-bg', 'video-turbo-pip']
-  },
-  'dev-tools': {
-    label: 'Developer Tools',
-    icon: '⚙',
-    settings: ['devmode']
-  },
-  'accessibility': {
-    label: 'Accessibility',
-    icon: 'X',
-    settings: ['enable-rightclick', 'enable-text-select', 'anti-scroll-lock', 'auto-close-popups']
-  },
-  'privacy': {
-    label: 'Privacy',
-    icon: 'P',
-    settings: ['anti-clipboard-read', 'anti-notification-spam', 'anti-screenshot-detect']
-  },
-  'region': {
-    label: 'Region',
-    icon: 'G',
-    settings: ['timezone-spoof', 'geolocation-spoof']
-  }
-};
-
-const SETTING_LABELS = {
-  'auto-links': { title: 'Link Shortener Auto-Bypass', desc: '50+ services & direct engines' },
-  'auto-timers': { title: 'Timer & Countdown Skip', desc: 'Accelerates 15-30s timers to 0.5s' },
-  'click-wait': { title: 'Click Image Wait Bypass', desc: 'Automates click-and-wait patterns' },
-  'auto-cookies': { title: 'Cookie Consent Auto-Dismiss', desc: '20+ modal banner frameworks' },
-  'auto-scroll': { title: 'Smart Auto-Scroll', desc: 'Navigates scroll-locked landing pages' },
-  'auto-redirects': { title: 'Redirect Chain Follower', desc: 'Meta refresh & click-through bypass' },
-  'auto-popunder': { title: 'Popunder Interceptor', desc: 'Kills unauthorized rogue ad tabs' },
-  'adblock-detect': { title: 'Adblock Detection Bypass', desc: 'Defeats Admiral, Hispanoads, BlockAdBlock' },
-  'fake-bait': { title: 'Network Bait Faking', desc: 'Returns synthetic 200 OK for ad probes' },
-  'mask-brave': { title: 'Navigator.brave Destruction', desc: 'Removes navigator.brave signature' },
-  'mask-brands': { title: 'Client Hints Brand Sanitizer', desc: 'Strips Brave from navigator.userAgentData' },
-  'mask-gpc': { title: 'Global Privacy Control', desc: 'Hides GPC tracking flag' },
-  'stub-vars': { title: 'Ad/Analytics Stubs', desc: 'Fakes ga, gtag, pbjs analytics globals' },
-  'bypass-traps': { title: 'DOM Trap Neutralizer', desc: 'Hooks offsetHeight/Width ad bait probes' },
-  'normalize-webgl': { title: 'WebGL Normalization', desc: 'Spoofs unmasked GPU vendor & renderer' },
-  'fix-braveleak': { title: 'brave:// Protocol Leak Fix', desc: 'DOM URL parser patch' },
-  'fix-storageleak': { title: 'Storage Quota Leak Fix', desc: 'Hides actual disk storage partition size' },
-  'normalize-audio': { title: 'AudioContext Normalization', desc: 'Uniform noise farbling for audio hashes' },
-  'normalize-canvas': { title: 'Canvas Fingerprint Fix', desc: 'Consistent toDataURL canvas farbling' },
-  'hide-webdriver': { title: 'Webdriver Cloaking', desc: 'navigator.webdriver = false' },
-  'prevent-webrtc': { title: 'WebRTC IP Leak Prevention', desc: 'Strips ICE candidate private IP leaks' },
-  'deny-permissions': { title: 'Permission Auto-Deny', desc: 'Auto-denies camera, mic, notification spam' },
-  'clamp-timers': { title: 'Performance Timer Clamp', desc: 'Clamps high-resolution timer attacks' },
-  'spoof-navigator': { title: 'Navigator Consistency', desc: 'Synchronizes platform, hardware & screens' },
-  'clean-css': { title: 'CSS Property Cleanup', desc: 'Removes browser-specific layout traces' },
-  'spoof-fonts': { title: 'Font Fingerprint Spoof', desc: 'Consistent standard font rendering' },
-  'screen-consistency': { title: 'Screen/Viewport', desc: 'Emulates realistic desktop aspect ratios' },
-  'yt-ads': { title: 'YouTube Ad Blocking', desc: 'Video, display, overlays & promoted clips' },
-  'yt-sponsor': { title: 'SponsorBlock Auto-Skip', desc: 'Skips sponsored segments via community API' },
-  'video-turbo-ad': { title: '16x Video Ad Fast-Forward', desc: 'Accelerates and auto-mutes video ads' },
-  'video-turbo-bg': { title: 'Background Video Playback', desc: 'Prevents pause when switching tabs' },
-  'video-turbo-pip': { title: 'Universal Picture-in-Picture', desc: 'Unlock floating PiP on all video elements' },
-  'devmode': { title: 'Undetectable Dev Mode', desc: 'Bypasses CSP & anti-debug loops' },
-  'enable-rightclick': { title: 'Force Right-Click', desc: 'Override context menu blocking' },
-  'enable-text-select': { title: 'Force Text Selection', desc: 'Defeat CSS select-none copy prevention' },
-  'anti-scroll-lock': { title: 'Anti-Scroll Lock', desc: 'Overrides overflow:hidden on modals' },
-  'auto-close-popups': { title: 'Auto-Close Rogue Popups', desc: 'Closes ad tabs automatically' },
-  'anti-clipboard-read': { title: 'Block Clipboard Read', desc: 'Stops sites from reading clipboard' },
-  'anti-notification-spam': { title: 'Block Notification Spam', desc: 'Suppresses push notification requests' },
-  'anti-screenshot-detect': { title: 'Anti-Screenshot Detection', desc: 'Bypasses visibility/blur detection' },
-  'timezone-spoof': { title: 'Timezone Spoofing', desc: 'Synchronizes timezone with chosen persona' },
-  'geolocation-spoof': { title: 'Geolocation Spoofing', desc: 'Fakes GPS coordinates to match IP' }
-};
-
-const WEBGL_GPU_PROFILES = {
-  'nvidia_rtx4090': {
-    vendor: 'Google Inc. (NVIDIA)',
-    renderer: 'ANGLE (NVIDIA, NVIDIA GeForce RTX 4090 Direct3D11 vs_5_0 ps_5_0, D3D11)'
-  },
-  'nvidia_rtx3080': {
-    vendor: 'Google Inc. (NVIDIA)',
-    renderer: 'ANGLE (NVIDIA, NVIDIA GeForce RTX 3080 Direct3D11 vs_5_0 ps_5_0, D3D11)'
-  },
-  'nvidia_rtx3060': {
-    vendor: 'Google Inc. (NVIDIA)',
-    renderer: 'ANGLE (NVIDIA, NVIDIA GeForce RTX 3060 Direct3D11 vs_5_0 ps_5_0, D3D11)'
-  },
-  'nvidia_gtx1660ti': {
-    vendor: 'Google Inc. (NVIDIA)',
-    renderer: 'ANGLE (NVIDIA, NVIDIA GeForce GTX 1660 Ti Direct3D11 vs_5_0 ps_5_0, D3D11)'
-  },
-  'nvidia_rtx4060_laptop': {
-    vendor: 'Google Inc. (NVIDIA)',
-    renderer: 'ANGLE (NVIDIA, NVIDIA GeForce RTX 4060 Laptop GPU Direct3D11 vs_5_0 ps_5_0, D3D11)'
-  },
-  'amd_rx7900xtx': {
-    vendor: 'Google Inc. (AMD)',
-    renderer: 'ANGLE (AMD, AMD Radeon RX 7900 XTX Direct3D11 vs_5_0 ps_5_0, D3D11)'
-  },
-  'amd_rx6800xt': {
-    vendor: 'Google Inc. (AMD)',
-    renderer: 'ANGLE (AMD, AMD Radeon RX 6800 XT Direct3D11 vs_5_0 ps_5_0, D3D11)'
-  },
-  'amd_rx6700xt': {
-    vendor: 'Google Inc. (AMD)',
-    renderer: 'ANGLE (AMD, AMD Radeon RX 6700 XT Direct3D11 vs_5_0 ps_5_0, D3D11)'
-  },
-  'apple_m3_max': {
-    vendor: 'Apple Inc.',
-    renderer: 'Apple M3 Max (Metal 3.0)'
-  },
-  'apple_m2_pro': {
-    vendor: 'Apple Inc.',
-    renderer: 'Apple M2 Pro (Metal 3.0)'
-  },
-  'apple_m1': {
-    vendor: 'Apple Inc.',
-    renderer: 'Apple M1 (Metal)'
-  },
-  'intel_iris_xe': {
-    vendor: 'Google Inc. (Intel)',
-    renderer: 'ANGLE (Intel, Intel(R) Iris(R) Xe Graphics Direct3D11 vs_5_0 ps_5_0, D3D11)'
-  },
-  'intel_uhd_770': {
-    vendor: 'Google Inc. (Intel)',
-    renderer: 'ANGLE (Intel, Intel(R) UHD Graphics 770 Direct3D11 vs_5_0 ps_5_0, D3D11)'
-  },
-  'intel_arc_a770': {
-    vendor: 'Google Inc. (Intel)',
-    renderer: 'ANGLE (Intel, Intel(R) Arc(TM) A770 Graphics Direct3D11 vs_5_0 ps_5_0, D3D11)'
-  },
-  'adreno_740': {
-    vendor: 'Qualcomm',
-    renderer: 'Adreno (TM) 740 (OpenGL ES 3.2)'
-  },
-  'mali_g715': {
-    vendor: 'ARM',
-    renderer: 'Mali-G715 Immortalis (Vulkan 1.3)'
-  }
-};
-
 document.addEventListener('DOMContentLoaded', () => {
-  const toast = document.getElementById('toast');
-  const saveBtn = document.getElementById('save-settings');
-  const whitelistEl = document.getElementById('whitelist');
-  const blacklistEl = document.getElementById('blacklist');
-  const allModulesGrid = document.getElementById('all-modules-grid');
-  const searchInput = document.getElementById('all-modules-search');
-  const toggleAllOn = document.getElementById('toggle-all-on');
-  const toggleAllOff = document.getElementById('toggle-all-off');
-  const webglProfileSelect = document.getElementById('webgl-profile-select');
-  const webglVendorInput = document.getElementById('webgl-vendor');
-  const webglRendererInput = document.getElementById('webgl-renderer');
-  const optionsMasterToggle = document.getElementById('options-master-toggle');
-  const optionsMasterLabel = document.getElementById('options-master-label');
-  const optionsMasterDot = document.getElementById('options-master-dot');
-  const telemetryFeedContainer = document.getElementById('telemetry-feed-container');
-  const btnSimulateProbe = document.getElementById('btn-simulate-probe');
-  const btnClearFeed = document.getElementById('btn-clear-feed');
-  const btnTestWebgl = document.getElementById('btn-test-webgl');
-  const webglPreviewStatus = document.getElementById('webgl-preview-status');
-  const webglTestCanvas = document.getElementById('webgl-test-canvas');
+  const masterToggle = document.getElementById('studio-master-toggle');
+  const masterLabel = document.getElementById('studio-master-status');
+  const optBrave = document.getElementById('opt-brave');
+  const optHints = document.getElementById('opt-hints');
+  const optWebgl = document.getElementById('opt-webgl');
+  const optTimers = document.getElementById('opt-timers');
+  const optAdblock = document.getElementById('opt-adblock');
+  const optDisclaimer = document.getElementById('opt-disclaimer');
+  const optSpotify = document.getElementById('opt-spotify');
+  const optYoutube = document.getElementById('opt-youtube');
+  const btnSync = document.getElementById('btn-studio-sync');
+  const syncTitle = document.getElementById('sync-title');
+  const syncTime = document.getElementById('sync-time');
+  const whitelistInput = document.getElementById('whitelist-input');
+  const btnAddWhitelist = document.getElementById('btn-add-whitelist');
+  const whitelistTags = document.getElementById('whitelist-tags');
 
-  function showToast(msg) {
-    if (!toast) return;
-    toast.textContent = msg;
-    toast.classList.add('show');
-    setTimeout(() => { toast.classList.remove('show'); }, 2200);
-  }
+  // Load Saved Options
+  chrome.storage.local.get([
+    'masterEnabled', 'maskBraveApi', 'maskClientHints', 'normalizeWebgl',
+    'autoBypassTimers', 'bypassAdblockDetection', 'spotifyUnlocked',
+    'youtubeAds', 'whitelist', 'lastSyncTime', 'remoteSyncStatus', 'remoteVersion'
+  ], (res) => {
+    const isMaster = res.masterEnabled !== false;
+    masterToggle.checked = isMaster;
+    updateMasterStatus(isMaster);
 
-  // 1. Master Kill Switch Listener
-  if (optionsMasterToggle) {
-    optionsMasterToggle.addEventListener('change', () => {
-      const isEnabled = optionsMasterToggle.checked;
-      chrome.runtime.sendMessage({ type: 'TOGGLE_MASTER', enabled: isEnabled }, () => {
-        if (optionsMasterLabel) {
-          optionsMasterLabel.textContent = isEnabled ? 'ENGINE ARMED' : 'ENGINE DISABLED';
-          optionsMasterLabel.style.color = isEnabled ? '#00f076' : '#ff3366';
-        }
-        if (optionsMasterDot) {
-          optionsMasterDot.style.background = isEnabled ? '#00f076' : '#ff3366';
-        }
-        showToast(isEnabled ? 'Master Engine Armed' : 'Master Engine Suspended');
-        addTelemetryEntry(isEnabled ? 'SYSTEM' : 'WARNING', isEnabled ? 'Master Shield Engine Armed (42 modules)' : 'Emergency Kill Switch Triggered - All Modules Paused', isEnabled ? 'badge-green' : 'badge-purple');
-      });
-    });
-  }
+    optBrave.checked = res.maskBraveApi !== false;
+    optHints.checked = res.maskClientHints !== false;
+    optWebgl.checked = res.normalizeWebgl !== false;
+    optTimers.checked = res.autoBypassTimers !== false;
+    optAdblock.checked = res.bypassAdblockDetection !== false;
+    optDisclaimer.checked = true;
+    optSpotify.checked = res.spotifyUnlocked !== false;
+    optYoutube.checked = res.youtubeAds !== false;
 
-  // 2. Synchronize any checkbox for a given setting ID across all panels and matrices
-  function syncCheckboxesForSetting(id, checked) {
-    document.querySelectorAll(`input#${id}, input[data-setting-id="${id}"]`).forEach(el => {
-      el.checked = checked;
-    });
-    updateStatsCounter();
-  }
+    if (res.lastSyncTime) {
+      syncTime.textContent = 'Last checked: ' + new Date(res.lastSyncTime).toLocaleTimeString();
+    }
 
-  function syncAllCheckboxes(storageData) {
-    Object.entries(SETTINGS_MAP).forEach(([id, key]) => {
-      if (storageData && storageData[key] !== undefined) {
-        syncCheckboxesForSetting(id, Boolean(storageData[key]));
-      }
-    });
-    updateStatsCounter();
-  }
-
-  function updateStatsCounter() {
-    const statEl = document.getElementById('stat-modules');
-    if (!statEl) return;
-    let activeCount = 0;
-    const seen = new Set();
-    document.querySelectorAll('.panel:not(#panel-all) input[type="checkbox"]').forEach(cb => {
-      if (cb.id && !seen.has(cb.id)) {
-        seen.add(cb.id);
-        if (cb.checked) activeCount++;
-      }
-    });
-    statEl.textContent = activeCount;
-  }
-
-  // 3. Tab Navigation
-  document.querySelectorAll('.tab-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-
-      const targetTab = btn.dataset.tab;
-      document.querySelectorAll('.panel').forEach(p => {
-        p.classList.remove('active');
-        if (p.id === 'panel-' + targetTab) {
-          p.classList.add('active');
-        }
-      });
-    });
+    renderWhitelist(res.whitelist || []);
   });
 
-  // Handle URL param tab routing (e.g. ?tab=sites or ?tab=profile)
-  const urlParams = new URLSearchParams(window.location.search);
-  const requestedTab = urlParams.get('tab');
-  if (requestedTab) {
-    const matchBtn = document.querySelector(`.tab-btn[data-tab="${requestedTab}"]`);
-    if (matchBtn) matchBtn.click();
-  }
-
-  // 4. Live Telemetry Event Stream Feed
-  function addTelemetryEntry(tag, msg, badgeClass = 'badge-cyan') {
-    if (!telemetryFeedContainer) return;
-    const entry = document.createElement('div');
-    entry.className = 'feed-entry';
-    const now = new Date();
-    const timeStr = now.toTimeString().split(' ')[0];
-    entry.innerHTML = `
-      <span class="feed-time">${timeStr}</span>
-      <span class="feed-badge ${badgeClass}">${tag}</span>
-      <span class="feed-msg">${msg}</span>
-    `;
-    telemetryFeedContainer.prepend(entry);
-    if (telemetryFeedContainer.children.length > 50) {
-      telemetryFeedContainer.removeChild(telemetryFeedContainer.lastChild);
+  function updateMasterStatus(enabled) {
+    if (enabled) {
+      masterLabel.textContent = 'SYSTEM DEFENSE ARMED';
+      masterLabel.style.color = 'var(--accent-emerald)';
+    } else {
+      masterLabel.textContent = 'SYSTEM DEFENSE OFFLINE';
+      masterLabel.style.color = 'var(--accent-danger)';
     }
   }
 
-  if (btnSimulateProbe) {
-    btnSimulateProbe.addEventListener('click', () => {
-      const probeTypes = [
-        { tag: 'TRAP DEFUSED', msg: 'Intercepted offsetHeight ad detector on cdn-metrics.net', cls: 'badge-green' },
-        { tag: 'WEBRTC SHIELD', msg: 'Stripped ICE Candidate from RTCPeerConnection', cls: 'badge-cyan' },
-        { tag: 'TURBO AD 16X', msg: 'Sped up video ad player by 16.0x with auto-mute', cls: 'badge-purple' },
-        { tag: 'CANVAS NOISE', msg: 'Farbled 2D canvas hash with deterministic uniform noise', cls: 'badge-cyan' },
-        { tag: 'TIMER SKIP', msg: 'Bypassed 20s countdown timer on download-gate.io', cls: 'badge-green' }
-      ];
-      const p = probeTypes[Math.floor(Math.random() * probeTypes.length)];
-      addTelemetryEntry(p.tag, p.msg, p.cls);
-      showToast('Simulated Security Probe Blocked');
+  // Master Switch
+  masterToggle.addEventListener('change', () => {
+    const val = masterToggle.checked;
+    chrome.storage.local.set({ masterEnabled: val, enabled: val });
+    updateMasterStatus(val);
+  });
+
+  // Settings Toggles
+  optBrave.addEventListener('change', () => chrome.storage.local.set({ maskBraveApi: optBrave.checked }));
+  optHints.addEventListener('change', () => chrome.storage.local.set({ maskClientHints: optHints.checked }));
+  optWebgl.addEventListener('change', () => chrome.storage.local.set({ normalizeWebgl: optWebgl.checked }));
+  optTimers.addEventListener('change', () => chrome.storage.local.set({ autoBypassTimers: optTimers.checked }));
+  optAdblock.addEventListener('change', () => chrome.storage.local.set({ bypassAdblockDetection: optAdblock.checked }));
+  optSpotify.addEventListener('change', () => chrome.storage.local.set({ spotifyUnlocked: optSpotify.checked }));
+  optYoutube.addEventListener('change', () => chrome.storage.local.set({ youtubeAds: optYoutube.checked }));
+
+  // Whitelist Logic
+  function renderWhitelist(list) {
+    whitelistTags.innerHTML = '';
+    list.forEach(domain => {
+      const tag = document.createElement('div');
+      tag.className = 'wtag';
+      tag.innerHTML = `<span>${domain}</span><span class="wtag-del" data-domain="${domain}">×</span>`;
+      whitelistTags.appendChild(tag);
     });
-  }
 
-  if (btnClearFeed) {
-    btnClearFeed.addEventListener('click', () => {
-      if (telemetryFeedContainer) telemetryFeedContainer.innerHTML = '';
-      showToast('Event Stream Cleared');
-    });
-  }
-
-  // 5. 3D WebGL Live Diagnostic Canvas
-  function runWebGLDiagnostic() {
-    if (!webglTestCanvas) return;
-    const gl = webglTestCanvas.getContext('webgl') || webglTestCanvas.getContext('experimental-webgl');
-    if (!gl) {
-      if (webglPreviewStatus) webglPreviewStatus.textContent = 'WebGL not supported on device';
-      return;
-    }
-    const ext = gl.getExtension('WEBGL_debug_renderer_info');
-    let renderer = ext ? gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) : 'Generic WebGL';
-    if (webglRendererInput && webglRendererInput.value) {
-      renderer = webglRendererInput.value;
-    }
-    if (webglPreviewStatus) webglPreviewStatus.textContent = 'Spoofed: ' + renderer.split(',')[0];
-
-    // Render a sleek rotating glowing cyan cube
-    gl.viewport(0, 0, webglTestCanvas.width, webglTestCanvas.height);
-    gl.clearColor(0.03, 0.05, 0.08, 1.0);
-    gl.clear(gl.COLOR_BUFFER_BIT);
-
-    // Simple canvas 2D fallback glow on 2d context or clear
-    showToast('Hardware Diagnostic Verified: WebGL Active');
-  }
-
-  if (btnTestWebgl) {
-    btnTestWebgl.addEventListener('click', runWebGLDiagnostic);
-  }
-
-  // 6. WebGL Preset Profiles Handler
-  function matchWebGLProfileKey(vendor, renderer) {
-    for (const [key, prof] of Object.entries(WEBGL_GPU_PROFILES)) {
-      if (prof.vendor === vendor && prof.renderer === renderer) {
-        return key;
-      }
-    }
-    return 'custom';
-  }
-
-  if (webglProfileSelect) {
-    webglProfileSelect.addEventListener('change', () => {
-      const selected = webglProfileSelect.value;
-      if (selected && selected !== 'custom' && WEBGL_GPU_PROFILES[selected]) {
-        const prof = WEBGL_GPU_PROFILES[selected];
-        if (webglVendorInput) webglVendorInput.value = prof.vendor;
-        if (webglRendererInput) webglRendererInput.value = prof.renderer;
-        chrome.storage.local.set({
-          webglProfile: selected,
-          webglVendor: prof.vendor,
-          webglRenderer: prof.renderer
+    document.querySelectorAll('.wtag-del').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const dom = e.target.getAttribute('data-domain');
+        chrome.storage.local.get(['whitelist'], (r) => {
+          const updated = (r.whitelist || []).filter(d => d !== dom);
+          chrome.storage.local.set({ whitelist: updated });
+          renderWhitelist(updated);
         });
-        if (webglPreviewStatus) webglPreviewStatus.textContent = 'Active: ' + prof.renderer.split(',')[0];
-        addTelemetryEntry('GPU ROTATED', 'Hardware spoofed as ' + prof.renderer.split(',')[0], 'badge-cyan');
-        showToast('WebGL GPU profile applied: ' + webglProfileSelect.options[webglProfileSelect.selectedIndex].text);
+      });
+    });
+  }
+
+  btnAddWhitelist.addEventListener('click', () => {
+    const val = (whitelistInput.value || '').trim().toLowerCase();
+    if (!val) return;
+    chrome.storage.local.get(['whitelist'], (r) => {
+      const list = r.whitelist || [];
+      if (!list.includes(val)) {
+        list.push(val);
+        chrome.storage.local.set({ whitelist: list });
+        renderWhitelist(list);
       }
-    });
-  }
-
-  if (webglVendorInput) {
-    webglVendorInput.addEventListener('input', () => {
-      if (webglProfileSelect) webglProfileSelect.value = 'custom';
-    });
-  }
-
-  if (webglRendererInput) {
-    webglRendererInput.addEventListener('input', () => {
-      if (webglProfileSelect) webglProfileSelect.value = 'custom';
-    });
-  }
-
-  // 7. Render All Modules Matrix with Search
-  function renderAllModulesMatrix(filter = '') {
-    if (!allModulesGrid) return;
-    allModulesGrid.innerHTML = '';
-    const q = filter.toLowerCase().trim();
-
-    Object.entries(MODULE_CATEGORIES).forEach(([catKey, cat]) => {
-      const matching = cat.settings.filter(id => {
-        const meta = SETTING_LABELS[id] || { title: id, desc: '' };
-        return !q || meta.title.toLowerCase().includes(q) || meta.desc.toLowerCase().includes(q) || cat.label.toLowerCase().includes(q);
-      });
-
-      if (matching.length > 0) {
-        const card = document.createElement('div');
-        card.className = 'card';
-        card.innerHTML = `
-          <div class="card-t">
-            <div class="ci">${cat.icon}</div>
-            <h3>${cat.label}</h3>
-            <span>${matching.length}</span>
-          </div>
-        `;
-
-        matching.forEach(id => {
-          const meta = SETTING_LABELS[id] || { title: id, desc: '' };
-          const row = document.createElement('div');
-          row.className = 'row';
-          row.innerHTML = `
-            <div class="rinfo">
-              <h4>${meta.title}</h4>
-              <span>${meta.desc}</span>
-            </div>
-            <label class="sw">
-              <input type="checkbox" data-setting-id="${id}">
-              <span class="sl"></span>
-            </label>
-          `;
-          const input = row.querySelector('input');
-          const original = document.getElementById(id);
-          if (original) input.checked = original.checked;
-
-          input.addEventListener('change', () => {
-            syncCheckboxesForSetting(id, input.checked);
-            const key = SETTINGS_MAP[id];
-            if (key) chrome.storage.local.set({ [key]: input.checked });
-          });
-
-          card.appendChild(row);
-        });
-
-        allModulesGrid.appendChild(card);
-      }
-    });
-  }
-
-  if (searchInput) {
-    searchInput.addEventListener('input', () => {
-      renderAllModulesMatrix(searchInput.value);
-    });
-  }
-
-  // 8. Bulk Toggle Actions
-  function setAllModules(enabled) {
-    const updates = {};
-    Object.entries(SETTINGS_MAP).forEach(([id, key]) => {
-      updates[key] = enabled;
-      syncCheckboxesForSetting(id, enabled);
-    });
-    chrome.storage.local.set(updates, () => {
-      showToast(enabled ? 'All 42 Modules Enabled' : 'All Modules Disabled');
-      renderAllModulesMatrix(searchInput ? searchInput.value : '');
-    });
-  }
-
-  if (toggleAllOn) toggleAllOn.addEventListener('click', () => setAllModules(true));
-  if (toggleAllOff) toggleAllOff.addEventListener('click', () => setAllModules(false));
-
-  // Category buttons
-  document.querySelectorAll('.cat-btn-sm[data-category]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const category = btn.dataset.category;
-      const enable = btn.dataset.enable === 'true';
-      const catObj = MODULE_CATEGORIES[category] || Object.values(MODULE_CATEGORIES).find(c => c.label.toLowerCase().includes(category));
-      const ids = catObj ? catObj.settings : [];
-      const updates = {};
-      ids.forEach(id => {
-        const key = SETTINGS_MAP[id];
-        if (key) {
-          updates[key] = enable;
-          syncCheckboxesForSetting(id, enable);
-        }
-      });
-      chrome.storage.local.set(updates, () => {
-        showToast((catObj ? catObj.label : category) + (enable ? ' Enabled' : ' Disabled'));
-        renderAllModulesMatrix(searchInput ? searchInput.value : '');
-      });
+      whitelistInput.value = '';
     });
   });
 
-  // 9. Checkbox Change Listeners
-  Object.entries(SETTINGS_MAP).forEach(([id, storageKey]) => {
-    const el = document.getElementById(id);
-    if (el) {
-      el.addEventListener('change', () => {
-        syncCheckboxesForSetting(id, el.checked);
-        chrome.storage.local.set({ [storageKey]: el.checked });
-      });
-    }
-  });
-
-  // 10. Load Initial Settings
-  const storageKeys = [
-    ...Object.values(SETTINGS_MAP),
-    'masterEnabled', 'blockedCounter', 'bypassedSites', 'webglVendor', 'webglRenderer', 'webglProfile', 'uaCategory', 'whitelist', 'blacklist'
-  ];
-
-  chrome.storage.local.get(storageKeys, (res) => {
-    syncAllCheckboxes(res);
-
-    if (optionsMasterToggle) {
-      const isMaster = res.masterEnabled !== false;
-      optionsMasterToggle.checked = isMaster;
-      if (optionsMasterLabel) {
-        optionsMasterLabel.textContent = isMaster ? 'ENGINE ARMED' : 'ENGINE DISABLED';
-        optionsMasterLabel.style.color = isMaster ? '#00f076' : '#ff3366';
-      }
-      if (optionsMasterDot) {
-        optionsMasterDot.style.background = isMaster ? '#00f076' : '#ff3366';
-      }
-    }
-
-    if (res.webglVendor && webglVendorInput) webglVendorInput.value = res.webglVendor;
-    if (res.webglRenderer && webglRendererInput) webglRendererInput.value = res.webglRenderer;
-    if (webglProfileSelect) {
-      const matched = res.webglProfile || matchWebGLProfileKey(webglVendorInput ? webglVendorInput.value : '', webglRendererInput ? webglRendererInput.value : '');
-      webglProfileSelect.value = matched;
-    }
-
-    if (res.uaCategory && document.getElementById('ua-select-opt')) {
-      document.getElementById('ua-select-opt').value = res.uaCategory;
-    }
-
-    const statTraps = document.getElementById('stat-traps');
-    if (statTraps) statTraps.textContent = String(res.blockedCounter || 0);
-
-    const statBypassed = document.getElementById('stat-bypassed');
-    if (statBypassed) statBypassed.textContent = String((res.bypassedSites || []).length);
-
-    // Load active Theme
-    chrome.storage.local.get(['theme'], (tres) => {
-      const activeTheme = tres.theme || 'obsidian_noir';
-      document.documentElement.setAttribute('data-theme', activeTheme);
-      highlightActiveThemeCard(activeTheme);
-    });
-
-    renderAllModulesMatrix();
-    runWebGLDiagnostic();
-  });
-
-  function highlightActiveThemeCard(themeId) {
-    document.querySelectorAll('.theme-card').forEach(c => {
-      const btn = c.querySelector('.btn-apply-theme');
-      if (c.dataset.themeId === themeId) {
-        c.style.borderColor = 'var(--accent-emerald)';
-        c.style.boxShadow = '0 0 20px var(--border-glow-emerald)';
-        if (btn) {
-          btn.textContent = '✓ Active Theme';
-          btn.className = 'abtn pri btn-sm btn-apply-theme';
-        }
+  // Manual Sync Button
+  btnSync.addEventListener('click', async () => {
+    btnSync.textContent = 'Syncing...';
+    btnSync.disabled = true;
+    try {
+      const res = await chrome.runtime.sendMessage({ type: 'TRIGGER_SYNC' });
+      if (res && res.success) {
+        btnSync.textContent = 'Synced!';
+        syncTime.textContent = 'Last checked: ' + new Date().toLocaleTimeString();
+        syncTitle.textContent = `GitHub Rules: Connected (v${res.remoteVersion || '5.3.0'})`;
       } else {
-        c.style.borderColor = 'var(--border-glass)';
-        c.style.boxShadow = 'none';
-        if (btn) {
-          btn.textContent = 'Apply Theme';
-          btn.className = 'abtn sec btn-sm btn-apply-theme';
-        }
+        btnSync.textContent = 'Error';
       }
-    });
-  }
-
-  // Theme Apply Click Handlers
-  document.querySelectorAll('.btn-apply-theme').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const theme = btn.dataset.theme;
-      document.documentElement.setAttribute('data-theme', theme);
-      chrome.storage.local.set({ theme });
-      highlightActiveThemeCard(theme);
-      showToast('Theme Applied: ' + theme.replace('_', ' ').toUpperCase());
-      addTelemetryEntry('THEME SWITCH', 'Visual Identity updated to ' + theme, 'badge-purple');
-    });
+    } catch (_) {
+      btnSync.textContent = 'Synced';
+    }
+    setTimeout(() => {
+      btnSync.textContent = 'Check & Sync';
+      btnSync.disabled = false;
+    }, 2000);
   });
 
-  // 11. Save Button
-  if (saveBtn) {
-    saveBtn.addEventListener('click', () => {
-      const updates = {};
-      Object.entries(SETTINGS_MAP).forEach(([id, key]) => {
-        const el = document.getElementById(id);
-        if (el) updates[key] = el.checked;
-      });
-      if (webglVendorInput) updates.webglVendor = webglVendorInput.value;
-      if (webglRendererInput) updates.webglRenderer = webglRendererInput.value;
-      if (webglProfileSelect) updates.webglProfile = webglProfileSelect.value;
-      const uaSel = document.getElementById('ua-select-opt');
-      if (uaSel) updates.uaCategory = uaSel.value;
-
-      chrome.storage.local.set(updates, () => {
-        showToast('All configurations saved & synced');
-      });
-    });
-  }
-
-  // 12. Real-Time Bidirectional Synchronization (Options Studio <-> Popup HUD)
+  // Two-way sync
   chrome.storage.onChanged.addListener((changes, area) => {
     if (area !== 'local') return;
-
-    // Sync Theme
-    if (changes.theme) {
-      const newTheme = changes.theme.newValue || 'obsidian_noir';
-      document.documentElement.setAttribute('data-theme', newTheme);
-      highlightActiveThemeCard(newTheme);
+    if (changes.masterEnabled) {
+      masterToggle.checked = changes.masterEnabled.newValue !== false;
+      updateMasterStatus(masterToggle.checked);
     }
-
-    // Sync Master Switch
-    if (changes.masterEnabled !== undefined) {
-      const isMaster = changes.masterEnabled.newValue !== false;
-      if (optionsMasterToggle) optionsMasterToggle.checked = isMaster;
-      if (optionsMasterLabel) {
-        optionsMasterLabel.textContent = isMaster ? 'ENGINE ARMED' : 'ENGINE DISABLED';
-        optionsMasterLabel.style.color = isMaster ? '#00f076' : '#ff3366';
-      }
-      if (optionsMasterDot) {
-        optionsMasterDot.style.background = isMaster ? '#00f076' : '#ff3366';
-      }
-    }
-
-    // Sync Individual Module Toggles
-    Object.entries(SETTINGS_MAP).forEach(([domId, key]) => {
-      if (changes[key] !== undefined) {
-        syncCheckboxesForSetting(domId, Boolean(changes[key].newValue));
-      }
-    });
-
-    // Sync Counters
-    const statTraps = document.getElementById('stat-traps');
-    if (changes.blockedCounter && statTraps) {
-      statTraps.textContent = String(changes.blockedCounter.newValue || 0);
-    }
-    const statBypassed = document.getElementById('stat-bypassed');
-    if (changes.bypassedSites && statBypassed) {
-      statBypassed.textContent = String((changes.bypassedSites.newValue || []).length);
-    }
-
-    // Sync UA Persona
-    if (changes.uaCategory) {
-      const uaSel = document.getElementById('ua-select-opt');
-      if (uaSel) uaSel.value = changes.uaCategory.newValue;
+    if (changes.whitelist) {
+      renderWhitelist(changes.whitelist.newValue || []);
     }
   });
 });

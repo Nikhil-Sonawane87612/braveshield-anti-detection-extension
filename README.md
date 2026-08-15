@@ -5,7 +5,7 @@
 # 🛡️ BraveShield Bypass Pro & Android Super Suite
 ### Universal Stealth, Anti-Detection, Spotify Unlocked & Turbo Automation Suite
 
-[![Version](https://img.shields.io/badge/version-v5.2.2-6366f1?style=for-the-badge&logo=semver&logoColor=white)](https://github.com/Nikhil-Sonawane87612/braveshield-anti-detection-extension/releases/latest)
+[![Version](https://img.shields.io/badge/version-v5.3.0-6366f1?style=for-the-badge&logo=semver&logoColor=white)](https://github.com/Nikhil-Sonawane87612/braveshield-anti-detection-extension/releases/latest)
 [![Manifest](https://img.shields.io/badge/manifest-v3-10b981?style=for-the-badge&logo=googlechrome&logoColor=white)](#-desktop-installation)
 [![Android](https://img.shields.io/badge/Android-55%2B%20Features-3ddc84?style=for-the-badge&logo=android&logoColor=white)](#-android-super-suite-setup)
 [![Modules](https://img.shields.io/badge/modules-55%2B%20Armed-8b5cf6?style=for-the-badge&logo=shield&logoColor=white)](#-the-core-stealth-modules)

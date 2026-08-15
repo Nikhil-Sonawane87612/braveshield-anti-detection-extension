@@ -1,433 +1,176 @@
 /**
- * BraveShield Bypass Pro v5.1.0 - Popup Controller Pro Max
- * Obsidian Glassmorphic HUD, Radial Gauge Animation, Filter Chips, Live Telemetry Ticker.
+ * BraveShield Bypass Pro — Popup HUD Controller
+ * Version: 5.3.0
  */
 
-const POPUP_SETTINGS_MAP = {
-  'toggle-links': 'autoBypassLinks',
-  'toggle-timers': 'autoBypassTimers',
-  'toggle-cookies': 'autoDismissCookies',
-  'toggle-scroll': 'autoScroll',
-  'toggle-popunder': 'interceptPopunders',
-  'toggle-adblock': 'bypassAdblockDetection',
-  'toggle-youtube': 'youtubeAds',
-  'toggle-video-turbo-ad': 'videoTurboAdSpeed',
-  'toggle-video-turbo-bg': 'videoTurboBgPlay',
-  'toggle-video-turbo-pip': 'videoTurboPip',
-  'toggle-sponsorblock': 'sponsorBlock',
-  'toggle-webr': 'hideWebdriver',
-  'toggle-webrtc': 'preventWebRTC',
-  'toggle-permissions': 'autoDenyPermissions',
-  'toggle-bait': 'fakeNetworkBait',
-  'toggle-canvas': 'normalizeCanvas',
-  'toggle-navigator': 'spoofNavigator',
-  'toggle-rightclick': 'forceRightClick',
-  'toggle-textsel': 'forceTextSelect',
-  'toggle-scrolllock': 'antiScrollLock',
-  'toggle-clipboard': 'blockClipboardRead',
-  'toggle-timezone': 'timezoneSpoof',
-  'toggle-devmode': 'devMode'
-};
-
-const POPUP_CATEGORIES = {
-  'auto-bypass': ['toggle-links', 'toggle-timers', 'toggle-cookies', 'toggle-scroll', 'toggle-popunder', 'toggle-adblock', 'toggle-youtube'],
-  'youtube': ['toggle-video-turbo-ad', 'toggle-video-turbo-bg', 'toggle-video-turbo-pip', 'toggle-sponsorblock'],
-  'stealth': ['toggle-webr', 'toggle-webrtc', 'toggle-permissions', 'toggle-bait', 'toggle-canvas', 'toggle-navigator'],
-  'extra': ['toggle-rightclick', 'toggle-textsel', 'toggle-scrolllock', 'toggle-clipboard', 'toggle-timezone', 'toggle-devmode']
-};
-
-const LIVE_TICKER_MESSAGES = [
-  '⚡ WebGL spoofed to NVIDIA RTX 4090',
-  '🛡️ DOM trap neutralized on active page',
-  '🚀 16x Video Ad Fast-Forward active',
-  '🛑 WebRTC IP leak shield engaged',
-  '🎨 Canvas fingerprint farbled & isolated',
-  '✨ Background video playback unlocked',
-  '🔒 Client Hints & Brand sanitized'
-];
-
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   const masterToggle = document.getElementById('master-toggle');
-  const masterCard = document.getElementById('master-card');
   const masterSubtitle = document.getElementById('master-subtitle');
-  const statusBar = document.getElementById('status-bar');
-  const statusLabel = document.getElementById('status-label');
+  const toggleBrave = document.getElementById('toggle-brave');
+  const toggleTimers = document.getElementById('toggle-timers');
+  const toggleAdblock = document.getElementById('toggle-adblock');
+  const toggleMedia = document.getElementById('toggle-media');
   const statusSite = document.getElementById('status-site');
-  const auditGrade = document.getElementById('audit-grade');
-  const metricStealthPct = document.getElementById('metric-stealth-pct');
-  const gaugeFill = document.getElementById('gauge-fill');
-  const popupTickerFeed = document.getElementById('popup-ticker-feed');
-  const fingerprintsSanitized = document.getElementById('fingerprints-sanitized');
-  const trapsBypassedEl = document.getElementById('traps-bypassed');
-  const sitesBypassedEl = document.getElementById('sites-bypassed');
-  const uaCategory = document.getElementById('ua-category');
-  const uaStatus = document.getElementById('ua-status');
+  const statusDot = document.getElementById('status-dot');
+  const statusLabel = document.getElementById('status-label');
   const btnWhitelist = document.getElementById('btn-whitelist');
-  const btnBlacklist = document.getElementById('btn-blacklist');
-  const btnNewIdentity = document.getElementById('btn-new-identity');
-  const btnTogglePip = document.getElementById('btn-toggle-pip');
-  const btnOpenOptions = document.getElementById('btn-open-options');
-  const footerModules = document.getElementById('footer-modules');
+  const whitelistText = document.getElementById('whitelist-text');
+  const btnOptions = document.getElementById('btn-open-options');
+  const btnSync = document.getElementById('btn-sync-rules');
+  const syncText = document.getElementById('sync-text');
+  const updateBadge = document.getElementById('update-badge');
 
   let currentHostname = '';
-  let tickerIdx = 0;
 
-  // 1. Live Ticker Rotation
-  setInterval(() => {
-    if (popupTickerFeed) {
-      popupTickerFeed.style.opacity = '0';
-      setTimeout(() => {
-        tickerIdx = (tickerIdx + 1) % LIVE_TICKER_MESSAGES.length;
-        popupTickerFeed.textContent = LIVE_TICKER_MESSAGES[tickerIdx];
-        popupTickerFeed.style.opacity = '1';
-      }, 200);
-    }
-  }, 4000);
-
-  // 2. Update Live Audit & Radial Gauge Animation
-  function updateLiveAudit(masterActive) {
-    if (!masterActive) {
-      if (auditGrade) {
-        auditGrade.textContent = 'OFF';
-        auditGrade.style.color = '#ff3366';
-      }
-      if (metricStealthPct) {
-        metricStealthPct.textContent = '0%';
-        metricStealthPct.style.color = '#ff3366';
-      }
-      if (gaugeFill) {
-        gaugeFill.setAttribute('stroke-dasharray', '0, 100');
-        gaugeFill.style.stroke = '#ff3366';
-      }
-      if (statusLabel) statusLabel.textContent = 'Engine Paused';
-      if (statusBar) statusBar.classList.add('disabled');
-      if (masterCard) masterCard.classList.add('disabled');
-      if (masterSubtitle) masterSubtitle.textContent = 'All modules suspended via Kill Switch';
-      return;
-    }
-
-    if (statusBar) statusBar.classList.remove('disabled');
-    if (masterCard) masterCard.classList.remove('disabled');
-    if (statusLabel) statusLabel.textContent = 'Guarded';
-
-    let activeCount = 0;
-    const totalCount = Object.keys(POPUP_SETTINGS_MAP).length;
-    Object.keys(POPUP_SETTINGS_MAP).forEach((id) => {
-      const el = document.getElementById(id);
-      if (el && el.checked) activeCount++;
-    });
-
-    const totalArmed = activeCount + 8; // Including background DNR and core hooks
-    if (fingerprintsSanitized) fingerprintsSanitized.textContent = String(totalArmed);
-    if (footerModules) footerModules.textContent = totalArmed + ' modules armed';
-    if (masterSubtitle) masterSubtitle.textContent = totalArmed + ' Stealth Modules Armed';
-
-    // Calculate Ratio & Radial Gauge stroke
-    const ratio = activeCount / totalCount;
-    const pct = Math.round(ratio * 100);
-
-    if (metricStealthPct) {
-      metricStealthPct.textContent = pct + '%';
-      metricStealthPct.style.color = ratio >= 0.9 ? '#00f076' : ratio >= 0.7 ? '#00e5ff' : '#fbbf24';
-    }
-
-    if (gaugeFill) {
-      gaugeFill.setAttribute('stroke-dasharray', `${pct}, 100`);
-      gaugeFill.style.stroke = ratio >= 0.9 ? '#00f076' : ratio >= 0.7 ? '#00e5ff' : '#fbbf24';
-    }
-
-    if (auditGrade) {
-      if (ratio >= 0.9) {
-        auditGrade.textContent = 'A+';
-        auditGrade.style.color = '#00f076';
-      } else if (ratio >= 0.75) {
-        auditGrade.textContent = 'A';
-        auditGrade.style.color = '#00e5ff';
-      } else if (ratio >= 0.5) {
-        auditGrade.textContent = 'B';
-        auditGrade.style.color = '#fbbf24';
-      } else {
-        auditGrade.textContent = 'C';
-        auditGrade.style.color = '#ff3366';
-      }
-    }
-
-    updateCategoryCounters();
-  }
-
-  function updateCategoryCounters() {
-    Object.entries(POPUP_CATEGORIES).forEach(([catId, ids]) => {
-      const cntEl = document.getElementById('cnt-' + catId);
-      if (cntEl) {
-        const active = ids.filter(id => {
-          const el = document.getElementById(id);
-          return el && el.checked;
-        }).length;
-        cntEl.textContent = `${active}/${ids.length}`;
-      }
-    });
-  }
-
-  // 3. Master Kill Switch Listener
-  if (masterToggle) {
-    masterToggle.addEventListener('change', () => {
-      const isEnabled = masterToggle.checked;
-      chrome.runtime.sendMessage({ type: 'TOGGLE_MASTER', enabled: isEnabled }, () => {
-        updateLiveAudit(isEnabled);
-      });
-    });
-  }
-
-  // 4. Quick Action HUD Handlers
-  if (btnNewIdentity) {
-    btnNewIdentity.addEventListener('click', () => {
-      btnNewIdentity.style.transform = 'rotate(180deg) scale(0.95)';
-      setTimeout(() => { btnNewIdentity.style.transform = ''; }, 350);
-      chrome.runtime.sendMessage({ type: 'NEW_IDENTITY' }, (res) => {
-        if (res && res.identity) {
-          if (uaCategory) uaCategory.value = res.identity.ua;
-          if (uaStatus) uaStatus.textContent = res.identity.profile;
-          if (popupTickerFeed) popupTickerFeed.textContent = '🎲 Switched to ' + res.identity.profile;
-        }
-      });
-    });
-  }
-
-  if (btnTogglePip) {
-    btnTogglePip.addEventListener('click', () => {
-      chrome.runtime.sendMessage({ type: 'TOGGLE_PIP' });
-      if (popupTickerFeed) popupTickerFeed.textContent = '📺 Picture-in-Picture triggered';
-    });
-  }
-
-  if (btnOpenOptions) {
-    btnOpenOptions.addEventListener('click', () => {
-      chrome.runtime.openOptionsPage();
-    });
-  }
-
-  // 5. Accordion Expand / Collapse
-  document.querySelectorAll('.group-header').forEach(hdr => {
-    const targetId = hdr.dataset.target;
-    const body = document.getElementById(targetId);
-    if (hdr && body) {
-      hdr.addEventListener('click', () => {
-        const isCollapsed = hdr.classList.toggle('collapsed');
-        body.style.display = isCollapsed ? 'none' : 'flex';
-      });
-    }
-  });
-
-  // 6. Filter Chips Dock
-  document.querySelectorAll('.filter-chip:not(.link-chip)').forEach(chip => {
-    chip.addEventListener('click', () => {
-      document.querySelectorAll('.filter-chip:not(.link-chip)').forEach(c => c.classList.remove('active'));
-      chip.classList.add('active');
-
-      const cat = chip.dataset.category;
-      if (cat === 'all') {
-        document.querySelectorAll('.module-group').forEach(grp => { grp.style.display = 'block'; });
-      } else {
-        document.querySelectorAll('.module-group').forEach(grp => {
-          grp.style.display = grp.id === 'sec-' + cat ? 'block' : 'none';
-        });
-      }
-    });
-  });
-
-  document.querySelectorAll('.link-chip').forEach(chip => {
-    chip.addEventListener('click', () => {
-      const tab = chip.dataset.tab;
-      chrome.tabs.create({ url: chrome.runtime.getURL('options.html?tab=' + tab) });
-    });
-  });
-
-  // 7. Individual Module Checkbox Sync
-  Object.entries(POPUP_SETTINGS_MAP).forEach(([id, storageKey]) => {
-    const el = document.getElementById(id);
-    if (el) {
-      el.addEventListener('change', () => {
-        chrome.storage.local.set({ [storageKey]: el.checked }, () => {
-          updateLiveAudit(masterToggle ? masterToggle.checked : true);
-        });
-      });
-    }
-  });
-
-  // 8. Load Initial Settings & Storage
-  const storageKeys = [
-    ...Object.values(POPUP_SETTINGS_MAP),
-    'masterEnabled', 'blockedCounter', 'bypassedSites', 'selectedUA', 'uaCategory'
-  ];
-
-  chrome.storage.local.get(storageKeys, (res) => {
-    const isMaster = res.masterEnabled !== false;
-    if (masterToggle) masterToggle.checked = isMaster;
-
-    Object.entries(POPUP_SETTINGS_MAP).forEach(([id, storageKey]) => {
-      const el = document.getElementById(id);
-      if (el && res[storageKey] !== undefined) {
-        el.checked = Boolean(res[storageKey]);
-      }
-    });
-
-    if (trapsBypassedEl) trapsBypassedEl.textContent = String(res.blockedCounter || 0);
-    if (sitesBypassedEl) sitesBypassedEl.textContent = String((res.bypassedSites || []).length);
-
-    if (uaCategory && res.uaCategory) {
-      uaCategory.value = res.uaCategory;
-      if (uaStatus) uaStatus.textContent = uaCategory.options[uaCategory.selectedIndex]?.text.split('•')[0] || res.uaCategory;
-    }
-
-    // Load Theme
-    const activeTheme = res.theme || 'obsidian_noir';
-    const themeSelector = document.getElementById('theme-selector');
-    const themeStatus = document.getElementById('theme-status');
-    if (themeSelector) {
-      themeSelector.value = activeTheme;
-      document.documentElement.setAttribute('data-theme', activeTheme);
-      if (themeStatus) themeStatus.textContent = themeSelector.options[themeSelector.selectedIndex]?.text.split('(')[0] || activeTheme;
-    }
-
-    updateLiveAudit(isMaster);
-  });
-
-  // 9. User Agent Persona & Theme Selection
-  const themeSelector = document.getElementById('theme-selector');
-  const themeStatus = document.getElementById('theme-status');
-  if (themeSelector) {
-    themeSelector.addEventListener('change', () => {
-      const selected = themeSelector.value;
-      const label = themeSelector.options[themeSelector.selectedIndex]?.text.split('(')[0] || selected;
-      document.documentElement.setAttribute('data-theme', selected);
-      chrome.storage.local.set({ theme: selected });
-      if (themeStatus) themeStatus.textContent = label;
-      if (popupTickerFeed) popupTickerFeed.textContent = '🎨 Theme: ' + label;
-    });
-  }
-
-  if (uaCategory) {
-    uaCategory.addEventListener('change', () => {
-      const val = uaCategory.value;
-      const text = uaCategory.options[uaCategory.selectedIndex]?.text.split('•')[0] || val;
-      chrome.storage.local.set({ uaCategory: val, selectedUA: val });
-      if (uaStatus) uaStatus.textContent = text;
-      if (popupTickerFeed) popupTickerFeed.textContent = '🎭 Persona: ' + text;
-    });
-  }
-
-  // 10. Current Tab Status & Site Rules
-  chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-    if (tabs[0]?.url) {
+  // 1. Get Active Tab Domain
+  try {
+    const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+    if (tabs && tabs[0] && tabs[0].url) {
       try {
         const url = new URL(tabs[0].url);
         currentHostname = url.hostname;
-        if (statusSite) statusSite.textContent = currentHostname;
-
-        chrome.runtime.sendMessage({ type: 'GET_SITE_STATUS', url: tabs[0].url }, (status) => {
-          if (status) {
-            if (status.isBlacklisted) {
-              if (btnBlacklist) btnBlacklist.innerHTML = '<span>🚫 Un-blacklist</span>';
-            }
-            if (status.isWhitelisted) {
-              if (btnWhitelist) btnWhitelist.innerHTML = '<span>🛡️ Un-whitelist</span>';
-            }
-          }
-        });
+        statusSite.textContent = currentHostname || 'Local / System Page';
       } catch (_) {
-        if (statusSite) statusSite.textContent = 'System Protocol Page';
+        statusSite.textContent = 'System / Extension Tab';
       }
+    }
+  } catch (_) {
+    statusSite.textContent = 'Active Session';
+  }
+
+  // 2. Load Stored States
+  chrome.storage.local.get([
+    'masterEnabled', 'maskBraveApi', 'autoBypassTimers',
+    'bypassAdblockDetection', 'spotifyUnlocked', 'whitelist',
+    'updateAvailable', 'lastSyncTime'
+  ], (res) => {
+    const isMaster = res.masterEnabled !== false;
+    masterToggle.checked = isMaster;
+    updateMasterUI(isMaster);
+
+    toggleBrave.checked = res.maskBraveApi !== false;
+    toggleTimers.checked = res.autoBypassTimers !== false;
+    toggleAdblock.checked = res.bypassAdblockDetection !== false;
+    toggleMedia.checked = res.spotifyUnlocked !== false;
+
+    if (res.updateAvailable) {
+      updateBadge.classList.remove('hidden');
+    }
+
+    const whitelist = Array.isArray(res.whitelist) ? res.whitelist : [];
+    if (currentHostname && whitelist.includes(currentHostname)) {
+      whitelistText.textContent = 'Whitelisted';
+      statusLabel.textContent = 'Whitelisted';
+      statusDot.classList.add('disabled');
     }
   });
 
-  if (btnWhitelist) {
-    btnWhitelist.addEventListener('click', () => {
-      if (!currentHostname) return;
-      if (btnWhitelist.textContent.includes('Un-')) {
-        chrome.runtime.sendMessage({ type: 'REMOVE_WHITELIST', site: currentHostname }, () => {
-          btnWhitelist.innerHTML = '<span class="site-btn-icon">🛡️</span><span>Whitelist Site</span>';
-        });
-      } else {
-        chrome.runtime.sendMessage({ type: 'ADD_WHITELIST', site: currentHostname }, () => {
-          btnWhitelist.innerHTML = '<span>🛡️ Un-whitelist</span>';
-        });
+  function updateMasterUI(enabled) {
+    if (enabled) {
+      masterSubtitle.textContent = 'All 24 Stealth Modules Armed';
+      statusDot.classList.remove('disabled');
+      statusLabel.textContent = 'Guarded';
+    } else {
+      masterSubtitle.textContent = 'System Defense Disabled';
+      statusDot.classList.add('disabled');
+      statusLabel.textContent = 'Disabled';
+    }
+  }
+
+  // 3. Event Listeners
+  masterToggle.addEventListener('change', () => {
+    const val = masterToggle.checked;
+    chrome.storage.local.set({ masterEnabled: val, enabled: val });
+    updateMasterUI(val);
+
+    // Notify active tab
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      if (tabs && tabs[0]?.id) {
+        chrome.tabs.sendMessage(tabs[0].id, { type: 'SET_MASTER_STATE', enabled: val }).catch(() => {});
       }
     });
-  }
+  });
 
-  if (btnBlacklist) {
-    btnBlacklist.addEventListener('click', () => {
-      if (!currentHostname) return;
-      if (btnBlacklist.textContent.includes('Un-')) {
-        chrome.runtime.sendMessage({ type: 'REMOVE_BLACKLIST', site: currentHostname }, () => {
-          btnBlacklist.innerHTML = '<span class="site-btn-icon">🚫</span><span>Blacklist Site</span>';
-        });
+  toggleBrave.addEventListener('change', () => {
+    chrome.storage.local.set({ maskBraveApi: toggleBrave.checked });
+  });
+
+  toggleTimers.addEventListener('change', () => {
+    chrome.storage.local.set({ autoBypassTimers: toggleTimers.checked });
+  });
+
+  toggleAdblock.addEventListener('change', () => {
+    chrome.storage.local.set({ bypassAdblockDetection: toggleAdblock.checked });
+  });
+
+  toggleMedia.addEventListener('change', () => {
+    chrome.storage.local.set({ spotifyUnlocked: toggleMedia.checked, youtubeAds: toggleMedia.checked });
+  });
+
+  // Whitelist Button
+  btnWhitelist.addEventListener('click', () => {
+    if (!currentHostname) return;
+    chrome.storage.local.get(['whitelist'], (res) => {
+      let wl = Array.isArray(res.whitelist) ? res.whitelist : [];
+      if (wl.includes(currentHostname)) {
+        wl = wl.filter(h => h !== currentHostname);
+        whitelistText.textContent = 'Whitelist Site';
+        statusLabel.textContent = 'Guarded';
+        statusDot.classList.remove('disabled');
       } else {
-        chrome.runtime.sendMessage({ type: 'ADD_BLACKLIST', site: currentHostname }, () => {
-          btnBlacklist.innerHTML = '<span>🚫 Un-blacklist</span>';
-        });
+        wl.push(currentHostname);
+        whitelistText.textContent = 'Whitelisted';
+        statusLabel.textContent = 'Whitelisted';
+        statusDot.classList.add('disabled');
       }
+      chrome.storage.local.set({ whitelist: wl });
     });
-  }
+  });
 
-  // 11. Remote GitHub Sync Listener
-  const btnSyncRules = document.getElementById('btn-sync-rules');
-  const syncStatusPill = document.getElementById('sync-status-pill');
-  if (btnSyncRules) {
-    btnSyncRules.addEventListener('click', () => {
-      if (syncStatusPill) syncStatusPill.textContent = 'Syncing...';
-      chrome.runtime.sendMessage({ type: 'CHECK_REMOTE_UPDATE' }, (res) => {
-        if (res && res.success) {
-          if (syncStatusPill) syncStatusPill.textContent = 'Updated v' + (res.version || '5.2.1');
-          if (popupTickerFeed) popupTickerFeed.textContent = '🔄 Rule auto-sync complete';
-        } else {
-          if (syncStatusPill) syncStatusPill.textContent = 'Synced';
-        }
-      });
-    });
-  }
+  // Open Options Page
+  btnOptions.addEventListener('click', () => {
+    if (chrome.runtime.openOptionsPage) {
+      chrome.runtime.openOptionsPage();
+    } else {
+      window.open('options.html');
+    }
+  });
 
-  // 12. Real-Time Bidirectional Synchronization (Popup <-> Options Studio)
+  // Auto-Sync Button
+  btnSync.addEventListener('click', async () => {
+    btnSync.classList.add('syncing');
+    syncText.textContent = 'Syncing...';
+    try {
+      const res = await chrome.runtime.sendMessage({ type: 'TRIGGER_SYNC' });
+      if (res && res.success) {
+        syncText.textContent = 'Synced!';
+        if (res.updateAvailable) updateBadge.classList.remove('hidden');
+      } else {
+        syncText.textContent = 'Error';
+      }
+    } catch (_) {
+      syncText.textContent = 'Synced';
+    }
+    setTimeout(() => {
+      btnSync.classList.remove('syncing');
+      syncText.textContent = 'Auto-Sync';
+    }, 2000);
+  });
+
+  // Two-way Live Sync
   chrome.storage.onChanged.addListener((changes, area) => {
     if (area !== 'local') return;
-
-    // Sync Theme
-    if (changes.theme) {
-      const newTheme = changes.theme.newValue || 'obsidian_noir';
-      document.documentElement.setAttribute('data-theme', newTheme);
-      if (themeSelector) themeSelector.value = newTheme;
-      if (themeStatus) themeStatus.textContent = themeSelector ? (themeSelector.options[themeSelector.selectedIndex]?.text.split('(')[0] || newTheme) : newTheme;
+    if (changes.masterEnabled) {
+      masterToggle.checked = changes.masterEnabled.newValue !== false;
+      updateMasterUI(masterToggle.checked);
     }
-
-    // Sync Master Switch
-    if (changes.masterEnabled !== undefined) {
-      const isMaster = changes.masterEnabled.newValue !== false;
-      if (masterToggle) masterToggle.checked = isMaster;
-      updateLiveAudit(isMaster);
+    if (changes.maskBraveApi) toggleBrave.checked = changes.maskBraveApi.newValue !== false;
+    if (changes.autoBypassTimers) toggleTimers.checked = changes.autoBypassTimers.newValue !== false;
+    if (changes.bypassAdblockDetection) toggleAdblock.checked = changes.bypassAdblockDetection.newValue !== false;
+    if (changes.spotifyUnlocked) toggleMedia.checked = changes.spotifyUnlocked.newValue !== false;
+    if (changes.updateAvailable) {
+      if (changes.updateAvailable.newValue) updateBadge.classList.remove('hidden');
+      else updateBadge.classList.add('hidden');
     }
-
-    // Sync Individual Module Toggles
-    Object.entries(POPUP_SETTINGS_MAP).forEach(([domId, key]) => {
-      if (changes[key] !== undefined) {
-        const el = document.getElementById(domId);
-        if (el) el.checked = Boolean(changes[key].newValue);
-      }
-    });
-
-    // Sync Counters
-    if (changes.blockedCounter && trapsBypassedEl) {
-      trapsBypassedEl.textContent = String(changes.blockedCounter.newValue || 0);
-    }
-    if (changes.bypassedSites && sitesBypassedEl) {
-      sitesBypassedEl.textContent = String((changes.bypassedSites.newValue || []).length);
-    }
-
-    // Sync UA Persona
-    if (changes.uaCategory && uaCategory) {
-      uaCategory.value = changes.uaCategory.newValue;
-      if (uaStatus) uaStatus.textContent = uaCategory.options[uaCategory.selectedIndex]?.text.split('•')[0] || changes.uaCategory.newValue;
-    }
-
-    updateLiveAudit(masterToggle ? masterToggle.checked : true);
   });
 });

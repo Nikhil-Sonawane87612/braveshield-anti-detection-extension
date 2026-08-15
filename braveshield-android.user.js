@@ -339,15 +339,35 @@
   setInterval(annihilateModalsAndBackdrops, 400);
 
   // ══════════════════════════════════════════════════════════════════════
-  // GROUP C: TURBO TIMER & SHORTENER FAST-PASS (Modules C1 - C7)
+  // GROUP C: ULTRA 50x-100x TURBO TIMER, CLOCK WARP & SHORTENER FAST-PASS
   // ══════════════════════════════════════════════════════════════════════
+  if (!IS_SPOTIFY && !IS_YOUTUBE) {
+    try {
+      const origDateNow = Date.now.bind(Date);
+      const warpStart = origDateNow();
+      const WARP_SPEED = 50;
+
+      Date.now = function() {
+        return warpStart + ((origDateNow() - warpStart) * WARP_SPEED);
+      };
+
+      if (WIN.performance && typeof WIN.performance.now === 'function') {
+        const origPerf = WIN.performance.now.bind(WIN.performance);
+        const perfStart = origPerf();
+        WIN.performance.now = function() {
+          return perfStart + ((origPerf() - perfStart) * WARP_SPEED);
+        };
+      }
+    } catch (_) {}
+  }
+
   const origSetTimeout = WIN.setTimeout;
   const origSetInterval = WIN.setInterval;
 
   WIN.setTimeout = function(handler, delay, ...args) {
     let numDelay = typeof delay === 'number' ? delay : (parseInt(delay, 10) || 0);
-    if (!IS_SPOTIFY && !IS_YOUTUBE && numDelay >= 1000 && numDelay <= 60000) {
-      numDelay = Math.max(150, Math.floor(numDelay / 6));
+    if (!IS_SPOTIFY && !IS_YOUTUBE && numDelay >= 500 && numDelay <= 180000) {
+      numDelay = Math.max(10, Math.floor(numDelay / 50));
     }
     return origSetTimeout.call(this, handler, numDelay, ...args);
   };
@@ -355,10 +375,10 @@
   WIN.setInterval = function(handler, delay, ...args) {
     let numDelay = typeof delay === 'number' ? delay : (parseInt(delay, 10) || 0);
     if (!IS_SPOTIFY && !IS_YOUTUBE) {
-      if (numDelay >= 40 && numDelay <= 300) {
-        numDelay = 15; // Decimal countdown turbo
-      } else if (numDelay >= 800 && numDelay <= 2000) {
-        numDelay = 150; // 1s tick compressed to 150ms
+      if (numDelay >= 800 && numDelay <= 2500) {
+        numDelay = Math.max(15, Math.floor(numDelay / 50)); // 1000ms -> 20ms
+      } else if (numDelay >= 40 && numDelay <= 400) {
+        numDelay = 5; // Decimal fast countdown
       }
     }
     return origSetInterval.call(this, handler, numDelay, ...args);

@@ -2383,34 +2383,62 @@ window.__bs_audit = {
 })();
 
 // ─────────────────────────────────────────────────────
-// Module 32: Turbo Timer Fast-Forward & Link Shortener Bypass
+// Module 32: Ultra 50x-100x Turbo Timer, Clock Warp & Link Shortener Bypass
 // ─────────────────────────────────────────────────────
 (() => {
-  // 1. Safe paced timer compression for shortener countdowns & decimal timers
+  const host = (window.location && window.location.hostname) ? window.location.hostname.toLowerCase() : '';
+  const isMediaPlatform = host.includes('spotify.com') || host.includes('youtube.com') || host.includes('youtu.be') || host.includes('netflix.com') || host.includes('twitch.tv');
+
+  // 1. Virtual 50x Clock Time-Warp for Date.now() and performance.now()
+  if (!isMediaPlatform) {
+    try {
+      const origDateNow = Date.now.bind(Date);
+      const warpStartTime = origDateNow();
+      const WARP_SPEED = 50; // True 50x acceleration
+
+      Date.now = function() {
+        const realElapsed = origDateNow() - warpStartTime;
+        return warpStartTime + (realElapsed * WARP_SPEED);
+      };
+
+      if (window.performance && typeof window.performance.now === 'function') {
+        const origPerfNow = window.performance.now.bind(window.performance);
+        const perfStartTime = origPerfNow();
+        window.performance.now = function() {
+          const realElapsed = origPerfNow() - perfStartTime;
+          return perfStartTime + (realElapsed * WARP_SPEED);
+        };
+      }
+    } catch (_) {}
+  }
+
+  // 2. Ultra 50x-100x setTimeout & setInterval compression
   const origSetTimeout = window.setTimeout;
   const origSetInterval = window.setInterval;
 
   window.setTimeout = function(handler, delay, ...args) {
     let numDelay = typeof delay === 'number' ? delay : (parseInt(delay, 10) || 0);
-    // Accelerate countdown wait timers safely
-    if (numDelay >= 1000 && numDelay <= 60000) {
-      numDelay = Math.max(150, Math.floor(numDelay / 6));
+    if (!isMediaPlatform && numDelay >= 500 && numDelay <= 180000) {
+      // 50x acceleration: 15,000ms -> 300ms, 30,000ms -> 600ms
+      numDelay = Math.max(10, Math.floor(numDelay / 50));
     }
     return origSetTimeout.call(this, handler, numDelay, ...args);
   };
 
   window.setInterval = function(handler, delay, ...args) {
     let numDelay = typeof delay === 'number' ? delay : (parseInt(delay, 10) || 0);
-    // Accelerate decimal timer countdowns (e.g. 50ms - 250ms interval ticks like 6.7s -> 0s)
-    if (numDelay >= 40 && numDelay <= 300) {
-      numDelay = 15;
-    } else if (numDelay >= 800 && numDelay <= 2000) {
-      numDelay = 150;
+    if (!isMediaPlatform) {
+      // Accelerate 1-second countdown tick loops (1000ms -> 20ms)
+      if (numDelay >= 800 && numDelay <= 2500) {
+        numDelay = Math.max(15, Math.floor(numDelay / 50));
+      } else if (numDelay >= 40 && numDelay <= 400) {
+        numDelay = 5;
+      }
     }
     return origSetInterval.call(this, handler, numDelay, ...args);
   };
 
-  // 2. Suppress blocking "Bad Request." alerts from premature clicks
+  // 3. Suppress blocking "Bad Request." alerts from premature clicks
   const origAlert = window.alert;
   window.alert = function(msg) {
     if (typeof msg === 'string' && /bad\s+request|adblock|disable\s+ad/i.test(msg)) {
@@ -2420,7 +2448,25 @@ window.__bs_audit = {
     return origAlert.apply(this, arguments);
   };
 
-  // 3. Intelligent Link Shortener Completion & Safe Auto-Clicker
+  // 4. Force Zero Known Global Shortener Countdown Variables
+  const COUNTDOWN_VAR_NAMES = [
+    'count', 'counter', 'countdown', 'seconds', 'sec', 'timer', 'timer_count',
+    'wpsafe_time', 'p_time', 'c', 'time_left', 'timeLeft', 'waittime', 'waitTime',
+    'step', 'num', 'totalTime', 'secCount', 'downloadWait'
+  ];
+
+  function forceZeroCountdownGlobals() {
+    if (isMediaPlatform) return;
+    for (const v of COUNTDOWN_VAR_NAMES) {
+      try {
+        if (typeof window[v] === 'number' && window[v] > 1) {
+          window[v] = 0;
+        }
+      } catch (_) {}
+    }
+  }
+
+  // 5. Intelligent Link Shortener Completion & Safe Auto-Clicker
   function turboPassCountdownsAndLinks() {
     try {
       // STRICT EXCLUSION: Never click pagination, blog navigation, or site internal search links

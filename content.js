@@ -386,13 +386,65 @@
   }
   }
 
+  // ─────────────────────────────────────────────────────
+  // Active DOM Countdown & Button Unlocker (ISOLATED World Fallback)
+  // ─────────────────────────────────────────────────────
+  function fastPassDOMTimersAndButtons() {
+    try {
+      const host = (window.location.hostname || '').toLowerCase();
+      if (host.includes('spotify.com') || host.includes('youtube.com') || host.includes('netflix.com')) return;
+
+      // Zero out countdown numbers displayed in DOM
+      const timerEls = document.querySelectorAll('.timer, #timer, .countdown, #countdown, #wpsafe-time, #time, #seconds, [data-timer], [data-countdown], .wait-time');
+      for (const tEl of timerEls) {
+        if (tEl && tEl.innerText && /\d+\s*s?/i.test(tEl.innerText)) {
+          const num = parseInt(tEl.innerText, 10);
+          if (num > 0) {
+            tEl.innerText = '0';
+            tEl.textContent = '0';
+            try { tEl.dispatchEvent(new Event('change', { bubbles: true })); } catch (_) {}
+          }
+        }
+      }
+
+      // Unlock and auto-click ready download/link buttons
+      const btns = document.querySelectorAll('#btn-main, #get-link, #getlink, #download-btn, #btn-download, .get-link, .download-btn, .btn-download, #wpsafe-generate, #wpsafe-snp, #tp-snp2');
+      for (const btn of btns) {
+        if (btn) {
+          const txt = (btn.innerText || btn.value || '').trim();
+          if (/getting\s+link|please\s+wait|loading|generating/i.test(txt)) continue;
+          
+          btn.removeAttribute('disabled');
+          btn.removeAttribute('aria-disabled');
+          if (btn.classList.contains('disabled')) btn.classList.remove('disabled');
+          btn.style.setProperty('pointer-events', 'auto', 'important');
+          btn.style.setProperty('opacity', '1', 'important');
+          btn.style.setProperty('display', 'inline-block', 'important');
+
+          if (!btn._bsAutoFastClicked && (/^(get\s+link|download|continue|next|download\s+now|direct\s+download)$/i.test(txt) || btn.id === 'wpsafe-generate')) {
+            btn._bsAutoFastClicked = true;
+            setTimeout(() => {
+              try { btn.click(); } catch (_) {}
+              try { btn.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true })); } catch (_) {}
+            }, 300);
+          }
+        }
+      }
+    } catch (_) {}
+  }
+
   // Run immediately and monitor DOM
   annihilateAntiAdblockModals();
-  const trapInterval = setInterval(annihilateAntiAdblockModals, 300);
+  fastPassDOMTimersAndButtons();
+  const trapInterval = setInterval(() => {
+    annihilateAntiAdblockModals();
+    fastPassDOMTimersAndButtons();
+  }, 250);
   setTimeout(() => clearInterval(trapInterval), 15000);
 
   const trapObserver = new MutationObserver(() => {
     annihilateAntiAdblockModals();
+    fastPassDOMTimersAndButtons();
   });
   if (document.documentElement) {
     trapObserver.observe(document.documentElement, { childList: true, subtree: true });

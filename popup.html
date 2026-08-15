@@ -7,231 +7,459 @@
 </head>
 <body>
 
-<!-- Header -->
-<div class="hdr">
+<!-- Cockpit Header -->
+<header class="hdr">
   <div class="hdr-top">
     <div class="brand">
-      <div class="brand-icon">
-        <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      <div class="radar-orb">
+        <div class="radar-ring"></div>
+        <div class="radar-ring r2"></div>
+        <div class="brand-icon">
+          <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        </div>
       </div>
       <div class="brand-t">
         <h1>BraveShield</h1>
-        <span>Bypass Pro</span>
+        <span class="brand-sub">Bypass Pro • Stealth Engine</span>
       </div>
     </div>
-    <span class="ver-badge">v5.1</span>
+    <div class="hdr-badges">
+      <span class="ver-pill">v5.1</span>
+    </div>
   </div>
-  <div class="sbar" id="status-bar">
-    <span class="sdot" id="status-dot"></span>
-    <span class="slbl" id="status-label">Active</span>
-    <span class="ssite" id="status-site">Detecting...</span>
-  </div>
-</div>
 
-<!-- Master Kill Switch & Privacy Audit Hero Card -->
-<div class="master-card" id="master-card">
-  <div class="master-header">
-    <div class="master-info">
-      <div class="master-title">
-        <span class="master-icon">⚡</span>
-        <h3>MASTER ENGINE</h3>
+  <!-- Active Domain & Shield State Pill -->
+  <div class="domain-pill" id="status-bar">
+    <div class="domain-info">
+      <span class="live-dot" id="status-dot"></span>
+      <span class="domain-name" id="status-site">Detecting active domain...</span>
+    </div>
+    <div class="domain-action">
+      <span class="shield-badge" id="status-label">Guarded</span>
+    </div>
+  </div>
+</header>
+
+<!-- Master Shield & Stealth Telemetry Cockpit -->
+<section class="master-cockpit" id="master-card">
+  <div class="master-deck">
+    <div class="master-telemetry">
+      <div class="master-head">
+        <div class="master-status-tag">
+          <span class="pulse-icon">⚡</span>
+          <span class="master-tag-text">SYSTEM DEFENSE</span>
+        </div>
+        <div class="master-state-label" id="master-subtitle">31 Stealth Modules Armed</div>
       </div>
-      <span class="master-subtitle" id="master-subtitle">31 stealth modules active</span>
+      
+      <!-- Live Security Event Ticker Feed -->
+      <div class="feed-ticker">
+        <span class="ticker-badge">LIVE FEED</span>
+        <span class="ticker-text" id="popup-ticker-feed">System armed • WebGL masked • Video Turbo active</span>
+      </div>
     </div>
-    <label class="master-sw">
-      <input type="checkbox" id="master-toggle" checked>
-      <span class="master-sl"></span>
-    </label>
+
+    <!-- Master Kill Switch -->
+    <div class="master-switch-wrap">
+      <label class="master-sw" title="Global Emergency Kill Switch">
+        <input type="checkbox" id="master-toggle" checked>
+        <span class="master-sl"></span>
+      </label>
+    </div>
   </div>
 
-  <!-- Live Privacy & Stealth Audit Ticker -->
-  <div class="audit-grid">
-    <div class="audit-card grade-card">
-      <div class="audit-grade" id="audit-grade">A+</div>
-      <div class="audit-lbl">Stealth Grade</div>
+  <!-- Radial Stealth Metrics Grid -->
+  <div class="metrics-dock">
+    <div class="metric-chip grade-chip">
+      <div class="gauge-wrap">
+        <svg class="gauge-svg" viewBox="0 0 36 36">
+          <path class="gauge-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+          <path class="gauge-fill" id="gauge-fill" stroke-dasharray="100, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+        </svg>
+        <div class="grade-val" id="audit-grade">A+</div>
+      </div>
+      <div class="metric-meta">
+        <span class="metric-label">Stealth</span>
+        <span class="metric-sub" id="metric-stealth-pct">100%</span>
+      </div>
     </div>
-    <div class="audit-card">
-      <div class="audit-val" id="traps-bypassed">0</div>
-      <div class="audit-lbl">Traps Defused</div>
+
+    <div class="metric-chip">
+      <div class="metric-val" id="traps-bypassed">0</div>
+      <div class="metric-meta">
+        <span class="metric-label">Traps</span>
+        <span class="metric-sub">Defused</span>
+      </div>
     </div>
-    <div class="audit-card">
-      <div class="audit-val" id="fingerprints-sanitized">31</div>
-      <div class="audit-lbl">Shields Active</div>
+
+    <div class="metric-chip">
+      <div class="metric-val" id="fingerprints-sanitized">31</div>
+      <div class="metric-meta">
+        <span class="metric-label">Shields</span>
+        <span class="metric-sub">Active</span>
+      </div>
     </div>
-    <div class="audit-card">
-      <div class="audit-val" id="sites-bypassed">0</div>
-      <div class="audit-lbl">Sites Bypassed</div>
+
+    <div class="metric-chip">
+      <div class="metric-val" id="sites-bypassed">0</div>
+      <div class="metric-meta">
+        <span class="metric-label">Sites</span>
+        <span class="metric-sub">Bypassed</span>
+      </div>
     </div>
   </div>
-</div>
+</section>
 
-<!-- Quick Actions HUD Bar -->
-<div class="quick-hud">
-  <button class="hud-btn" id="btn-new-identity" title="Roll random User-Agent & WebGL profile">
-    <span class="hud-icon">🎲</span>
-    <span>New Identity</span>
+<!-- Tactile Quick Action HUD Dock -->
+<nav class="quick-hud">
+  <button class="hud-action-btn" id="btn-new-identity" title="Roll random User-Agent &amp; WebGL profile">
+    <div class="hud-btn-glow"></div>
+    <span class="hud-btn-icon">🎲</span>
+    <span class="hud-btn-txt">New Identity</span>
   </button>
-  <button class="hud-btn" id="btn-toggle-pip" title="Force Picture-in-Picture on current video">
-    <span class="hud-icon">📺</span>
-    <span>Force PiP</span>
+  <button class="hud-action-btn" id="btn-toggle-pip" title="Force Picture-in-Picture on current video">
+    <div class="hud-btn-glow"></div>
+    <span class="hud-btn-icon">📺</span>
+    <span class="hud-btn-txt">Force PiP</span>
   </button>
-  <button class="hud-btn" id="btn-open-options" title="Open full settings page">
-    <span class="hud-icon">⚙️</span>
-    <span>Options</span>
+  <button class="hud-action-btn" id="btn-open-options" title="Open full configuration studio">
+    <div class="hud-btn-glow"></div>
+    <span class="hud-btn-icon">⚙️</span>
+    <span class="hud-btn-txt">Dashboard</span>
   </button>
+</nav>
+
+<!-- Category Navigation Chips Filter -->
+<div class="cat-filter-dock" id="cat-bulk-popup">
+  <button class="filter-chip active" data-category="all">All (31)</button>
+  <button class="filter-chip" data-category="auto-bypass">Bypass (7)</button>
+  <button class="filter-chip" data-category="youtube">Video (4)</button>
+  <button class="filter-chip" data-category="stealth">Stealth (6)</button>
+  <button class="filter-chip" data-category="extra">Extra (6)</button>
+  <button class="filter-chip link-chip" data-tab="sites">Sites ↗</button>
+  <button class="filter-chip link-chip" data-tab="profile">GPU ↗</button>
 </div>
 
-<!-- Category Navigation Bar -->
-<div class="cat-bulk-popup" id="cat-bulk-popup">
-  <div class="cat-group">
-    <button class="cat-btn" data-category="auto-bypass">Bypass</button>
-    <div class="cat-mini">
-      <button class="cat-btn-sm" data-category="auto-bypass" data-enable="true">On</button>
-      <button class="cat-btn-sm" data-category="auto-bypass" data-enable="false">Off</button>
+<!-- Scrollable Modules Matrix -->
+<main class="modules-scroll-deck" id="modules-container">
+  
+  <!-- Group: Auto Bypass -->
+  <div class="module-group" id="sec-auto-bypass">
+    <div class="group-header" data-target="tlist-auto-bypass" role="button" tabindex="0">
+      <div class="group-title-wrap">
+        <span class="group-icon">⚡</span>
+        <span class="group-name">Auto Bypass</span>
+      </div>
+      <div class="group-meta">
+        <span class="group-badge" id="cnt-auto-bypass">7/7</span>
+        <span class="group-chev"><svg viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg></span>
+      </div>
     </div>
-  </div>
-  <div class="cat-group">
-    <button class="cat-btn" data-category="youtube">Video</button>
-    <div class="cat-mini">
-      <button class="cat-btn-sm" data-category="youtube" data-enable="true">On</button>
-      <button class="cat-btn-sm" data-category="youtube" data-enable="false">Off</button>
-    </div>
-  </div>
-  <div class="cat-group">
-    <button class="cat-btn" data-category="stealth">Stealth</button>
-    <div class="cat-mini">
-      <button class="cat-btn-sm" data-category="stealth" data-enable="true">On</button>
-      <button class="cat-btn-sm" data-category="stealth" data-enable="false">Off</button>
-    </div>
-  </div>
-  <div class="cat-group">
-    <button class="cat-btn" data-category="extra">Extra</button>
-    <div class="cat-mini">
-      <button class="cat-btn-sm" data-category="extra" data-enable="true">On</button>
-      <button class="cat-btn-sm" data-category="extra" data-enable="false">Off</button>
-    </div>
-  </div>
-  <div class="cat-group">
-    <button class="cat-btn link-btn" data-tab="sites">Sites ↗</button>
-  </div>
-  <div class="cat-group">
-    <button class="cat-btn link-btn" data-tab="profile">GPU ↗</button>
-  </div>
-</div>
+    <div class="module-list" id="tlist-auto-bypass">
+      <div class="module-card">
+        <div class="mod-icon-box">Z</div>
+        <div class="mod-info">
+          <h4>Link Shortener Bypass</h4>
+          <p>50+ shorteners &amp; multi-hops</p>
+        </div>
+        <label class="sw"><input type="checkbox" id="toggle-links" checked><span class="sl"></span></label>
+      </div>
 
-<!-- Section: Auto Bypass -->
-<div class="section-container" id="sec-auto-bypass">
-  <div class="shdr" data-target="tlist-auto-bypass" role="button" tabindex="0">
-    <div class="shdr-left">
-      <span class="s-chev"><svg viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg></span>
-      <span class="stit">Auto Bypass</span>
+      <div class="module-card">
+        <div class="mod-icon-box">T</div>
+        <div class="mod-info">
+          <h4>Timer &amp; Countdown Skip</h4>
+          <p>Instant click trigger (0.5s)</p>
+        </div>
+        <label class="sw"><input type="checkbox" id="toggle-timers" checked><span class="sl"></span></label>
+      </div>
+
+      <div class="module-card">
+        <div class="mod-icon-box">C</div>
+        <div class="mod-info">
+          <h4>Cookie Consent Dismiss</h4>
+          <p>20+ consent banner frameworks</p>
+        </div>
+        <label class="sw"><input type="checkbox" id="toggle-cookies" checked><span class="sl"></span></label>
+      </div>
+
+      <div class="module-card">
+        <div class="mod-icon-box">S</div>
+        <div class="mod-info">
+          <h4>Smart Auto-Scroll</h4>
+          <p>Auto-navigate scroll-lock pages</p>
+        </div>
+        <label class="sw"><input type="checkbox" id="toggle-scroll" checked><span class="sl"></span></label>
+      </div>
+
+      <div class="module-card">
+        <div class="mod-icon-box">P</div>
+        <div class="mod-info">
+          <h4>Popunder Interceptor</h4>
+          <p>Kill unauthorized ad popunders</p>
+        </div>
+        <label class="sw"><input type="checkbox" id="toggle-popunder" checked><span class="sl"></span></label>
+      </div>
+
+      <div class="module-card">
+        <div class="mod-icon-box">A</div>
+        <div class="mod-info">
+          <h4>Adblock Detection Bypass</h4>
+          <p>Defeats Admiral, BlockAdBlock</p>
+        </div>
+        <label class="sw"><input type="checkbox" id="toggle-adblock" checked><span class="sl"></span></label>
+      </div>
+
+      <div class="module-card">
+        <div class="mod-icon-box">Y</div>
+        <div class="mod-info">
+          <h4>YouTube AdBlock + Sponsor</h4>
+          <p>Strips video ads &amp; promoted clips</p>
+        </div>
+        <label class="sw"><input type="checkbox" id="toggle-youtube" checked><span class="sl"></span></label>
+      </div>
     </div>
-    <span class="scnt" id="cnt-auto-bypass">7/7</span>
   </div>
-  <div class="tlist" id="tlist-auto-bypass">
-    <div class="titem"><div class="tinfo"><div class="tico">Z</div><div class="ttxt"><h4>Link Shortener Bypass</h4><span>50+ bypass engines</span></div></div><label class="sw"><input type="checkbox" id="toggle-links" checked><span class="sl"></span></label></div>
-    <div class="titem"><div class="tinfo"><div class="tico">T</div><div class="ttxt"><h4>Timer &amp; Countdown Skip</h4><span>Instant click trigger</span></div></div><label class="sw"><input type="checkbox" id="toggle-timers" checked><span class="sl"></span></label></div>
-    <div class="titem"><div class="tinfo"><div class="tico">C</div><div class="ttxt"><h4>Cookie Consent Auto-Dismiss</h4><span>20+ modal frameworks</span></div></div><label class="sw"><input type="checkbox" id="toggle-cookies" checked><span class="sl"></span></label></div>
-    <div class="titem"><div class="tinfo"><div class="tico">S</div><div class="ttxt"><h4>Smart Auto-Scroll</h4><span>Scroll-lock pages</span></div></div><label class="sw"><input type="checkbox" id="toggle-scroll" checked><span class="sl"></span></label></div>
-    <div class="titem"><div class="tinfo"><div class="tico">P</div><div class="ttxt"><h4>Popunder Interceptor</h4><span>Blocks rogue ad tabs</span></div></div><label class="sw"><input type="checkbox" id="toggle-popunder" checked><span class="sl"></span></label></div>
-    <div class="titem"><div class="tinfo"><div class="tico">A</div><div class="ttxt"><h4>Adblock Detection Bypass</h4><span>Hispanoads, Admiral, etc.</span></div></div><label class="sw"><input type="checkbox" id="toggle-adblock" checked><span class="sl"></span></label></div>
-    <div class="titem"><div class="tinfo"><div class="tico">Y</div><div class="ttxt"><h4>YouTube AdBlock + Sponsor</h4><span>Ads &amp; segment skipping</span></div></div><label class="sw"><input type="checkbox" id="toggle-youtube" checked><span class="sl"></span></label></div>
-  </div>
-</div>
 
-<!-- Section: Video Turbo Engine -->
-<div class="section-container" id="sec-youtube">
-  <div class="shdr" data-target="tlist-youtube" role="button" tabindex="0">
-    <div class="shdr-left">
-      <span class="s-chev"><svg viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg></span>
-      <span class="stit">Video Turbo Engine</span>
+  <!-- Group: Video Turbo Engine -->
+  <div class="module-group" id="sec-youtube">
+    <div class="group-header" data-target="tlist-youtube" role="button" tabindex="0">
+      <div class="group-title-wrap">
+        <span class="group-icon">🚀</span>
+        <span class="group-name">Video Turbo Engine</span>
+      </div>
+      <div class="group-meta">
+        <span class="group-badge" id="cnt-youtube">4/4</span>
+        <span class="group-chev"><svg viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg></span>
+      </div>
     </div>
-    <span class="scnt" id="cnt-youtube">4/4</span>
-  </div>
-  <div class="tlist" id="tlist-youtube">
-    <div class="titem"><div class="tinfo"><div class="tico">⚡</div><div class="ttxt"><h4>16x Video Ad Fast-Forward</h4><span>Instant ad acceleration</span></div></div><label class="sw"><input type="checkbox" id="toggle-video-turbo-ad" checked><span class="sl"></span></label></div>
-    <div class="titem"><div class="tinfo"><div class="tico">▶️</div><div class="ttxt"><h4>Background Video Playback</h4><span>No pause on tab switch</span></div></div><label class="sw"><input type="checkbox" id="toggle-video-turbo-bg" checked><span class="sl"></span></label></div>
-    <div class="titem"><div class="tinfo"><div class="tico">📺</div><div class="ttxt"><h4>Universal Picture-in-Picture</h4><span>Enable PiP everywhere</span></div></div><label class="sw"><input type="checkbox" id="toggle-video-turbo-pip" checked><span class="sl"></span></label></div>
-    <div class="titem"><div class="tinfo"><div class="tico">S</div><div class="ttxt"><h4>SponsorBlock Auto-Skip</h4><span>Community sponsor API</span></div></div><label class="sw"><input type="checkbox" id="toggle-sponsorblock" checked><span class="sl"></span></label></div>
-  </div>
-</div>
+    <div class="module-list" id="tlist-youtube">
+      <div class="module-card">
+        <div class="mod-icon-box turbo-box">16x</div>
+        <div class="mod-info">
+          <h4>16x Video Ad Fast-Forward</h4>
+          <p>Accelerate &amp; auto-mute video ads</p>
+        </div>
+        <label class="sw"><input type="checkbox" id="toggle-video-turbo-ad" checked><span class="sl"></span></label>
+      </div>
 
-<!-- Section: Stealth -->
-<div class="section-container" id="sec-stealth">
-  <div class="shdr" data-target="tlist-stealth" role="button" tabindex="0">
-    <div class="shdr-left">
-      <span class="s-chev"><svg viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg></span>
-      <span class="stit">Stealth &amp; Fingerprint</span>
+      <div class="module-card">
+        <div class="mod-icon-box turbo-box">▶️</div>
+        <div class="mod-info">
+          <h4>Background Video Playback</h4>
+          <p>No pause on tab switch or minimize</p>
+        </div>
+        <label class="sw"><input type="checkbox" id="toggle-video-turbo-bg" checked><span class="sl"></span></label>
+      </div>
+
+      <div class="module-card">
+        <div class="mod-icon-box turbo-box">📺</div>
+        <div class="mod-info">
+          <h4>Universal Picture-in-Picture</h4>
+          <p>Enable floating PiP on all players</p>
+        </div>
+        <label class="sw"><input type="checkbox" id="toggle-video-turbo-pip" checked><span class="sl"></span></label>
+      </div>
+
+      <div class="module-card">
+        <div class="mod-icon-box turbo-box">⚡</div>
+        <div class="mod-info">
+          <h4>SponsorBlock Auto-Skip</h4>
+          <p>Skip sponsorships via community API</p>
+        </div>
+        <label class="sw"><input type="checkbox" id="toggle-sponsorblock" checked><span class="sl"></span></label>
+      </div>
     </div>
-    <span class="scnt" id="cnt-stealth">6/6</span>
   </div>
-  <div class="tlist" id="tlist-stealth">
-    <div class="titem"><div class="tinfo"><div class="tico">W</div><div class="ttxt"><h4>Webdriver Hide</h4><span>navigator.webdriver = false</span></div></div><label class="sw"><input type="checkbox" id="toggle-webr" checked><span class="sl"></span></label></div>
-    <div class="titem"><div class="tinfo"><div class="tico">R</div><div class="ttxt"><h4>WebRTC IP Leak Shield</h4><span>Prevent internal IP exposure</span></div></div><label class="sw"><input type="checkbox" id="toggle-webrtc" checked><span class="sl"></span></label></div>
-    <div class="titem"><div class="tinfo"><div class="tico">N</div><div class="ttxt"><h4>Permission Auto-Deny</h4><span>Camera, mic &amp; notifications</span></div></div><label class="sw"><input type="checkbox" id="toggle-permissions" checked><span class="sl"></span></label></div>
-    <div class="titem"><div class="tinfo"><div class="tico">B</div><div class="ttxt"><h4>Network Bait Faking</h4><span>Fake 200 OK for ad probes</span></div></div><label class="sw"><input type="checkbox" id="toggle-bait" checked><span class="sl"></span></label></div>
-    <div class="titem"><div class="tinfo"><div class="tico">F</div><div class="ttxt"><h4>Canvas + Audio Normalization</h4><span>Consistent noise farbling</span></div></div><label class="sw"><input type="checkbox" id="toggle-canvas" checked><span class="sl"></span></label></div>
-    <div class="titem"><div class="tinfo"><div class="tico">M</div><div class="ttxt"><h4>Navigator Spoofing</h4><span>Platform, hardware &amp; screen</span></div></div><label class="sw"><input type="checkbox" id="toggle-navigator" checked><span class="sl"></span></label></div>
-  </div>
-</div>
 
-<!-- Section: Extra Features -->
-<div class="section-container" id="sec-extra">
-  <div class="shdr" data-target="tlist-extra" role="button" tabindex="0">
-    <div class="shdr-left">
-      <span class="s-chev"><svg viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg></span>
-      <span class="stit">Extra Protections</span>
+  <!-- Group: Stealth & Anti-Fingerprint -->
+  <div class="module-group" id="sec-stealth">
+    <div class="group-header" data-target="tlist-stealth" role="button" tabindex="0">
+      <div class="group-title-wrap">
+        <span class="group-icon">🛡️</span>
+        <span class="group-name">Stealth &amp; Anti-Fingerprint</span>
+      </div>
+      <div class="group-meta">
+        <span class="group-badge" id="cnt-stealth">6/6</span>
+        <span class="group-chev"><svg viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg></span>
+      </div>
     </div>
-    <span class="scnt" id="cnt-extra">6/6</span>
+    <div class="module-list" id="tlist-stealth">
+      <div class="module-card">
+        <div class="mod-icon-box">W</div>
+        <div class="mod-info">
+          <h4>Webdriver Cloaking</h4>
+          <p>navigator.webdriver = false</p>
+        </div>
+        <label class="sw"><input type="checkbox" id="toggle-webr" checked><span class="sl"></span></label>
+      </div>
+
+      <div class="module-card">
+        <div class="mod-icon-box">R</div>
+        <div class="mod-info">
+          <h4>WebRTC IP Leak Shield</h4>
+          <p>Strips private &amp; public IP leaks</p>
+        </div>
+        <label class="sw"><input type="checkbox" id="toggle-webrtc" checked><span class="sl"></span></label>
+      </div>
+
+      <div class="module-card">
+        <div class="mod-icon-box">N</div>
+        <div class="mod-info">
+          <h4>Permission Auto-Deny</h4>
+          <p>Block camera, mic &amp; spam prompts</p>
+        </div>
+        <label class="sw"><input type="checkbox" id="toggle-permissions" checked><span class="sl"></span></label>
+      </div>
+
+      <div class="module-card">
+        <div class="mod-icon-box">B</div>
+        <div class="mod-info">
+          <h4>Network Bait Faking</h4>
+          <p>200 OK responses for ad probes</p>
+        </div>
+        <label class="sw"><input type="checkbox" id="toggle-bait" checked><span class="sl"></span></label>
+      </div>
+
+      <div class="module-card">
+        <div class="mod-icon-box">F</div>
+        <div class="mod-info">
+          <h4>Canvas + Audio Normalization</h4>
+          <p>Uniform noise farbling defense</p>
+        </div>
+        <label class="sw"><input type="checkbox" id="toggle-canvas" checked><span class="sl"></span></label>
+      </div>
+
+      <div class="module-card">
+        <div class="mod-icon-box">M</div>
+        <div class="mod-info">
+          <h4>Navigator Spoofing</h4>
+          <p>Hardware, screen &amp; platform spoof</p>
+        </div>
+        <label class="sw"><input type="checkbox" id="toggle-navigator" checked><span class="sl"></span></label>
+      </div>
+    </div>
   </div>
-  <div class="tlist" id="tlist-extra">
-    <div class="titem"><div class="tinfo"><div class="tico">R</div><div class="ttxt"><h4>Force Right-Click</h4><span>Override context menu blocks</span></div></div><label class="sw"><input type="checkbox" id="toggle-rightclick" checked><span class="sl"></span></label></div>
-    <div class="titem"><div class="tinfo"><div class="tico">T</div><div class="ttxt"><h4>Force Text Selection</h4><span>Override copy prevention</span></div></div><label class="sw"><input type="checkbox" id="toggle-textsel" checked><span class="sl"></span></label></div>
-    <div class="titem"><div class="tinfo"><div class="tico">L</div><div class="ttxt"><h4>Anti-Scroll Lock</h4><span>Defeat modal body lock</span></div></div><label class="sw"><input type="checkbox" id="toggle-scrolllock" checked><span class="sl"></span></label></div>
-    <div class="titem"><div class="tinfo"><div class="tico">X</div><div class="ttxt"><h4>Block Clipboard + Notifs</h4><span>Deny tracking permissions</span></div></div><label class="sw"><input type="checkbox" id="toggle-clipboard" checked><span class="sl"></span></label></div>
-    <div class="titem"><div class="tinfo"><div class="tico">G</div><div class="ttxt"><h4>Timezone &amp; Geo Spoof</h4><span>Align with chosen User-Agent</span></div></div><label class="sw"><input type="checkbox" id="toggle-timezone"><span class="sl"></span></label></div>
-    <div class="titem"><div class="tinfo"><div class="tico">V</div><div class="ttxt"><h4>Undetectable Developer Mode</h4><span>CSP strip &amp; anti-debug</span></div></div><label class="sw"><input type="checkbox" id="toggle-devmode"><span class="sl"></span></label></div>
+
+  <!-- Group: Extra Protections -->
+  <div class="module-group" id="sec-extra">
+    <div class="group-header" data-target="tlist-extra" role="button" tabindex="0">
+      <div class="group-title-wrap">
+        <span class="group-icon">🔮</span>
+        <span class="group-name">Extra Protections</span>
+      </div>
+      <div class="group-meta">
+        <span class="group-badge" id="cnt-extra">6/6</span>
+        <span class="group-chev"><svg viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg></span>
+      </div>
+    </div>
+    <div class="module-list" id="tlist-extra">
+      <div class="module-card">
+        <div class="mod-icon-box">R</div>
+        <div class="mod-info">
+          <h4>Force Right-Click</h4>
+          <p>Override context menu disable</p>
+        </div>
+        <label class="sw"><input type="checkbox" id="toggle-rightclick" checked><span class="sl"></span></label>
+      </div>
+
+      <div class="module-card">
+        <div class="mod-icon-box">T</div>
+        <div class="mod-info">
+          <h4>Force Text Selection</h4>
+          <p>Defeat CSS select-none blocks</p>
+        </div>
+        <label class="sw"><input type="checkbox" id="toggle-textsel" checked><span class="sl"></span></label>
+      </div>
+
+      <div class="module-card">
+        <div class="mod-icon-box">L</div>
+        <div class="mod-info">
+          <h4>Anti-Scroll Lock</h4>
+          <p>Restore scrolling on modal popups</p>
+        </div>
+        <label class="sw"><input type="checkbox" id="toggle-scrolllock" checked><span class="sl"></span></label>
+      </div>
+
+      <div class="module-card">
+        <div class="mod-icon-box">X</div>
+        <div class="mod-info">
+          <h4>Block Clipboard &amp; Notifs</h4>
+          <p>Prevent unauthorized clipboard read</p>
+        </div>
+        <label class="sw"><input type="checkbox" id="toggle-clipboard" checked><span class="sl"></span></label>
+      </div>
+
+      <div class="module-card">
+        <div class="mod-icon-box">G</div>
+        <div class="mod-info">
+          <h4>Timezone &amp; Geo Spoof</h4>
+          <p>Align with chosen User-Agent</p>
+        </div>
+        <label class="sw"><input type="checkbox" id="toggle-timezone"><span class="sl"></span></label>
+      </div>
+
+      <div class="module-card">
+        <div class="mod-icon-box">V</div>
+        <div class="mod-info">
+          <h4>Undetectable Dev Mode</h4>
+          <p>CSP stripping &amp; anti-debug bypass</p>
+        </div>
+        <label class="sw"><input type="checkbox" id="toggle-devmode"><span class="sl"></span></label>
+      </div>
+    </div>
   </div>
-</div>
 
-<!-- User Agent Control -->
-<div class="uac">
-  <div class="uac-l">Active User-Agent</div>
-  <select class="uasel" id="ua-category">
-    <option value="random">Random Desktop Chrome</option>
-    <optgroup label="Desktop Chrome">
-      <option value="chrome_win131">Chrome 131 (Windows)</option>
-      <option value="chrome_mac131">Chrome 131 (macOS)</option>
-      <option value="chrome_lin131">Chrome 131 (Linux)</option>
-    </optgroup>
-    <optgroup label="Desktop Edge">
-      <option value="edge131">Edge 131 (Windows)</option>
-    </optgroup>
-    <optgroup label="Desktop Firefox">
-      <option value="firefox133">Firefox 133 (Windows)</option>
-      <option value="firefox_mac133">Firefox 133 (macOS)</option>
-    </optgroup>
-    <optgroup label="Desktop Safari">
-      <option value="safari18">Safari 18 (macOS)</option>
-    </optgroup>
-    <optgroup label="Mobile">
-      <option value="mobile_chrome131">Chrome 131 (Android)</option>
-      <option value="safari_ios18">Safari 18 (iPhone)</option>
-      <option value="ipad_os18">Safari 18 (iPad)</option>
-    </optgroup>
-  </select>
-  <div class="uast"><span class="dot"></span><span id="ua-status">Random Desktop Chrome</span></div>
-</div>
+</main>
 
-<!-- Site Whitelist / Blacklist Actions -->
-<div class="sacts">
-  <button class="sbtn wl" id="btn-whitelist">🛡️ Whitelist Site</button>
-  <button class="sbtn bl" id="btn-blacklist">🚫 Blacklist Site</button>
-</div>
+<!-- User-Agent Persona Selector -->
+<section class="persona-section">
+  <div class="persona-header">
+    <span class="persona-label">ACTIVE BROWSER PERSONA</span>
+    <span class="persona-status" id="ua-status">Random Desktop Chrome</span>
+  </div>
+  <div class="select-wrapper">
+    <select class="custom-select" id="ua-category">
+      <option value="random">⚡ Random Desktop Chrome (Recommended)</option>
+      <optgroup label="Desktop Chrome">
+        <option value="chrome_win131">Chrome 131 • Windows 11</option>
+        <option value="chrome_mac131">Chrome 131 • macOS Sonoma</option>
+        <option value="chrome_lin131">Chrome 131 • Linux x86_64</option>
+      </optgroup>
+      <optgroup label="Desktop Edge &amp; Safari">
+        <option value="edge131">Microsoft Edge 131 • Windows 11</option>
+        <option value="safari18">Apple Safari 18 • macOS Sequoia</option>
+      </optgroup>
+      <optgroup label="Desktop Firefox">
+        <option value="firefox133">Firefox 133 • Windows 11</option>
+        <option value="firefox_mac133">Firefox 133 • macOS Sonoma</option>
+      </optgroup>
+      <optgroup label="Mobile Devices">
+        <option value="mobile_chrome131">Chrome Mobile • Galaxy S24</option>
+        <option value="safari_ios18">Safari Mobile • iPhone 16 Pro</option>
+        <option value="ipad_os18">Safari iPadOS • iPad Pro M4</option>
+      </optgroup>
+    </select>
+  </div>
+</section>
 
-<!-- Footer -->
-<div class="ftr">
-  <span id="footer-modules">31 modules active</span> • <span>BraveShield Bypass Pro</span>
+<!-- Site Whitelist & Blacklist Dual Actions -->
+<footer class="site-actions-footer">
+  <button class="site-action-btn btn-whitelist" id="btn-whitelist">
+    <span class="site-btn-icon">🛡️</span>
+    <span>Whitelist Site</span>
+  </button>
+  <button class="site-action-btn btn-blacklist" id="btn-blacklist">
+    <span class="site-btn-icon">🚫</span>
+    <span>Blacklist Site</span>
+  </button>
+</footer>
+
+<!-- Bottom Status Bar -->
+<div class="bottom-dock">
+  <span class="dock-status" id="footer-modules">31 modules armed</span>
+  <span class="dock-dot">•</span>
+  <span class="dock-brand">BraveShield Bypass Pro</span>
 </div>
 
 <script src="popup.js"></script>

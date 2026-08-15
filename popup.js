@@ -1,6 +1,6 @@
 /**
- * BraveShield Bypass Pro v5.1.0 - Popup Controller
- * Master Kill Switch, Video Turbo, Live Privacy Audit, Disposable Identity HUD.
+ * BraveShield Bypass Pro v5.1.0 - Popup Controller Pro Max
+ * Obsidian Glassmorphic HUD, Radial Gauge Animation, Filter Chips, Live Telemetry Ticker.
  */
 
 const POPUP_SETTINGS_MAP = {
@@ -36,6 +36,16 @@ const POPUP_CATEGORIES = {
   'extra': ['toggle-rightclick', 'toggle-textsel', 'toggle-scrolllock', 'toggle-clipboard', 'toggle-timezone', 'toggle-devmode']
 };
 
+const LIVE_TICKER_MESSAGES = [
+  '⚡ WebGL spoofed to NVIDIA RTX 4090',
+  '🛡️ DOM trap neutralized on active page',
+  '🚀 16x Video Ad Fast-Forward active',
+  '🛑 WebRTC IP leak shield engaged',
+  '🎨 Canvas fingerprint farbled & isolated',
+  '✨ Background video playback unlocked',
+  '🔒 Client Hints & Brand sanitized'
+];
+
 document.addEventListener('DOMContentLoaded', () => {
   const masterToggle = document.getElementById('master-toggle');
   const masterCard = document.getElementById('master-card');
@@ -44,6 +54,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const statusLabel = document.getElementById('status-label');
   const statusSite = document.getElementById('status-site');
   const auditGrade = document.getElementById('audit-grade');
+  const metricStealthPct = document.getElementById('metric-stealth-pct');
+  const gaugeFill = document.getElementById('gauge-fill');
+  const popupTickerFeed = document.getElementById('popup-ticker-feed');
   const fingerprintsSanitized = document.getElementById('fingerprints-sanitized');
   const trapsBypassedEl = document.getElementById('traps-bypassed');
   const sitesBypassedEl = document.getElementById('sites-bypassed');
@@ -57,24 +70,45 @@ document.addEventListener('DOMContentLoaded', () => {
   const footerModules = document.getElementById('footer-modules');
 
   let currentHostname = '';
+  let tickerIdx = 0;
 
-  // 1. Update Live Audit Grade and Counters
+  // 1. Live Ticker Rotation
+  setInterval(() => {
+    if (popupTickerFeed) {
+      popupTickerFeed.style.opacity = '0';
+      setTimeout(() => {
+        tickerIdx = (tickerIdx + 1) % LIVE_TICKER_MESSAGES.length;
+        popupTickerFeed.textContent = LIVE_TICKER_MESSAGES[tickerIdx];
+        popupTickerFeed.style.opacity = '1';
+      }, 200);
+    }
+  }, 4000);
+
+  // 2. Update Live Audit & Radial Gauge Animation
   function updateLiveAudit(masterActive) {
     if (!masterActive) {
       if (auditGrade) {
         auditGrade.textContent = 'OFF';
-        auditGrade.style.color = '#ef4444';
+        auditGrade.style.color = '#ff3366';
       }
-      if (statusLabel) statusLabel.textContent = 'Engine Disabled';
+      if (metricStealthPct) {
+        metricStealthPct.textContent = '0%';
+        metricStealthPct.style.color = '#ff3366';
+      }
+      if (gaugeFill) {
+        gaugeFill.setAttribute('stroke-dasharray', '0, 100');
+        gaugeFill.style.stroke = '#ff3366';
+      }
+      if (statusLabel) statusLabel.textContent = 'Engine Paused';
       if (statusBar) statusBar.classList.add('disabled');
       if (masterCard) masterCard.classList.add('disabled');
-      if (masterSubtitle) masterSubtitle.textContent = 'All modules paused via Kill Switch';
+      if (masterSubtitle) masterSubtitle.textContent = 'All modules suspended via Kill Switch';
       return;
     }
 
     if (statusBar) statusBar.classList.remove('disabled');
     if (masterCard) masterCard.classList.remove('disabled');
-    if (statusLabel) statusLabel.textContent = 'Active & Guarded';
+    if (statusLabel) statusLabel.textContent = 'Guarded';
 
     let activeCount = 0;
     const totalCount = Object.keys(POPUP_SETTINGS_MAP).length;
@@ -83,25 +117,38 @@ document.addEventListener('DOMContentLoaded', () => {
       if (el && el.checked) activeCount++;
     });
 
-    if (fingerprintsSanitized) fingerprintsSanitized.textContent = String(activeCount + 8); // Include background core stubs
-    if (footerModules) footerModules.textContent = (activeCount + 8) + ' modules active';
-    if (masterSubtitle) masterSubtitle.textContent = (activeCount + 8) + ' stealth modules active';
+    const totalArmed = activeCount + 8; // Including background DNR and core hooks
+    if (fingerprintsSanitized) fingerprintsSanitized.textContent = String(totalArmed);
+    if (footerModules) footerModules.textContent = totalArmed + ' modules armed';
+    if (masterSubtitle) masterSubtitle.textContent = totalArmed + ' Stealth Modules Armed';
 
-    // Calculate Grade
+    // Calculate Ratio & Radial Gauge stroke
     const ratio = activeCount / totalCount;
+    const pct = Math.round(ratio * 100);
+
+    if (metricStealthPct) {
+      metricStealthPct.textContent = pct + '%';
+      metricStealthPct.style.color = ratio >= 0.9 ? '#00f076' : ratio >= 0.7 ? '#00e5ff' : '#fbbf24';
+    }
+
+    if (gaugeFill) {
+      gaugeFill.setAttribute('stroke-dasharray', `${pct}, 100`);
+      gaugeFill.style.stroke = ratio >= 0.9 ? '#00f076' : ratio >= 0.7 ? '#00e5ff' : '#fbbf24';
+    }
+
     if (auditGrade) {
       if (ratio >= 0.9) {
         auditGrade.textContent = 'A+';
-        auditGrade.style.color = '#00d26a';
+        auditGrade.style.color = '#00f076';
       } else if (ratio >= 0.75) {
         auditGrade.textContent = 'A';
         auditGrade.style.color = '#00e5ff';
       } else if (ratio >= 0.5) {
         auditGrade.textContent = 'B';
-        auditGrade.style.color = '#f59e0b';
+        auditGrade.style.color = '#fbbf24';
       } else {
         auditGrade.textContent = 'C';
-        auditGrade.style.color = '#ef4444';
+        auditGrade.style.color = '#ff3366';
       }
     }
 
@@ -121,7 +168,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // 2. Master Kill Switch Listener
+  // 3. Master Kill Switch Listener
   if (masterToggle) {
     masterToggle.addEventListener('change', () => {
       const isEnabled = masterToggle.checked;
@@ -131,15 +178,16 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // 3. Quick Action HUD Handlers
+  // 4. Quick Action HUD Handlers
   if (btnNewIdentity) {
     btnNewIdentity.addEventListener('click', () => {
-      btnNewIdentity.style.transform = 'rotate(180deg)';
-      setTimeout(() => { btnNewIdentity.style.transform = ''; }, 300);
+      btnNewIdentity.style.transform = 'rotate(180deg) scale(0.95)';
+      setTimeout(() => { btnNewIdentity.style.transform = ''; }, 350);
       chrome.runtime.sendMessage({ type: 'NEW_IDENTITY' }, (res) => {
         if (res && res.identity) {
           if (uaCategory) uaCategory.value = res.identity.ua;
-          if (uaStatus) uaStatus.textContent = 'Identity switched: ' + res.identity.profile;
+          if (uaStatus) uaStatus.textContent = res.identity.profile;
+          if (popupTickerFeed) popupTickerFeed.textContent = '🎲 Switched to ' + res.identity.profile;
         }
       });
     });
@@ -148,6 +196,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (btnTogglePip) {
     btnTogglePip.addEventListener('click', () => {
       chrome.runtime.sendMessage({ type: 'TOGGLE_PIP' });
+      if (popupTickerFeed) popupTickerFeed.textContent = '📺 Picture-in-Picture triggered';
     });
   }
 
@@ -157,8 +206,8 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // 4. Accordion Expand / Collapse
-  document.querySelectorAll('.shdr').forEach(hdr => {
+  // 5. Accordion Expand / Collapse
+  document.querySelectorAll('.group-header').forEach(hdr => {
     const targetId = hdr.dataset.target;
     const body = document.getElementById(targetId);
     if (hdr && body) {
@@ -169,53 +218,31 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // 5. Category Navigation & Scroll
-  document.querySelectorAll('.cat-btn:not(.link-btn)').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const cat = btn.dataset.category;
-      const targetSec = document.getElementById('sec-' + cat);
-      if (targetSec) {
-        targetSec.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-        const hdr = targetSec.querySelector('.shdr');
-        const body = targetSec.querySelector('.tlist');
-        if (hdr && body && hdr.classList.contains('collapsed')) {
-          hdr.classList.remove('collapsed');
-          body.style.display = 'flex';
-        }
+  // 6. Filter Chips Dock
+  document.querySelectorAll('.filter-chip:not(.link-chip)').forEach(chip => {
+    chip.addEventListener('click', () => {
+      document.querySelectorAll('.filter-chip:not(.link-chip)').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+
+      const cat = chip.dataset.category;
+      if (cat === 'all') {
+        document.querySelectorAll('.module-group').forEach(grp => { grp.style.display = 'block'; });
+      } else {
+        document.querySelectorAll('.module-group').forEach(grp => {
+          grp.style.display = grp.id === 'sec-' + cat ? 'block' : 'none';
+        });
       }
     });
   });
 
-  document.querySelectorAll('.cat-btn-sm:not(.link-btn)').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const cat = btn.dataset.category;
-      const enable = btn.dataset.enable === 'true';
-      const ids = POPUP_CATEGORIES[cat] || [];
-      const updates = {};
-      ids.forEach(id => {
-        const key = POPUP_SETTINGS_MAP[id];
-        if (key) {
-          updates[key] = enable;
-          const el = document.getElementById(id);
-          if (el) el.checked = enable;
-        }
-      });
-      chrome.storage.local.set(updates, () => {
-        updateLiveAudit(masterToggle ? masterToggle.checked : true);
-      });
-    });
-  });
-
-  // Category Link buttons for Sites and Profile
-  document.querySelectorAll('.link-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const tab = btn.dataset.tab;
+  document.querySelectorAll('.link-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      const tab = chip.dataset.tab;
       chrome.tabs.create({ url: chrome.runtime.getURL('options.html?tab=' + tab) });
     });
   });
 
-  // 6. Individual Toggle Checkboxes
+  // 7. Individual Module Checkbox Sync
   Object.entries(POPUP_SETTINGS_MAP).forEach(([id, storageKey]) => {
     const el = document.getElementById(id);
     if (el) {
@@ -227,7 +254,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // 7. Load Initial Settings & Tab Info
+  // 8. Load Initial Settings & Storage
   const storageKeys = [
     ...Object.values(POPUP_SETTINGS_MAP),
     'masterEnabled', 'blockedCounter', 'bypassedSites', 'selectedUA', 'uaCategory'
@@ -249,23 +276,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (uaCategory && res.uaCategory) {
       uaCategory.value = res.uaCategory;
-      if (uaStatus) uaStatus.textContent = uaCategory.options[uaCategory.selectedIndex]?.text || res.uaCategory;
+      if (uaStatus) uaStatus.textContent = uaCategory.options[uaCategory.selectedIndex]?.text.split('•')[0] || res.uaCategory;
     }
 
     updateLiveAudit(isMaster);
   });
 
-  // 8. User Agent Selection
+  // 9. User Agent Persona Selection
   if (uaCategory) {
     uaCategory.addEventListener('change', () => {
       const val = uaCategory.value;
-      const text = uaCategory.options[uaCategory.selectedIndex]?.text || val;
+      const text = uaCategory.options[uaCategory.selectedIndex]?.text.split('•')[0] || val;
       chrome.storage.local.set({ uaCategory: val, selectedUA: val });
       if (uaStatus) uaStatus.textContent = text;
+      if (popupTickerFeed) popupTickerFeed.textContent = '🎭 Persona: ' + text;
     });
   }
 
-  // 9. Current Tab Status
+  // 10. Current Tab Status & Site Rules
   chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
     if (tabs[0]?.url) {
       try {
@@ -276,15 +304,15 @@ document.addEventListener('DOMContentLoaded', () => {
         chrome.runtime.sendMessage({ type: 'GET_SITE_STATUS', url: tabs[0].url }, (status) => {
           if (status) {
             if (status.isBlacklisted) {
-              if (btnBlacklist) btnBlacklist.textContent = 'Un-blacklist';
+              if (btnBlacklist) btnBlacklist.innerHTML = '<span>🚫 Un-blacklist</span>';
             }
             if (status.isWhitelisted) {
-              if (btnWhitelist) btnWhitelist.textContent = 'Un-whitelist';
+              if (btnWhitelist) btnWhitelist.innerHTML = '<span>🛡️ Un-whitelist</span>';
             }
           }
         });
       } catch (_) {
-        if (statusSite) statusSite.textContent = 'System Page';
+        if (statusSite) statusSite.textContent = 'System Protocol Page';
       }
     }
   });
@@ -294,11 +322,11 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!currentHostname) return;
       if (btnWhitelist.textContent.includes('Un-')) {
         chrome.runtime.sendMessage({ type: 'REMOVE_WHITELIST', site: currentHostname }, () => {
-          btnWhitelist.textContent = '🛡️ Whitelist Site';
+          btnWhitelist.innerHTML = '<span class="site-btn-icon">🛡️</span><span>Whitelist Site</span>';
         });
       } else {
         chrome.runtime.sendMessage({ type: 'ADD_WHITELIST', site: currentHostname }, () => {
-          btnWhitelist.textContent = 'Un-whitelist';
+          btnWhitelist.innerHTML = '<span>🛡️ Un-whitelist</span>';
         });
       }
     });
@@ -309,11 +337,11 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!currentHostname) return;
       if (btnBlacklist.textContent.includes('Un-')) {
         chrome.runtime.sendMessage({ type: 'REMOVE_BLACKLIST', site: currentHostname }, () => {
-          btnBlacklist.textContent = '🚫 Blacklist Site';
+          btnBlacklist.innerHTML = '<span class="site-btn-icon">🚫</span><span>Blacklist Site</span>';
         });
       } else {
         chrome.runtime.sendMessage({ type: 'ADD_BLACKLIST', site: currentHostname }, () => {
-          btnBlacklist.textContent = 'Un-blacklist';
+          btnBlacklist.innerHTML = '<span>🚫 Un-blacklist</span>';
         });
       }
     });

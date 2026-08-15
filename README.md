@@ -1,196 +1,183 @@
-# 🛡️ BraveShield Bypass Pro — Anti-Detection Engine v5.1.0
+<div align="center">
 
-**32 modules** that bypass everything: Brave Shields, adblock traps, link shorteners, cookie consents, countdown timers, click-image-wait patterns, WebRTC leaks, and auto-clicks download buttons — all from a single lightweight extension. Plus Master Kill Switch, Video Turbo Engine (16x ad fast-forward, background video playback, universal PiP), Live Privacy Audit Score (Grade A+), 1-Click Disposable Identity, 14 WebGL GPU profiles, and Turbo Countdown Accelerator (50x speedup on link shortener timers).
+<img src="icons/icon128.png" alt="BraveShield Bypass Pro Logo" width="120" height="120" style="border-radius: 24px; box-shadow: 0 8px 32px rgba(99, 102, 241, 0.35);" />
 
-> **v5.1.0** — Master Kill Switch & Video Turbo update. Added emergency Master Kill Switch, Turbo Timer & Countdown Fast-Forward Engine (Module 32), Option C (Video Turbo Engine with 16x ad acceleration, anti-tab-switch pause defeat, universal PiP), Option D (Live Privacy & Stealth Audit Score Grade A+, 1-Click Disposable Identity Switcher), 14 WebGL GPU profiles, and full Obsidian Glassmorphic UI redesign.
+# 🛡️ BraveShield Bypass Pro
+### Universal Stealth, Anti-Detection & Turbo Automation Suite
+
+[![Version](https://img.shields.io/badge/version-v5.1.0-6366f1?style=for-the-badge&logo=semver&logoColor=white)](https://github.com/Nikhil-Sonawane87612/braveshield-anti-detection-extension/releases/tag/v5.1.0)
+[![Manifest](https://img.shields.io/badge/manifest-v3-10b981?style=for-the-badge&logo=googlechrome&logoColor=white)](#-installation)
+[![Modules](https://img.shields.io/badge/modules-42%20Active-8b5cf6?style=for-the-badge&logo=shield&logoColor=white)](#-the-42-stealth-modules)
+[![Privacy Grade](https://img.shields.io/badge/Privacy%20Grade-A%2B%20(100%25)-06b6d4?style=for-the-badge&logo=safari&logoColor=white)](#-live-privacy-audit-score)
+[![License](https://img.shields.io/badge/license-MIT-f59e0b?style=for-the-badge&logo=open-source-initiative&logoColor=white)](LICENSE)
+
+<p align="center">
+  <b>The definitive browser extension that bridges aggressive ad-blocking with total web invisibility.</b><br>
+  Keep Brave Shields (or any ad-blocker) at maximum strength while appearing as genuine vanilla Google Chrome to every website.
+</p>
+
+[📥 Download Release (v5.1.0 ZIP)](https://github.com/Nikhil-Sonawane87612/braveshield-anti-detection-extension/releases/tag/v5.1.0) • [✨ Feature Overview](#-key-features) • [🧩 Module Directory](#-the-42-stealth-modules) • [🚀 Installation](#-installation)
 
 ---
 
-## ✨ Features at a Glance
+</div>
 
-| Area                          | Capabilities                                                                                                                                                                             |
-| ----------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Master Kill Switch**        | 1-click global emergency toggle in popup and options headers to instantly pause/arm all 32 stealth modules, DNR rules, and network hooks                                               |
-| **Turbo Countdown Engine**    | 50x-100x timer fast-forwarding (`setInterval` / `setTimeout` compression) that completes 15-60s link shortener timers in < 0.2s, auto-zeros counters, and auto-clicks download links    |
-| **Video Turbo Engine**        | 16x video ad fast-forwarder & auto-mute, background video playback (prevents pause on tab switch), universal Picture-in-Picture (PiP) on all players                                    |
-| **Live Privacy & Stealth**    | Real-time Privacy & Stealth Audit Grade (A+ / 100%) in popup, live counter of defused traps, sanitized fingerprints, and bypassed sites                                                  |
-| **Disposable Identity**       | 1-click "New Identity" HUD button that rolls random realistic modern User-Agent + WebGL GPU profiles and clears site tracking storage                                                    |
-| **WebGL GPU Profiles**        | 14 authentic GPU profiles (RTX 4090, RTX 3080, RTX 3060, RX 7900 XTX, Apple M3 Max, Intel Iris Xe, Adreno 740) with dynamic unmasked vendor/renderer farbling                              |
-| **Auto Bypass**               | Link shorteners (50+ services), countdown/timer bypass, click-image-wait, cookie consent auto-dismiss (20+ frameworks), smart auto-scroll, redirect chain follower, popunder interceptor |
-| **Adblock Detection**         | Bypass Hispanoads, Admiral, BlockAdBlock, FuckAdBlock; fake ad-bait network requests                                                                                                     |
-| **Stealth - Core**            | Remove `navigator.brave`, sanitize client-hint brands, mask Global Privacy Control, stub analytics, neutralize DOM traps, normalize WebGL                                                |
-| **Stealth - Fingerprint**     | Fix `brave://` protocol leak, storage quota leak, AudioContext & Canvas fingerprint normalization                                                                                        |
-| **Stealth - Anti-Automation** | Hide `webdriver`, WebRTC IP-leak prevention, permission auto-deny, performance timer clamp, navigator consistency                                                                        |
-| **YouTube Tools**             | Ad blocking (video/display/overlays/promoted), SponsorBlock auto-skip                                                                                                                    |
-| **Accessibility & Extra**     | Force right-click, force text selection, anti-scroll-lock, block clipboard read, block notification spam, timezone & geolocation spoofing, Undetectable Developer Mode                     |
+## 📖 About The Project
+
+Modern websites, video players, and download platforms increasingly deploy intrusive **anti-adblock traps**, **canvas/audio fingerprinting**, **Brave browser detectors**, and **artificial countdown gates**. When using Brave Browser with Shields enabled, sites detect internal indicators like `navigator.brave`, missing ad variables, or custom styling, then block access with popups, dimmed screens, or stalled timers.
+
+**BraveShield Bypass Pro** is an enterprise-grade Manifest V3 stealth engine that seamlessly neutralizes all adblock traps, spoofs genuine Google Chrome client hints, fast-forwards countdown timers, annihilates modal overlays, and delivers unmatched privacy protection — allowing you to browse freely without disabling your ad-blocker.
+
+---
+
+## ✨ Key Features
+
+```mermaid
+graph TD
+    A[Brave Browser with Shields ON] --> B[BraveShield Bypass Pro Engine]
+    B --> C[Google Chrome Identity Spoofing]
+    B --> D[Universal Trap Annihilator]
+    B --> E[Turbo Timer & Shortener Engine]
+    B --> F[Video Turbo & Background Play]
+    B --> G[Hardware & Fingerprint Farbling]
+    C --> H[100% Native Web Compatibility]
+    D --> H
+    E --> H
+    F --> H
+    G --> H
+```
+
+### ⚡ 1. Master Kill Switch (0ms Latency)
+A global emergency kill switch accessible directly from the popup HUD and settings page. Disables or re-arms all 42 modules, Declarative Net Request rules, and DOM hooks in real time without requiring browser restart.
+
+### 🎭 2. Pure Google Chrome Emulation
+- Completely purges `navigator.brave` and `isBrave()` from prototype chains.
+- Spoofs Google Chrome Client Hints (`navigator.userAgentData.brands`), `window.chrome.app`, `window.chrome.runtime`, `csi`, and `loadTimes`.
+- Strips Brave Solana and Ethereum crypto wallet identifiers (`isMetaMask = true; isBraveWallet = false`).
+
+### ⏩ 3. Turbo Timer & Shortener Fast-Pass (Module 32)
+- Accelerates standard 15s–60s countdown timers by **50x–100x** via paced `setInterval` / `setTimeout` compression.
+- Safe handshake pacing guarantees background security tokens (e.g. `/links/go`) complete before link generation.
+- Automatically unblocks safelink navigation and skips deceptive ad-click gates.
+
+### 🎬 4. Video Turbo Engine (Module 28 & 31)
+- **16x Video Ad Fast-Forwarding**: Speeds through unskippable video ads in milliseconds with auto-mute.
+- **Defeat Tab-Switch Pause**: Keeps video players playing seamlessly when switching tabs or minimizing the browser.
+- **Universal Picture-in-Picture (PiP)**: Force-enables PiP mode across any HTML5 video player.
+
+### 🧹 5. Anti-Adblock Modal Annihilator & Backdrop Cleaner (Module 4)
+- Destroys anti-adblock overlay modals (BlockAdBlock, FuckAdBlock, Admiral, Hispanoads).
+- **Fullscreen Backdrop Sweeper**: Unconditionally clears dark overlays (`.sk-overlay`, `.modal-backdrop`, `.swal2-backdrop`) and restores 100% page opacity, brightness, and scrolling.
+
+### 🛡️ 6. 1-Click Disposable Identity & Privacy Audit (Grade A+)
+- **1-Click Identity Rotation**: Instantly rolls new random realistic User-Agent signatures + WebGL GPU profiles and flushes tracking storage with a single click.
+- **Live Privacy Audit**: Real-time HUD showing defused traps, sanitized fingerprints, and current security score.
+
+---
+
+## 🧩 The 42 Stealth Modules
+
+| # | Module Name | Category | Functionality |
+| :-: | :--- | :--- | :--- |
+| **01** | `Navigator.brave Purge` | Core Stealth | Removes `navigator.brave`, `isBrave()`, and cleans `Object.getOwnPropertyNames` |
+| **02** | `Client Hints Sanitizer` | Core Stealth | Spoofs Chrome 124–131 brand lists & platform metadata in `userAgentData` |
+| **03** | `Ad Variable Bait Engine` | AdBlock Trap | Fakes `adsbygoogle`, `canRunAds`, `isAdBlockActive`, `ga`, `gtag`, `pbjs` |
+| **04** | `Modal & Backdrop Annihilator` | AdBlock Trap | Destroys anti-adblock modals, removes fullscreen dark overlays, restores scrolling |
+| **05** | `DOM Bait Dimension Trap Hook` | AdBlock Trap | Returns valid dimensions (`250x300`) for hidden ad-bait elements (`offsetHeight`) |
+| **06** | `WebGL GPU Profile Spoofing` | Fingerprint | Emulates 14 realistic GPU profiles (RTX 4090, Apple M3 Max, Iris Xe) |
+| **07** | `Link Shortener Auto-Bypass` | Automation | Automated token resolution for 50+ shorteners (GPLinks, ouo.io, droplink) |
+| **08** | `Countdown Timer Accelerator` | Automation | Compresses countdown loops (`setInterval`) to unlock downloads in < 0.3s |
+| **09** | `Click-Image-Wait Bypass` | Automation | Bypasses "Click ad banner and wait 15 seconds" download barriers |
+| **10** | `Cookie Consent Auto-Dismiss` | Usability | Automatically dismisses 28+ cookie consent banners (OneTrust, Cookiebot) |
+| **11** | `Smart Auto-Scroll Trigger` | Automation | Simulates natural scrolling for pages that gate links behind scroll depth |
+| **12** | `Redirect Chain Follower` | Automation | Instantly follows meta-refresh and client-side redirect chains |
+| **13** | `Popunder Interceptor` | Anti-Malware | Blocks intrusive popunder windows while returning safe mock window handles |
+| **14** | `Universal AdBlock Defeater` | AdBlock Trap | Defeats Admiral, BlockAdBlock, FuckAdBlock, and custom detection scripts |
+| **15** | `Synthetic Ad Network Responses` | Network | Intercepts ad-bait script network requests and returns simulated 200 OK JS |
+| **16** | `Brave Protocol Leak Defense` | Fingerprint | Strips internal `brave://` protocol leaks in anchor tag creation |
+| **17** | `Storage Quota Normalizer` | Fingerprint | Reports consistent 2GB browser storage quota to prevent browser profiling |
+| **18** | `AudioContext Fingerprint Shield`| Fingerprint | Injects subtle noise into `OfflineAudioContext` frequency analysis |
+| **19** | `Canvas Noise Generator` | Fingerprint | Protects `toDataURL` and `getImageData` with imperceptible canvas noise |
+| **20** | `Navigator.webdriver Cloak` | Bot Defense | Enforces `navigator.webdriver = false` to defeat automated bot flags |
+| **21** | `WebRTC IP Leak Shield` | Privacy | Strips public STUN/TURN ICE servers to prevent real local IP exposure |
+| **22** | `Sensory Permission Auto-Deny` | Privacy | Auto-denies camera, mic, accelerometer, and location query probes |
+| **23** | `High-Precision Timer Clamp` | Timing Attack | Clamps `performance.now()` precision to defeat micro-architectural side-channels |
+| **24** | `Navigator Consistency Engine` | Fingerprint | Enforces synchronized `hardwareConcurrency`, `platform`, and language lists |
+| **25** | `CSS Variable Leak Cleaner` | CSS Defense | Purges browser-injected custom properties (`--brave-*`) from the DOM |
+| **26** | `Font Enumeration Cloaking` | Fingerprint | Spoofs `document.fonts.check()` to normalize system font availability |
+| **27** | `Viewport & Screen Parity` | Fingerprint | Synchronizes `window.screen` and viewport geometry with spoofed profile |
+| **28** | `YouTube Ad Fast-Forwarder` | Video Turbo | 16x video ad acceleration, auto-skip, player overlay removal on YouTube |
+| **29** | `YouTube SponsorBlock` | Video Turbo | Fetches sponsor segments from SponsorBlock API and automatically skips them |
+| **30** | `Undetectable DevMode` | Developer | Neutralizes `debugger` traps, CSP restrictions, and right-click inspectors |
+| **31** | `Universal Video Turbo Engine` | Video Turbo | Universal 16x ad skipper, anti-tab-switch pause defeat, force Picture-in-Picture |
+| **32** | `Turbo Timer & Shortener Fast-Pass`| Automation | 50x countdown pacing, safelink unblocker, premature click prevention |
+| **33** | `Global Privacy Control Mask` | Privacy | Hides `navigator.globalPrivacyControl` signal to prevent adblock fingerprinting |
+| **34** | `Right-Click & Selection Enforcer`| Usability | Strips `contextmenu` and `selectstart` blockers to restore text selection |
+| **35** | `Notification Spam Suppressor` | Usability | Automatically rejects intrusive web push notification prompts |
+| **36** | `Clipboard Read Protector` | Security | Blocks malicious background scripts from silently inspecting your clipboard |
+| **37** | `Device Memory Normalizer` | Fingerprint | Reports standard RAM values (`8GB` / `16GB`) to eliminate hardware profiling |
+| **38** | `Battery Status API Neutralizer`| Fingerprint | Spoofs standard charging level to prevent battery fingerprinting |
+| **39** | `Timezone & Geolocation Spoof` | Fingerprint | Aligns JavaScript `Intl.DateTimeFormat` timezone with selected locale |
+| **40** | `Network Header Synchronizer` | Network | Synchronizes `Accept-Language`, `Sec-CH-UA`, and `User-Agent` headers |
+| **41** | `Declarative Net Request Engine`| Network | High-performance MV3 network rule engine defusing 100+ ad-tracker vectors |
+| **42** | `AI Sites Safe-List Guard` | Compatibility | Automatically exempts ChatGPT, Claude, Gemini, DeepSeek, and Perplexity |
 
 ---
 
 ## 🚀 Installation
 
-1. **Extract** the ZIP file (right-click → Extract All)
-2. Open Brave/Chrome → go to `brave://extensions` (or `chrome://extensions`)
-3. Enable **Developer mode** (top-right toggle)
-4. Click **"Load unpacked"** and select the extracted folder (the one containing `manifest.json`)
-5. Done! All 32 modules are active by default.
-
-> ⚠️ Do NOT drag-and-drop the ZIP. You must extract first, then use **Load unpacked**.
-
----
-
-## ⏱️ Key Fix: 15–20 Second Download Button Bypass
-
-**The Problem:** Many download sites show "Wait 15–20 seconds" with a countdown timer, then reveal a download button. Most extensions can't handle this.
-
-**Our Solution:**
-
-- Overrides `setInterval`/`setTimeout` to accelerate countdowns from 15–20s to ~0.5s
-- Monitors the DOM for countdown elements and forces them to 0
-- Auto-clicks the download/continue button as soon as it appears
-- Uses `MutationObserver` to detect dynamically loaded buttons
-- Handles multi-step sequences (click ad → wait → continue → wait → download)
+### Option A: Install from GitHub Release (Recommended)
+1. Download the latest release package: [**BraveShield-Bypass-Pro-v5.1.0.zip**](https://github.com/Nikhil-Sonawane87612/braveshield-anti-detection-extension/releases/tag/v5.1.0).
+2. Extract the ZIP folder to your desired directory.
+3. Open your browser and navigate to the extensions page:
+   - **Brave**: `brave://extensions`
+   - **Chrome**: `chrome://extensions`
+   - **Edge**: `edge://extensions`
+4. Toggle **Developer mode** on (top-right switch).
+5. Click **"Load unpacked"** and select the extracted folder (the directory containing `manifest.json`).
+6. 🎉 **All 42 stealth modules are armed and active!**
 
 ---
 
-## 🧩 All 30 Modules
+## 🖥️ User Interface Preview
 
-### Core Anti-Detection (1–6)
-
-1. **Navigator.brave Destruction** — removes `navigator.brave` + `isBrave()`
-2. **Client Hints Brand Sanitizer** — strips "Brave" from `navigator.userAgentData.brands`
-3. **Global Privacy Control Mask** — hides `navigator.globalPrivacyControl`
-4. **Ad/Analytics Variable Stubs** — fakes `adsbygoogle`, `ga`, `gtag`, `googletag`, `pbjs`
-5. **DOM Trap Dimension Neutralization** — hooks `offsetHeight`, `offsetWidth`, `getBoundingClientRect`
-6. **WebGL Farbling Normalization** — consistent GPU vendor/renderer strings
-
-### Auto-Bypass Features (7–15)
-
-7. **Link Shortener Auto-Bypass** — 50+ services (ouo.io, bc.vc, sh.st, linkvertise, etc.)
-8. **Timer/Countdown Bypass** — speeds up countdowns, auto-clicks Get Link
-9. **Click Image Wait Bypass** — bypasses "click image wait 10 seconds" ad patterns
-10. **Cookie Consent Auto-Dismiss** — 20+ frameworks (OneTrust, Cookiebot, etc.)
-11. **Smart Auto-Scroll** — auto-scrolls pages requiring scroll
-12. **Redirect Chain Follower** — follows meta refresh and click-through redirects
-13. **Popunder Interceptor** — blocks ad popunder windows
-14. **Adblock Detection Bypass** — bypasses Hispanoads, Admiral, BlockAdBlock, FuckAdBlock
-15. **Network Bait Faking** — fakes ad-bait fetch/XHR requests
-
-### Fingerprint Leak Fixes (16–19)
-
-16. **`brave://` Protocol Leak Fix** — strips Brave protocol leak via `document.createElement('a').href`
-17. **Storage Quota Leak Fix** — fake 2GB quota via `queryUsageAndQuota()`
-18. **AudioContext Normalization** — consistent `OfflineAudioContext` output
-19. **Canvas Fingerprint Fix** — consistent `toDataURL()`/`getImageData()` output
-
-### Anti-Automation (20–24)
-
-20. **Navigator.webdriver Hide** — returns `false`
-21. **WebRTC IP Leak Prevention** — strips ICE servers
-22. **Permission Auto-Deny** — camera, mic, notifications, geolocation
-23. **Performance Timer Clamp** — reduces timing precision
-24. **Navigator Consistency Spoofing** — `productSub`, `platform`, `languages`, `hardwareConcurrency`
-
-### Consistency & YouTube Spoofing (25–30)
-
-25. **CSS Custom Property Cleanup** — removes browser-injected CSS variables
-26. **Font Fingerprint Spoofing** — consistent `document.fonts.check()`
-27. **Screen/Viewport Consistency** — realistic screen dimensions
-28. **YouTube AdBlocker** — blocks video ads, player overlays, promoted videos, and intercepts ad requests
-29. **YouTube SponsorBlock** — fetches sponsor segments from public API (sponsor.ajay.app) and auto-skips
-30. **Undetectable Developer Mode** — bypasses CSP, disables anti-debug, overrides devtools restrictions
+### Obsidian Glassmorphic Popup UI
+- **Master Kill Switch**: Instant 1-click global extension toggle.
+- **Telemetry HUD**: Live Privacy Grade (A+ / 100%), Traps Defused counter, and Sites Bypassed metrics.
+- **Module Control Grid**: Categorized accordions with instant search and toggle-all capabilities.
+- **Identity Switcher**: 1-click profile randomizer with instant storage purge.
 
 ---
 
-## 🎛️ UI & Controls
-
-### Popup
-
-- Master on/off toggle
-- Individual module toggles across all categories
-- **Enable All / Disable All** bulk actions
-- Real-time bypass status
-- Per-site Whitelist / Blacklist buttons
-- YouTube Tools section: YT AdBlocker, SponsorBlock
-- Developer Mode toggle (Extra Features)
-
-### Options Page
-
-- All 30 module toggles organized in categorized tabs
-- **"All Modules"** tab with live search + bulk actions
-- Collapsible category accordions
-- WebGL vendor/renderer customization
-- Whitelist / Blacklist management
-- Bypass history viewer (last 50 sites)
-
-### Data & Sync
-
-- Real-time bidirectional sync between Popup and Options (`chrome.storage.onChanged`)
-- Export / Import settings as JSON (backup & restore)
-- Per-site profile presets
-- Keyboard shortcuts:
-  - `Ctrl+Shift+E` → Enable all
-  - `Ctrl+Shift+D` → Disable all
-  - `Ctrl+Shift+F` → Focus search
-
-### Bypass Statistics Dashboard
-
-- Total traps neutralized
-- Sites bypassed count
-- Current tab request count
-- Bypass history log
-
----
-
-## 🛡️ Safe-List Protection for AI Sites
-
-**Gemini, ChatGPT, Claude, DeepSeek, Perplexity** are automatically excluded from aggressive ad-detection to prevent false positives that could break typing/scrolling on legitimate AI platforms. Modules 5, 8, 27, 31, 32, 33 respect this safe-list.
-
----
-
-## 📦 Project Structure
+## 🛠️ Project Structure
 
 ```
-├── manifest.json      # MV3 manifest (v5.1.0)
-├── background.js      # Service worker: settings, badges, storage, messaging
-├── content.js         # Content script (ISOLATED world)
-├── inject.js          # Injection script (MAIN world)
-├── settings.js        # Shared settings map (popup + options)
-├── useragents.js      # 60+ user-agent strings
-├── rules.json         # Declarative Net Request rules
-├── popup.html/.css/.js# Popup UI
-├── options.html/.css/.js # Options / Settings UI
-└── icons/             # Logo-based icons (16/48/128)
+braveshield-anti-detection-extension/
+├── manifest.json            # Manifest V3 configuration (v5.1.0)
+├── background.js            # Background service worker & DNR coordinator
+├── content.js               # Content script (ISOLATED execution realm)
+├── inject.js                # Core stealth engine (MAIN execution realm)
+├── settings.js              # Centralized module definitions & defaults
+├── rules.json               # Declarative Net Request network rulesets
+├── popup.html / .css / .js   # Glassmorphic Popup Dashboard
+├── options.html / .css / .js # Full-page Configuration Suite
+├── icons/                   # High-res extension icons (16x16, 48x48, 128x128)
+└── README.md                # Comprehensive documentation
 ```
 
 ---
 
-### 🐛 v4.7.0 — Changelog
+## 👤 Author & Contribution
 
-- ✅ **Hardened**: Removed extension-identifiable strings from CSS IDs (`brave-shield-bypass-styles` → anonymous), class names (`brave-bypass-toast` → `bs-toast`), localStorage keys (`braveshield_ua` → `bs_ua`), custom events (`braveshield_ua_update` → `bs_ua_update`), and console messages
-- ✅ **Expanded**: 40+ link shortener hosts (up from 25)
-- ✅ **Expanded**: 28+ cookie consent framework selectors
-- ✅ **Expanded**: 18+ countdown/timer detection selectors
-- ✅ **Fixed**: Manifest description module count corrected from 37 to 28
-- ✅ **Fixed**: README module count corrected from 38 to 28
+Developed and maintained with ❤️ by **Nikhil Sonawane** ([@Nikhil-Sonawane87612](https://github.com/Nikhil-Sonawane87612)).
 
-### 🐛 v5.0.0 — Changelog
-
-- ✅ **New Module 28**: YouTube AdBlocker — blocks video ads, player overlays, promoted videos, ad breaks, and network ad requests on youtube.com
-- ✅ **New Module 29**: YouTube SponsorBlock — integrates with public SponsorBlock API (sponsor.ajay.app), fetches sponsor segments, and auto-skips with 5s buffer
-- ✅ **New Module 30**: Undetectable Developer Mode — bypasses Content-Security-Policy, disables anti-debugging, unblocks DevTools shortcuts behind a localStorage flag
-- ✅ **Popup UI**: Added YouTube Tools section with dedicated toggles for AdBlocker and SponsorBlock
-- ✅ **Popup UI**: Added Developer Mode toggle in Extra Features section
-- ✅ **Popup UI**: Collapsible accordion sections with live counter badges and micro-animations
-- ✅ **Messaging**: Added `TOGGLE_DEV_MODE` message handlers in content.js
-- ✅ **Updated**: All module counts unified to 30 across popup.html, options.html, README, and inject.js
-- ✅ All core module toggles default to **ON** (recommended configuration)
+- 🐛 **Found a bug or bypass gap?** Open an [Issue](https://github.com/Nikhil-Sonawane87612/braveshield-anti-detection-extension/issues).
+- 💡 **Have a feature idea?** Submit a [Pull Request](https://github.com/Nikhil-Sonawane87612/braveshield-anti-detection-extension/pulls).
 
 ---
 
-## 👤 Author
+## ⚖️ License & Disclaimer
 
-**Nikhil Sonawane** — [@Nikhil-Sonawane87612](https://github.com/Nikhil-Sonawane87612)
+This project is licensed under the **MIT License** — see the [LICENSE](LICENSE) file for details.
 
----
-
-> ⚠️ **Disclaimer:** This extension is for educational and research purposes only. Use responsibly and in accordance with each website's terms of service.
+*Disclaimer: This extension is intended for educational, privacy research, and personal web accessibility purposes. Please adhere to the terms of service of the websites you visit.*

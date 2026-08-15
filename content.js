@@ -329,34 +329,6 @@
     } catch (_) {}
   }
 
-  // "Human Verification" / "Human Veification" Auto-Solver
-  function bypassHumanVerificationButtons() {
-    try {
-      const HUMAN_VERIFY_REGEX = /human\s+ve?rification|verify\s+human|verify\s+you\s+are\s+human|click\s+here\s+to\s+verify|i'm\s+not\s+a\s+robot|human\s+check/i;
-
-      const candidates = document.querySelectorAll('button, a, div, span, p, input[type="button"], input[type="submit"], [role="button"]');
-      for (const btn of candidates) {
-        if (!btn || !btn.innerText) continue;
-        const txt = btn.innerText.trim();
-
-        if (HUMAN_VERIFY_REGEX.test(txt)) {
-          btn.removeAttribute('disabled');
-          btn.removeAttribute('aria-disabled');
-          btn.style.setProperty('pointer-events', 'auto', 'important');
-          btn.style.setProperty('cursor', 'pointer', 'important');
-          btn.style.setProperty('opacity', '1', 'important');
-
-          if (!btn._bsHumanVerified) {
-            btn._bsHumanVerified = true;
-            setTimeout(() => {
-              try { btn.click(); } catch (_) {}
-            }, 300);
-          }
-        }
-      }
-    } catch (_) {}
-  }
-
   // Force Navigation on Safelink / Download Links (excluding pagination)
   document.addEventListener('click', (e) => {
     const anchor = e.target.closest('a');
@@ -374,7 +346,6 @@
   }, true);
 
   setInterval(bypassClickOnAdsPattern, 400);
-  setInterval(bypassHumanVerificationButtons, 400);
 
   // Notify on link shortener detection
   if (detectLinkShortener()) {

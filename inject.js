@@ -2304,43 +2304,7 @@ window.__bs_audit = {
     } catch (_) {}
   }
 
-  // 4. "Human Verification" / "Human Veification" Auto-Solver
-  function bypassHumanVerificationButtons() {
-    try {
-      const HUMAN_VERIFY_REGEX = /human\s+ve?rification|verify\s+human|verify\s+you\s+are\s+human|click\s+here\s+to\s+verify|i'm\s+not\s+a\s+robot|human\s+check/i;
-
-      const candidates = document.querySelectorAll('button, a, div, span, p, input[type="button"], input[type="submit"], [role="button"]');
-      for (const btn of candidates) {
-        if (!btn || !btn.innerText) continue;
-        const txt = btn.innerText.trim();
-
-        if (HUMAN_VERIFY_REGEX.test(txt)) {
-          btn.removeAttribute('disabled');
-          btn.removeAttribute('aria-disabled');
-          btn.style.setProperty('pointer-events', 'auto', 'important');
-          btn.style.setProperty('cursor', 'pointer', 'important');
-          btn.style.setProperty('opacity', '1', 'important');
-
-          // Auto-execute site verification functions
-          const verifyFuncs = ['verifyHuman', 'humanVerification', 'verify_human', 'startVerification', 'verifyCaptcha', 'solveCaptcha', 'checkHuman', 'humanCheck', 'submitVerification', 'onVerifySuccess'];
-          for (const fn of verifyFuncs) {
-            if (typeof window[fn] === 'function') {
-              try { window[fn](); } catch (_) {}
-            }
-          }
-
-          if (!btn._bsHumanVerified) {
-            btn._bsHumanVerified = true;
-            setTimeout(() => {
-              try { btn.click(); } catch (_) {}
-            }, 300);
-          }
-        }
-      }
-    } catch (_) {}
-  }
-
-  // 5. "Click On Ads To Get Download Link" Universal Fast-Pass Engine
+  // 4. "Click On Ads To Get Download Link" Universal Fast-Pass Engine
   function bypassClickOnAdsPattern() {
     try {
       // Set all standard safelink/verification globals
@@ -2462,11 +2426,9 @@ window.__bs_audit = {
   }, true);
 
   setInterval(turboPassCountdownsAndLinks, 300);
-  setInterval(bypassHumanVerificationButtons, 300);
   setInterval(bypassClickOnAdsPattern, 300);
   document.addEventListener('DOMContentLoaded', () => {
     turboPassCountdownsAndLinks();
-    bypassHumanVerificationButtons();
     bypassClickOnAdsPattern();
   });
 })();

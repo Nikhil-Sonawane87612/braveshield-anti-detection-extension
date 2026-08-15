@@ -635,4 +635,52 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     });
   }
+
+  // 12. Real-Time Bidirectional Synchronization (Options Studio <-> Popup HUD)
+  chrome.storage.onChanged.addListener((changes, area) => {
+    if (area !== 'local') return;
+
+    // Sync Theme
+    if (changes.theme) {
+      const newTheme = changes.theme.newValue || 'obsidian_noir';
+      document.documentElement.setAttribute('data-theme', newTheme);
+      highlightActiveThemeCard(newTheme);
+    }
+
+    // Sync Master Switch
+    if (changes.masterEnabled !== undefined) {
+      const isMaster = changes.masterEnabled.newValue !== false;
+      if (optionsMasterToggle) optionsMasterToggle.checked = isMaster;
+      if (optionsMasterLabel) {
+        optionsMasterLabel.textContent = isMaster ? 'ENGINE ARMED' : 'ENGINE DISABLED';
+        optionsMasterLabel.style.color = isMaster ? '#00f076' : '#ff3366';
+      }
+      if (optionsMasterDot) {
+        optionsMasterDot.style.background = isMaster ? '#00f076' : '#ff3366';
+      }
+    }
+
+    // Sync Individual Module Toggles
+    Object.entries(SETTINGS_MAP).forEach(([domId, key]) => {
+      if (changes[key] !== undefined) {
+        syncCheckboxesForSetting(domId, Boolean(changes[key].newValue));
+      }
+    });
+
+    // Sync Counters
+    const statTraps = document.getElementById('stat-traps');
+    if (changes.blockedCounter && statTraps) {
+      statTraps.textContent = String(changes.blockedCounter.newValue || 0);
+    }
+    const statBypassed = document.getElementById('stat-bypassed');
+    if (changes.bypassedSites && statBypassed) {
+      statBypassed.textContent = String((changes.bypassedSites.newValue || []).length);
+    }
+
+    // Sync UA Persona
+    if (changes.uaCategory) {
+      const uaSel = document.getElementById('ua-select-opt');
+      if (uaSel) uaSel.value = changes.uaCategory.newValue;
+    }
+  });
 });

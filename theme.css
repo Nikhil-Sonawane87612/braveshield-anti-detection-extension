@@ -1,11 +1,12 @@
 /* ══════════════════════════════════════════════════════════════════════════════
    BraveShield Bypass Pro - 10 Premium Visual Themes
-   Obsidian Noir, Cyberpunk Neon, Arctic Frost, Sunset Gradient, Ocean Depth,
-   Forest Emerald, Lavender Dream, Solar Flare, Midnight Galaxy, Rose Gold
+   Complete visual identities with responsive surface gradients, glass cards,
+   vibrant accent glows, and themed HUD components.
    ══════════════════════════════════════════════════════════════════════════════ */
 
-/* 1. Obsidian Noir (Default) */
+/* 1. Obsidian Noir (Dark Luxury & Stealth) */
 :root, [data-theme="obsidian_noir"] {
+  color-scheme: dark;
   --bg-space: #0a0a0f;
   --bg-surface: #111118;
   --bg-card: rgba(255, 255, 255, 0.04);
@@ -22,10 +23,15 @@
   --accent-purple: #a855f7;
   --accent-amber: #f59e0b;
   --accent-gradient: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%);
+  --body-bg-gradient: 
+    radial-gradient(circle at 15% 0%, rgba(139, 92, 246, 0.12) 0%, transparent 45%),
+    radial-gradient(circle at 85% 15%, rgba(99, 102, 241, 0.10) 0%, transparent 45%),
+    radial-gradient(circle at 50% 100%, rgba(168, 85, 247, 0.06) 0%, transparent 50%);
 }
 
-/* 2. Cyberpunk Neon */
+/* 2. Cyberpunk Neon (Futuristic Hacker Terminal) */
 [data-theme="cyberpunk_neon"] {
+  color-scheme: dark;
   --bg-space: #0d0221;
   --bg-surface: #170438;
   --bg-card: rgba(0, 255, 136, 0.06);
@@ -42,10 +48,15 @@
   --accent-purple: #ff007f;
   --accent-amber: #ffe600;
   --accent-gradient: linear-gradient(135deg, #00ff88 0%, #00d4ff 100%);
+  --body-bg-gradient: 
+    radial-gradient(circle at 10% 0%, rgba(0, 255, 136, 0.15) 0%, transparent 50%),
+    radial-gradient(circle at 90% 20%, rgba(0, 212, 255, 0.15) 0%, transparent 50%),
+    radial-gradient(circle at 50% 100%, rgba(255, 0, 127, 0.1) 0%, transparent 50%);
 }
 
-/* 3. Arctic Frost */
+/* 3. Arctic Frost (Clean, Minimal, Frosted Glass) */
 [data-theme="arctic_frost"] {
+  color-scheme: light;
   --bg-space: #f0f4ff;
   --bg-surface: #e2e8f0;
   --bg-card: rgba(255, 255, 255, 0.85);
@@ -62,10 +73,15 @@
   --accent-purple: #6366f1;
   --accent-amber: #f59e0b;
   --accent-gradient: linear-gradient(135deg, #3b82f6 0%, #06b6d4 100%);
+  --body-bg-gradient: 
+    radial-gradient(circle at 15% 0%, rgba(59, 130, 246, 0.12) 0%, transparent 45%),
+    radial-gradient(circle at 85% 15%, rgba(6, 182, 212, 0.12) 0%, transparent 45%),
+    radial-gradient(circle at 50% 100%, rgba(99, 102, 241, 0.08) 0%, transparent 50%);
 }
 
-/* 4. Sunset Gradient */
+/* 4. Sunset Gradient (Warm, Energetic, Coral) */
 [data-theme="sunset_gradient"] {
+  color-scheme: dark;
   --bg-space: #1a0814;
   --bg-surface: #2b0b1e;
   --bg-card: rgba(255, 107, 53, 0.08);
@@ -82,10 +98,15 @@
   --accent-purple: #7209b7;
   --accent-amber: #ffbe0b;
   --accent-gradient: linear-gradient(135deg, #f72585 0%, #ff6b35 100%);
+  --body-bg-gradient: 
+    radial-gradient(circle at 20% 0%, rgba(247, 37, 133, 0.16) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(255, 107, 53, 0.16) 0%, transparent 50%),
+    radial-gradient(circle at 50% 100%, rgba(114, 9, 183, 0.12) 0%, transparent 50%);
 }
 
-/* 5. Ocean Depth */
+/* 5. Ocean Depth (Deep Abyss Sea & Glowing Aqua) */
 [data-theme="ocean_depth"] {
+  color-scheme: dark;
   --bg-space: #0b1628;
   --bg-surface: #0f233d;
   --bg-card: rgba(6, 182, 212, 0.06);
@@ -102,10 +123,15 @@
   --accent-purple: #38bdf8;
   --accent-amber: #38bdf8;
   --accent-gradient: linear-gradient(135deg, #06b6d4 0%, #0ea5e9 100%);
+  --body-bg-gradient: 
+    radial-gradient(circle at 15% 0%, rgba(6, 182, 212, 0.15) 0%, transparent 45%),
+    radial-gradient(circle at 85% 15%, rgba(14, 165, 233, 0.15) 0%, transparent 45%),
+    radial-gradient(circle at 50% 100%, rgba(2, 132, 199, 0.10) 0%, transparent 50%);
 }
 
-/* 6. Forest Emerald */
+/* 6. Forest Emerald (Organic Matrix Night) */
 [data-theme="forest_emerald"] {
+  color-scheme: dark;
   --bg-space: #0a1f0a;
   --bg-surface: #0f2e0f;
   --bg-card: rgba(16, 185, 129, 0.06);
@@ -122,10 +148,15 @@
   --accent-purple: #34d399;
   --accent-amber: #10b981;
   --accent-gradient: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  --body-bg-gradient: 
+    radial-gradient(circle at 15% 0%, rgba(16, 185, 129, 0.15) 0%, transparent 45%),
+    radial-gradient(circle at 85% 15%, rgba(5, 150, 105, 0.15) 0%, transparent 45%),
+    radial-gradient(circle at 50% 100%, rgba(52, 211, 153, 0.08) 0%, transparent 50%);
 }
 
-/* 7. Lavender Dream */
+/* 7. Lavender Dream (Soft Plum & Dreamy Lilac) */
 [data-theme="lavender_dream"] {
+  color-scheme: dark;
   --bg-space: #1a1025;
   --bg-surface: #261738;
   --bg-card: rgba(167, 139, 250, 0.08);
@@ -142,10 +173,15 @@
   --accent-purple: #e879f9;
   --accent-amber: #f472b6;
   --accent-gradient: linear-gradient(135deg, #a78bfa 0%, #c084fc 100%);
+  --body-bg-gradient: 
+    radial-gradient(circle at 20% 0%, rgba(167, 139, 250, 0.15) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(192, 132, 252, 0.15) 0%, transparent 50%),
+    radial-gradient(circle at 50% 100%, rgba(232, 121, 249, 0.08) 0%, transparent 50%);
 }
 
-/* 8. Solar Flare */
+/* 8. Solar Flare (Ember Black & Flame Amber) */
 [data-theme="solar_flare"] {
+  color-scheme: dark;
   --bg-space: #1a0a00;
   --bg-surface: #2d1300;
   --bg-card: rgba(249, 115, 22, 0.06);
@@ -162,10 +198,15 @@
   --accent-purple: #f59e0b;
   --accent-amber: #fbbf24;
   --accent-gradient: linear-gradient(135deg, #f97316 0%, #eab308 100%);
+  --body-bg-gradient: 
+    radial-gradient(circle at 15% 0%, rgba(249, 115, 22, 0.16) 0%, transparent 45%),
+    radial-gradient(circle at 85% 15%, rgba(234, 179, 8, 0.14) 0%, transparent 45%),
+    radial-gradient(circle at 50% 100%, rgba(251, 191, 36, 0.08) 0%, transparent 50%);
 }
 
-/* 9. Midnight Galaxy */
+/* 9. Midnight Galaxy (Cosmic Starfield & Infinite Indigo) */
 [data-theme="midnight_galaxy"] {
+  color-scheme: dark;
   --bg-space: #030014;
   --bg-surface: #0a0424;
   --bg-card: rgba(99, 102, 241, 0.05);
@@ -182,10 +223,15 @@
   --accent-purple: #c084fc;
   --accent-amber: #818cf8;
   --accent-gradient: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  --body-bg-gradient: 
+    radial-gradient(circle at 15% 0%, rgba(99, 102, 241, 0.16) 0%, transparent 45%),
+    radial-gradient(circle at 85% 15%, rgba(139, 92, 246, 0.16) 0%, transparent 45%),
+    radial-gradient(circle at 50% 100%, rgba(192, 132, 252, 0.08) 0%, transparent 50%);
 }
 
-/* 10. Rose Gold */
+/* 10. Rose Gold (Elegant Blush & Pink Luxury) */
 [data-theme="rose_gold"] {
+  color-scheme: dark;
   --bg-space: #1a0f0f;
   --bg-surface: #2b1418;
   --bg-card: rgba(244, 114, 182, 0.06);
@@ -202,4 +248,47 @@
   --accent-purple: #fb7185;
   --accent-amber: #f59e0b;
   --accent-gradient: linear-gradient(135deg, #f472b6 0%, #fb923c 100%);
+  --body-bg-gradient: 
+    radial-gradient(circle at 20% 0%, rgba(244, 114, 182, 0.16) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(251, 146, 60, 0.14) 0%, transparent 50%),
+    radial-gradient(circle at 50% 100%, rgba(251, 113, 133, 0.08) 0%, transparent 50%);
+}
+
+/* Global elements bound to theme variables */
+body {
+  background: var(--bg-space) !important;
+  background-image: var(--body-bg-gradient) !important;
+  background-attachment: fixed !important;
+  color: var(--text-primary) !important;
+}
+
+.hdr {
+  background: var(--bg-surface) !important;
+}
+
+.brand-icon {
+  background: var(--accent-gradient) !important;
+  box-shadow: 0 0 16px var(--border-glow-emerald) !important;
+}
+
+.radar-ring {
+  border-color: var(--border-glow-emerald) !important;
+}
+
+.radar-ring.r2 {
+  border-color: var(--border-glow-cyan) !important;
+}
+
+.card, .module-card, .scard {
+  background: var(--bg-card) !important;
+  border-color: var(--border-glass) !important;
+}
+
+.card:hover, .module-card:hover {
+  background: var(--bg-card-hover) !important;
+}
+
+.abtn.pri {
+  background: var(--accent-gradient) !important;
+  color: #ffffff !important;
 }

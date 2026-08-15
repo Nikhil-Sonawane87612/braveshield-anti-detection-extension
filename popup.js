@@ -370,30 +370,64 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // GitHub Auto-Sync Button Handler
-  const btnSync = document.getElementById('btn-sync-rules');
-  const syncIcon = document.getElementById('sync-icon');
-  const syncText = document.getElementById('sync-text');
-
-  if (btnSync) {
-    chrome.runtime.sendMessage({ type: 'GET_SYNC_STATUS' }, (res) => {
-      if (res && res.remoteVersion) {
-        syncText.textContent = `Synced v${res.remoteVersion}`;
-      }
-    });
-
-    btnSync.addEventListener('click', () => {
-      syncText.textContent = 'Syncing...';
+  // 11. Remote GitHub Sync Listener
+  const btnSyncRules = document.getElementById('btn-sync-rules');
+  const syncStatusPill = document.getElementById('sync-status-pill');
+  if (btnSyncRules) {
+    btnSyncRules.addEventListener('click', () => {
+      if (syncStatusPill) syncStatusPill.textContent = 'Syncing...';
       chrome.runtime.sendMessage({ type: 'CHECK_REMOTE_UPDATE' }, (res) => {
         if (res && res.success) {
-          syncText.textContent = `Updated v${res.version || '5.1.0'}`;
+          if (syncStatusPill) syncStatusPill.textContent = 'Updated v' + (res.version || '5.2.1');
+          if (popupTickerFeed) popupTickerFeed.textContent = '🔄 Rule auto-sync complete';
         } else {
-          syncText.textContent = 'Up to date';
+          if (syncStatusPill) syncStatusPill.textContent = 'Synced';
         }
-        setTimeout(() => {
-          syncText.textContent = 'Auto-Sync';
-        }, 3000);
       });
     });
   }
+
+  // 12. Real-Time Bidirectional Synchronization (Popup <-> Options Studio)
+  chrome.storage.onChanged.addListener((changes, area) => {
+    if (area !== 'local') return;
+
+    // Sync Theme
+    if (changes.theme) {
+      const newTheme = changes.theme.newValue || 'obsidian_noir';
+      document.documentElement.setAttribute('data-theme', newTheme);
+      if (themeSelector) themeSelector.value = newTheme;
+      if (themeStatus) themeStatus.textContent = themeSelector ? (themeSelector.options[themeSelector.selectedIndex]?.text.split('(')[0] || newTheme) : newTheme;
+    }
+
+    // Sync Master Switch
+    if (changes.masterEnabled !== undefined) {
+      const isMaster = changes.masterEnabled.newValue !== false;
+      if (masterToggle) masterToggle.checked = isMaster;
+      updateLiveAudit(isMaster);
+    }
+
+    // Sync Individual Module Toggles
+    Object.entries(POPUP_SETTINGS_MAP).forEach(([domId, key]) => {
+      if (changes[key] !== undefined) {
+        const el = document.getElementById(domId);
+        if (el) el.checked = Boolean(changes[key].newValue);
+      }
+    });
+
+    // Sync Counters
+    if (changes.blockedCounter && trapsBypassedEl) {
+      trapsBypassedEl.textContent = String(changes.blockedCounter.newValue || 0);
+    }
+    if (changes.bypassedSites && sitesBypassedEl) {
+      sitesBypassedEl.textContent = String((changes.bypassedSites.newValue || []).length);
+    }
+
+    // Sync UA Persona
+    if (changes.uaCategory && uaCategory) {
+      uaCategory.value = changes.uaCategory.newValue;
+      if (uaStatus) uaStatus.textContent = uaCategory.options[uaCategory.selectedIndex]?.text.split('•')[0] || changes.uaCategory.newValue;
+    }
+
+    updateLiveAudit(masterToggle ? masterToggle.checked : true);
+  });
 });

@@ -5,6 +5,13 @@
 <title>BraveShield Bypass Pro</title>
 <link rel="stylesheet" href="popup.css">
 <link rel="stylesheet" href="theme.css">
+<script>
+  try {
+    chrome.storage.local.get(['theme'], (r) => {
+      if (r && r.theme) document.documentElement.setAttribute('data-theme', r.theme);
+    });
+  } catch (_) {}
+</script>
 </head>
 <body>
 

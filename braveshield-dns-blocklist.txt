@@ -14,19 +14,17 @@
 # ==============================================================================
 
 # ------------------------------------------------------------------------------
-# 1. SPOTIFY AD & TELEMETRY SERVERS (Zero Stream Errors Safe-List)
+# 1. SPOTIFY AD & TELEMETRY SERVERS (Zero Stream & Captcha Errors Safe-List)
 # ------------------------------------------------------------------------------
-# NOTE: DO NOT block audio-fa.scdn.co, audio4-fa.scdn.co, or api.spotify.com!
+# NOTE: DO NOT block spclient.wg.spotify.com, audio-fa.scdn.co, arkoselabs.com, or accounts.spotify.com!
 ads.spotify.com
 adstudio.spotify.com
-spclient.wg.spotify.com/ad-logic
 heads4-ak.spotify.com
 adclick.g.doubleclick.net
 googleads.g.doubleclick.net
 pagead2.googlesyndication.com
 audio-ak-spotify-com.akamaized.net
 crashdump.spotify.com
-log.spotify.com
 
 # ------------------------------------------------------------------------------
 # 2. YOUTUBE & GOOGLE VIDEO AD SERVERS

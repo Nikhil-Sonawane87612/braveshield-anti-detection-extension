@@ -160,27 +160,52 @@
   // B6 & B7: Modal Annihilator & Fullscreen Backdrop Cleaner
   const ADBLOCK_MODAL_REGEX = /adblock(?:er)?\s+detected|disable\s+(?:your\s+)?ad\s*blocker|ads\s+help\s+us\s+keep|turn\s+off\s+adblock|ad\s*block\s+detected|please\s+whitelist|adblocker\s+is\s+detected|i've\s+disabled\s+adblocker/i;
 
+  function isProtectedCaptchaOrAuth(el) {
+    if (!el) return false;
+    if (IS_SPOTIFY || HOSTNAME.includes('arkoselabs.com')) return true;
+    const htmlSnippet = (el.outerHTML || '').slice(0, 800).toLowerCase();
+    const textSnippet = (el.innerText || '').toLowerCase();
+    if (htmlSnippet.includes('arkose') || htmlSnippet.includes('funcaptcha') || htmlSnippet.includes('recaptcha') || htmlSnippet.includes('hcaptcha') || htmlSnippet.includes('turnstile') || htmlSnippet.includes('cf-chl') || htmlSnippet.includes('challenge-form') || htmlSnippet.includes('arkoselabs')) {
+      return true;
+    }
+    if (textSnippet.includes("make sure that you're a human") || textSnippet.includes('verify you are human') || textSnippet.includes('security check') || textSnippet.includes('please verify')) {
+      return true;
+    }
+    if (el.querySelector && el.querySelector('iframe[src*="arkose"], iframe[src*="arkoselabs"], iframe[src*="recaptcha"], iframe[src*="hcaptcha"], iframe[src*="turnstile"], iframe[src*="cloudflare"], #challenge-stage, .arkose-container')) {
+      return true;
+    }
+    return false;
+  }
+
   function annihilateModalsAndBackdrops() {
     try {
       if (IS_SPOTIFY) return; // Do not sweep Spotify internal modals
       const elements = DOC.querySelectorAll('div, section, dialog, [role="dialog"], .modal, .swal2-container, .overlay, .popup');
       for (const el of elements) {
-        if (!el || !el.innerText) continue;
+        if (!el || !el.innerText || isProtectedCaptchaOrAuth(el)) continue;
         if (ADBLOCK_MODAL_REGEX.test(el.innerText)) {
           let target = el;
           let parent = el.parentElement;
           while (parent && parent !== DOC.body && parent !== DOC.documentElement) {
+            if (isProtectedCaptchaOrAuth(parent)) {
+              target = null;
+              break;
+            }
             const style = WIN.getComputedStyle(parent);
             if (style.position === 'fixed' || style.position === 'absolute') target = parent;
             parent = parent.parentElement;
           }
-          try { target.remove(); } catch (_) { target.style.display = 'none'; }
+          if (target && !isProtectedCaptchaOrAuth(target)) {
+            try { target.remove(); } catch (_) { target.style.display = 'none'; }
+          }
         }
       }
 
       // Sweep dark dimmers
       DOC.querySelectorAll('.modal-backdrop, .swal2-backdrop, .swal2-container, .sk-overlay, #sk-overlay, .overlay-backdrop').forEach(b => {
-        try { b.remove(); } catch (_) { b.style.display = 'none'; }
+        if (b && !isProtectedCaptchaOrAuth(b)) {
+          try { b.remove(); } catch (_) { b.style.display = 'none'; }
+        }
       });
 
       // Restore scrolling & pointer interactivity

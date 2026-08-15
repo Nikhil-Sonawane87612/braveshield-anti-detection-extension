@@ -485,18 +485,42 @@ window.__bs_audit = {
 (() => {
   const ADBLOCK_MODAL_TEXT_REGEX = /adblock(?:er)?\s+detected|disable\s+(?:your\s+)?ad\s*blocker|disable\s+(?:your\s+)?private\s+dns|ads\s+help\s+us\s+keep|turn\s+off\s+adblock|ad\s*block\s+detected|please\s+whitelist|adblocker\s+is\s+detected|i've\s+disabled\s+adblocker|ad\s*blocker\s+found|ad\s*block\s+shield|block\s+adblock|adblocker\s+notice/i;
 
+  function isProtectedCaptchaOrAuth(el) {
+    if (!el) return false;
+    const host = (window.location.hostname || '').toLowerCase();
+    if (host.includes('accounts.spotify.com') || host.includes('challenge.spotify.com') || host.includes('arkoselabs.com')) {
+      return true;
+    }
+    const htmlSnippet = (el.outerHTML || '').slice(0, 800).toLowerCase();
+    const textSnippet = (el.innerText || '').toLowerCase();
+    if (htmlSnippet.includes('arkose') || htmlSnippet.includes('funcaptcha') || htmlSnippet.includes('recaptcha') || htmlSnippet.includes('hcaptcha') || htmlSnippet.includes('turnstile') || htmlSnippet.includes('cf-chl') || htmlSnippet.includes('challenge-form') || htmlSnippet.includes('arkoselabs')) {
+      return true;
+    }
+    if (textSnippet.includes("make sure that you're a human") || textSnippet.includes('verify you are human') || textSnippet.includes('security check') || textSnippet.includes('please verify')) {
+      return true;
+    }
+    if (el.querySelector && el.querySelector('iframe[src*="arkose"], iframe[src*="arkoselabs"], iframe[src*="recaptcha"], iframe[src*="hcaptcha"], iframe[src*="turnstile"], iframe[src*="cloudflare"], #challenge-stage, .arkose-container')) {
+      return true;
+    }
+    return false;
+  }
+
   function annihilateAntiAdblockModals() {
     try {
       // 1. Detect and destroy anti-adblock modals
       const candidates = document.querySelectorAll('div, section, dialog, [role="dialog"], [role="alertdialog"], .modal, .swal2-container, .sweet-alert, .overlay, .popup, [class*="modal"], [class*="overlay"], [class*="popup"], [id*="modal"], [id*="overlay"], [id*="adblock"]');
       
       for (const el of candidates) {
-        if (!el || !el.innerText) continue;
+        if (!el || !el.innerText || isProtectedCaptchaOrAuth(el)) continue;
         
         if (ADBLOCK_MODAL_TEXT_REGEX.test(el.innerText)) {
           let target = el;
           let parent = el.parentElement;
           while (parent && parent !== document.body && parent !== document.documentElement) {
+            if (isProtectedCaptchaOrAuth(parent)) {
+              target = null;
+              break;
+            }
             const style = window.getComputedStyle(parent);
             if (style.position === 'fixed' || style.position === 'absolute' || parent.classList.contains('modal') || parent.classList.contains('overlay') || parent.classList.contains('swal2-container')) {
               target = parent;
@@ -504,10 +528,12 @@ window.__bs_audit = {
             parent = parent.parentElement;
           }
 
+          if (!target || isProtectedCaptchaOrAuth(target)) continue;
+
           // Auto-click "I've Disabled AdBlocker" button or close button
           const buttons = target.querySelectorAll('button, a, input[type="button"], input[type="submit"], [role="button"]');
           for (const btn of buttons) {
-            if (/disabled\s+adblocker|i've\s+disabled|continue|close|ok|dismiss|i\s+understand/i.test(btn.innerText || btn.value || '')) {
+            if (/disabled\s+adblocker|i've\s+disabled|close|ok|dismiss|i\s+understand/i.test(btn.innerText || btn.value || '')) {
               try { btn.click(); } catch (_) {}
             }
           }
@@ -526,7 +552,7 @@ window.__bs_audit = {
         }
       }
 
-      // 2. Unconditionally clean up dark backdrops and dimmed overlays
+      // 2. Clean up dark backdrops and dimmed overlays
       const backdropSelectors = [
         '.modal-backdrop', '.swal2-backdrop', '.swal2-container', '.overlay-backdrop',
         '[class*="backdrop"]', '[class*="overlay"]', '#overlay', '.overlay',
@@ -536,15 +562,16 @@ window.__bs_audit = {
       
       for (const sel of backdropSelectors) {
         document.querySelectorAll(sel).forEach(b => {
-          if (b && !b.querySelector('h1, h2, form, video, article, #stat-modules')) {
+          if (b && !isProtectedCaptchaOrAuth(b) && !b.querySelector('h1, h2, form, video, article, #stat-modules')) {
             try { b.remove(); } catch (_) { b.style.display = 'none'; }
           }
         });
       }
 
-      // 3. Remove fixed fullscreen dark dimmers (elements with position: fixed covering the screen with high z-index and semi-transparent background)
+      // 3. Remove fixed fullscreen dark dimmers
       document.querySelectorAll('div, section').forEach(el => {
         try {
+          if (isProtectedCaptchaOrAuth(el)) return;
           const style = window.getComputedStyle(el);
           if (style.position === 'fixed' || style.position === 'absolute') {
             const zIndex = parseInt(style.zIndex, 10) || 0;

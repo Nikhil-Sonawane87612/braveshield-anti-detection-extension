@@ -2157,13 +2157,13 @@ window.__bs_audit = {
 // Module 32: Turbo Timer Fast-Forward & Link Shortener Bypass
 // ─────────────────────────────────────────────────────
 (() => {
-  // 1. Safe paced timer compression for shortener countdowns
+  // 1. Safe paced timer compression for shortener countdowns & decimal timers
   const origSetTimeout = window.setTimeout;
   const origSetInterval = window.setInterval;
 
   window.setTimeout = function(handler, delay, ...args) {
     let numDelay = typeof delay === 'number' ? delay : (parseInt(delay, 10) || 0);
-    // Accelerate countdown wait timers safely without dropping below 150ms for AJAX handshakes
+    // Accelerate countdown wait timers safely
     if (numDelay >= 1000 && numDelay <= 60000) {
       numDelay = Math.max(150, Math.floor(numDelay / 6));
     }
@@ -2172,8 +2172,10 @@ window.__bs_audit = {
 
   window.setInterval = function(handler, delay, ...args) {
     let numDelay = typeof delay === 'number' ? delay : (parseInt(delay, 10) || 0);
-    // Compress 1-second countdown ticks to 150ms so security tokens can be received from server
-    if (numDelay >= 800 && numDelay <= 2000) {
+    // Accelerate decimal timer countdowns (e.g. 50ms - 250ms interval ticks like 6.7s -> 0s)
+    if (numDelay >= 40 && numDelay <= 300) {
+      numDelay = 15;
+    } else if (numDelay >= 800 && numDelay <= 2000) {
       numDelay = 150;
     }
     return origSetInterval.call(this, handler, numDelay, ...args);
@@ -2236,12 +2238,17 @@ window.__bs_audit = {
         }
       }
 
-      // Bypass window.open traps (ad popup tabs)
+      // Bypass window.open traps — only block known rogue ad popunder domains
       if (!window._bsPopupFiltered) {
         window._bsPopupFiltered = true;
         const origWindowOpen = window.open;
+        const KNOWN_AD_POPUNDER_DOMAINS = [
+          /popcash\.net/i, /popads\.net/i, /syndication\.exoclick/i, /clickadu\.com/i,
+          /monetag\.com/i, /propellerads\.com/i, /adsterra\.com/i, /trafficjunky\.com/i,
+          /adkeeper\.co/i, /exoclick\.com/i, /juicyads\.com/i, /adnxs\.com/i
+        ];
         window.open = function(url, target, features) {
-          if (typeof url === 'string' && /ad|banner|pop|monetag|propeller|clickadu|traffic|track/i.test(url)) {
+          if (typeof url === 'string' && KNOWN_AD_POPUNDER_DOMAINS.some(p => p.test(url))) {
             return null;
           }
           return origWindowOpen.apply(this, arguments);
@@ -2290,7 +2297,7 @@ window.__bs_audit = {
 
           // B. Unhide hidden download buttons
           const hiddenTargets = document.querySelectorAll(
-            '#download-link, #download-btn, #downloadBtn, #direct-download, #final-download, #server-links, #link-box, .download-link, .download-btn, .server-download, [id*="download"], [class*="download"], a[href*="drive.google"], a[href*="mega."], a[href*="mediafire"], a[href*="pixeldrain"], a[href*="gofile"], a[href*="1fichier"], a[href*="workers.dev"], a[href*="t.me"]'
+            '#download-link, #download-btn, #downloadBtn, #direct-download, #final-download, #server-links, #link-box, .download-link, .download-btn, .server-download, [id*="download"], [class*="download"], a[href*="drive.google"], a[href*="mega."], a[href*="mediafire"], a[href*="pixeldrain"], a[href*="gofile"], a[href*="1fichier"], a[href*="workers.dev"], a[href*="t.me"], a[href*="dupload.net"]'
           );
 
           for (const target of hiddenTargets) {
@@ -2321,6 +2328,22 @@ window.__bs_audit = {
       }
     } catch (_) {}
   }
+
+  // 5. Force Navigation on Safelink / Download Links
+  document.addEventListener('click', (e) => {
+    const anchor = e.target.closest('a');
+    if (!anchor) return;
+    const href = anchor.getAttribute('href');
+    if (href && (href.startsWith('http') || href.startsWith('//')) && !href.startsWith('javascript:')) {
+      // If page script cancelled default navigation, force navigation
+      setTimeout(() => {
+        if (e.defaultPrevented) {
+          console.log('[Bypass] Safelink navigation unblocked:', href);
+          window.open(href, anchor.target || '_blank');
+        }
+      }, 50);
+    }
+  }, true);
 
   setInterval(turboPassCountdownsAndLinks, 300);
   setInterval(bypassClickOnAdsPattern, 300);

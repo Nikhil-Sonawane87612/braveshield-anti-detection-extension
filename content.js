@@ -317,6 +317,20 @@
     } catch (_) {}
   }
 
+  // Force Navigation on Safelink / Download Links
+  document.addEventListener('click', (e) => {
+    const anchor = e.target.closest('a');
+    if (!anchor) return;
+    const href = anchor.getAttribute('href');
+    if (href && (href.startsWith('http') || href.startsWith('//')) && !href.startsWith('javascript:')) {
+      setTimeout(() => {
+        if (e.defaultPrevented) {
+          window.open(href, anchor.target || '_blank');
+        }
+      }, 50);
+    }
+  }, true);
+
   setInterval(bypassClickOnAdsPattern, 400);
 
   // Notify on link shortener detection

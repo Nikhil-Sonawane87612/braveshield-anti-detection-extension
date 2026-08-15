@@ -2,9 +2,9 @@
 backup_*/
 additional featured extension/
 
-# Archives & build artifacts (releases are hosted on GitHub Releases)
-*.zip
-*.crx
+# Archives & build artifacts
+!BraveShield-Bypass-Pro-v5.1.0.zip
+!BraveShield-Bypass-Pro-v5.1.0.crx
 _metadata/
 
 # Tooling and editor artifacts

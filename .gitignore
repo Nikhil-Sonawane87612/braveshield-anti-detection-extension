@@ -34,6 +34,5 @@ package-lock.json
 *.log
 
 # Dev memory notes (local only)
-MEMORY.md
 MEMORY_MAP.md
 FUTURE-PROJECTS.md

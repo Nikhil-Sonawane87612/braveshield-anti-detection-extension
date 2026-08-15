@@ -5,7 +5,7 @@
 # 🛡️ BraveShield Bypass Pro & Android Super Suite
 ### Universal Stealth, Anti-Detection, Spotify Unlocked & Turbo Automation Suite
 
-[![Version](https://img.shields.io/badge/version-v5.2.0-6366f1?style=for-the-badge&logo=semver&logoColor=white)](https://github.com/Nikhil-Sonawane87612/braveshield-anti-detection-extension/releases/tag/v5.1.0)
+[![Version](https://img.shields.io/badge/version-v5.1.0-6366f1?style=for-the-badge&logo=semver&logoColor=white)](https://github.com/Nikhil-Sonawane87612/braveshield-anti-detection-extension/releases/latest)
 [![Manifest](https://img.shields.io/badge/manifest-v3-10b981?style=for-the-badge&logo=googlechrome&logoColor=white)](#-desktop-installation)
 [![Android](https://img.shields.io/badge/Android-55%2B%20Features-3ddc84?style=for-the-badge&logo=android&logoColor=white)](#-android-super-suite-setup)
 [![Modules](https://img.shields.io/badge/modules-55%2B%20Armed-8b5cf6?style=for-the-badge&logo=shield&logoColor=white)](#-the-core-stealth-modules)
@@ -16,7 +16,7 @@
   Keep Brave Shields at maximum strength while appearing as pure Google Chrome. Enjoy ad-free Spotify with live synced lyrics, 16x YouTube fast-forwarding, 50x timer bypass, and system-wide in-app ad blocking.
 </p>
 
-[📥 Download Extension (.ZIP)](https://github.com/Nikhil-Sonawane87612/braveshield-anti-detection-extension/releases/download/v5.1.0/BraveShield-Bypass-Pro-v5.1.0.zip) • [⚡ Fast CDN Mirror (.ZIP)](https://cdn.jsdelivr.net/gh/Nikhil-Sonawane87612/braveshield-anti-detection-extension@main/BraveShield-Bypass-Pro-v5.1.0.zip) • [📱 Android Userscript (`.user.js`)](braveshield-android.user.js) • [🛡️ AdGuard Filters (`rules.txt`)](filters/rules.txt) • [📖 Android Guide](ANDROID-SETUP.md)
+[📥 Download Extension (.ZIP)](https://github.com/Nikhil-Sonawane87612/braveshield-anti-detection-extension/releases/latest) • [📱 Android Userscript (`.user.js`)](braveshield-android.user.js) • [🛡️ AdGuard Filters (`rules.txt`)](filters/rules.txt) • [📖 Android Guide](ANDROID-SETUP.md)
 
 ---
 
@@ -130,7 +130,7 @@ You do **not** need Kiwi Browser or a PC-like desktop browser to use BraveShield
 
 ## 💻 Desktop Installation (Chrome / Brave / Edge / Opera)
 
-1. Download the latest release: [**BraveShield-Bypass-Pro-v5.1.0.zip**](https://github.com/Nikhil-Sonawane87612/braveshield-anti-detection-extension/releases/tag/v5.1.0).
+1. Download the latest release from [**GitHub Releases**](https://github.com/Nikhil-Sonawane87612/braveshield-anti-detection-extension/releases/latest).
 2. Extract the ZIP folder on your computer.
 3. Open your browser and navigate to the extensions page:
    - **Brave**: `brave://extensions`

@@ -566,8 +566,108 @@ window.__bs_audit = {
     return false;
   }
 
+  // ─────────────────────────────────────────────────────
+  // Auto 18+ Age Verification & Adult Consent Bypass Engine
+  // ─────────────────────────────────────────────────────
+  const AGE_GATE_TEXT_REGEX = /18\s*(?:\+|years|or\s+older|and\s+older)|over\s*18|adult\s+content|sexually\s+explicit|age\s+verification|age\s+gate|confirm\s+your\s+age|you\s+must\s+be\s+(?:at\s+least\s+)?18|adults\s+only|disclaimer/i;
+  const AGE_AGREE_BTN_REGEX = /18\s*(?:\+|plus|years|or\s+older|and\s+older)|i\s*am\s*(?:at\s+least\s+)?18|i\s*am\s*over\s*18|i\s*am\s*an\s*adult|i\s*am\s*21|over\s*18|enter\s*(?:site)?|agree|confirm\s*(?:age)?|accept\s*(?:&|and)?\s*enter|continue\s*to\s*site|proceed|yes(?:,\s*i\s*am)?|je\s*suis\s*majeur|soy\s*mayor\s*de\s*edad|ich\s*bin\s*vollj|18\s*岁以上|成人|同意进入|입장/i;
+  const AGE_DECLINE_BTN_REGEX = /leave|exit|under\s*18|no|decline|cancel|disagree|non/i;
+
+  function autoBypassAgeAndConsent() {
+    try {
+      // 1. Pre-seed adult & age cookies / localStorage
+      const AGE_COOKIES = [
+        'age_verified=1', 'is_adult=1', 'has_accepted_18=1', 'disclaimer=1',
+        'accessAgeDisclaimer=true', 'over18=1', 'age_gate=1', 'age_confirmed=1',
+        'adult_confirmed=1', 'warning=1', 'modal_closed=1', 'agree=1',
+        'terms_agreed=1', 'adult=1', 'legal_age=1', 'has_entered=1',
+        'age_gate_passed=1', 'compliance_18=1', 'spankbang_age=1', 'xvideos_age=1',
+        'disclaimer_accepted=1', 'pornhub_age_verified=1', 'adult_modal_seen=1'
+      ];
+      AGE_COOKIES.forEach(c => {
+        try { document.cookie = c + '; path=/; max-age=31536000; SameSite=Lax'; } catch (_) {}
+      });
+
+      try {
+        localStorage.setItem('age_verified', 'true');
+        localStorage.setItem('has_accepted_18', 'true');
+        localStorage.setItem('is_adult', '1');
+        localStorage.setItem('ageVerified', '1');
+        localStorage.setItem('accessAgeDisclaimer', 'true');
+        localStorage.setItem('legal_age_confirmed', 'true');
+        localStorage.setItem('adult_warning_accepted', 'true');
+        localStorage.setItem('age_gate_passed', 'true');
+        localStorage.setItem('over18', 'true');
+        localStorage.setItem('disclaimer_accepted', 'true');
+        sessionStorage.setItem('age_verified', 'true');
+        sessionStorage.setItem('is_adult', 'true');
+        sessionStorage.setItem('over18', 'true');
+      } catch (_) {}
+
+      // 2. Scan & auto-click age verification buttons
+      const ageButtonSelectors = [
+        '#enter-button', '.btn-enter', '.enter-btn', '#btn-enter', '#age-verification-yes',
+        '.age-gate-btn', '#confirm-age', '#agree-button', '.agree-btn', '#over18',
+        '.btn-agree', '#btn-agree', '.modal-agree', '[data-action="enter"]', '[data-action="agree"]',
+        '.btn-adult-agree', '#btn-18plus', '.btn-over-18', '#btn-over-18', '.disclaimer-agree',
+        '#disclaimer-agree', '.age-consent-agree', 'button[class*="enter"]', 'a[class*="enter"]',
+        'button[id*="enter"]', 'a[id*="enter"]', 'button[class*="agree"]', 'button[id*="agree"]',
+        '.age-disclaimer-btn', '#age-disclaimer-btn', '.agree-disclaimer', '#agree-disclaimer', '.btn-accept-age'
+      ];
+
+      for (const sel of ageButtonSelectors) {
+        document.querySelectorAll(sel).forEach(btn => {
+          if (btn && !btn._bsAgeClicked && !isProtectedCaptchaOrAuth(btn)) {
+            btn._bsAgeClicked = true;
+            try { btn.click(); } catch (_) {}
+            try { btn.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true })); } catch (_) {}
+          }
+        });
+      }
+
+      // 3. Scan modal containers with 18+ text and click the affirmative button
+      document.querySelectorAll('div, section, dialog, [role="dialog"], .modal, [class*="modal"], [class*="disclaimer"], [id*="disclaimer"], [class*="age-gate"], [id*="age-gate"]').forEach(modal => {
+        if (!modal || isProtectedCaptchaOrAuth(modal)) return;
+        const text = (modal.innerText || '').toLowerCase();
+        if (AGE_GATE_TEXT_REGEX.test(text)) {
+          const buttons = modal.querySelectorAll('button, a, input[type="button"], input[type="submit"], [role="button"]');
+          for (const btn of buttons) {
+            const btnText = (btn.innerText || btn.value || '').trim();
+            if (btnText && AGE_AGREE_BTN_REGEX.test(btnText) && !AGE_DECLINE_BTN_REGEX.test(btnText)) {
+              if (!btn._bsAgeClicked) {
+                btn._bsAgeClicked = true;
+                try { btn.click(); } catch (_) {}
+                try { btn.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true })); } catch (_) {}
+              }
+            }
+          }
+        }
+      });
+
+      // 4. Force unhide hidden page wrappers/content
+      const contentSelectors = [
+        '#main', '#content', '.main-content', '#primary', '.video-list', '.videos',
+        '.gallery', '[class*="video-list"]', '[class*="main-content"]', '[id*="main-content"]',
+        '.page-wrapper', '#page-content', '.site-content', '#site-content'
+      ];
+      for (const cSel of contentSelectors) {
+        document.querySelectorAll(cSel).forEach(cEl => {
+          if (cEl && cEl.style) {
+            if (cEl.style.display === 'none') cEl.style.setProperty('display', 'block', 'important');
+            if (cEl.style.visibility === 'hidden') cEl.style.setProperty('visibility', 'visible', 'important');
+            if (cEl.style.opacity === '0') cEl.style.setProperty('opacity', '1', 'important');
+            if (cEl.style.filter && cEl.style.filter.includes('blur')) cEl.style.setProperty('filter', 'none', 'important');
+          }
+        });
+      }
+    } catch (_) {}
+  }
+
   function annihilateAntiAdblockModals() {
     try {
+      // First pass: auto-bypass age and adult consent gates cleanly
+      autoBypassAgeAndConsent();
+
       // 1. Detect and destroy anti-adblock modals
       const candidates = document.querySelectorAll('div, section, dialog, [role="dialog"], [role="alertdialog"], .modal, .swal2-container, .sweet-alert, .overlay, .popup, [class*="modal"], [class*="overlay"], [class*="popup"], [id*="modal"], [id*="overlay"], [id*="adblock"]');
       
@@ -623,7 +723,7 @@ window.__bs_audit = {
       
       for (const sel of backdropSelectors) {
         document.querySelectorAll(sel).forEach(b => {
-          if (b && !isProtectedCaptchaOrAuth(b) && !b.querySelector('h1, h2, form, video, article, #stat-modules')) {
+          if (b && !isProtectedCaptchaOrAuth(b) && !b.querySelector('h1, h2, form, video, article, #stat-modules, .video-list, [class*="video"]')) {
             try { b.remove(); } catch (_) { b.style.display = 'none'; }
           }
         });
@@ -638,7 +738,7 @@ window.__bs_audit = {
             const zIndex = parseInt(style.zIndex, 10) || 0;
             const rect = el.getBoundingClientRect();
             const isFullscreen = rect.width >= (window.innerWidth * 0.85) && rect.height >= (window.innerHeight * 0.85);
-            if (isFullscreen && zIndex >= 10 && !el.querySelector('header, nav, main, article, footer, video, form, h1, h2')) {
+            if (isFullscreen && zIndex >= 10 && !el.querySelector('header, nav, main, article, footer, video, form, h1, h2, .video-list, [class*="video"]')) {
               const bg = style.backgroundColor;
               if (bg && (bg.includes('rgba') || bg.includes('rgb(0, 0, 0)') || bg.includes('rgb(30,') || bg.includes('#000'))) {
                 try { el.remove(); } catch (_) { el.style.display = 'none'; }
@@ -660,7 +760,7 @@ window.__bs_audit = {
       document.documentElement.style.setProperty('pointer-events', 'auto', 'important');
 
       // 5. Restore any dimmed/blurred main page content
-      document.querySelectorAll('main, #main, .container, .card, body > div').forEach(node => {
+      document.querySelectorAll('main, #main, .container, .card, body > div, [class*="content"], [id*="content"]').forEach(node => {
         if (node.style) {
           if (node.style.filter && (node.style.filter.includes('blur') || node.style.filter.includes('brightness'))) {
             node.style.setProperty('filter', 'none', 'important');
@@ -674,9 +774,13 @@ window.__bs_audit = {
           if (node.style.pointerEvents === 'none') {
             node.style.setProperty('pointer-events', 'auto', 'important');
           }
+          if (node.style.display === 'none' && !node.classList.contains('modal') && !node.classList.contains('overlay') && !node.id.includes('stat-')) {
+            node.style.setProperty('display', 'block', 'important');
+          }
         }
       });
     } catch (_) {}
+  }
   }
 
   // Run immediately and periodically

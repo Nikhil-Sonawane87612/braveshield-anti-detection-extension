@@ -21,6 +21,15 @@
 #%#//scriptlet('abort-on-property-read', 'blockAdBlock')
 #%#//scriptlet('abort-on-property-read', 'adblockDetector')
 #%#//scriptlet('abort-on-property-read', 'admiral')
+#%#//scriptlet('set-cookie', 'age_verified', '1')
+#%#//scriptlet('set-cookie', 'is_adult', '1')
+#%#//scriptlet('set-cookie', 'has_accepted_18', '1')
+#%#//scriptlet('set-cookie', 'disclaimer', '1')
+#%#//scriptlet('set-cookie', 'accessAgeDisclaimer', 'true')
+#%#//scriptlet('set-cookie', 'over18', '1')
+#%#//scriptlet('set-local-storage-item', 'age_verified', 'true')
+#%#//scriptlet('set-local-storage-item', 'has_accepted_18', 'true')
+#%#//scriptlet('set-local-storage-item', 'is_adult', '1')
 
 ! ==============================================================================
 ! SECTION 2: ANTI-ADBLOCK MODAL & BACKDROP SUPPRESSION
@@ -46,7 +55,7 @@
 ##.swal2-container:has(> .swal2-popup:has-text(/adblock|ad-block|disable\s+ad/i))
 
 ! ==============================================================================
-! SECTION 3: CSS OVERRIDES & SCROLL RESTORATION
+! SECTION 3: CSS OVERRIDES, SCROLL RESTORATION & UNHIDE CONTENT
 ! ==============================================================================
-#$#html, body { overflow: auto !important; position: static !important; filter: none !important; }
-#$#main, #main, .container, .card, body > div { filter: none !important; backdrop-filter: none !important; }
+#$#html, body { overflow: auto !important; position: static !important; filter: none !important; opacity: 1 !important; }
+#$#main, #main, .container, .card, body > div, .video-list, .videos { filter: none !important; backdrop-filter: none !important; opacity: 1 !important; }

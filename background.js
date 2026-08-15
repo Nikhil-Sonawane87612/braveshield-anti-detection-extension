@@ -1,10 +1,10 @@
 /**
- * BraveShield Bypass Pro v5.2.0 - Service Worker
- * 10 Visual Themes, Auto-Sync Engine, Master Kill Switch, Video Turbo, Disposable Identity.
+ * BraveShield Bypass Pro v5.2.1 - Service Worker
+ * 18+ Age & Consent Fast-Pass, 10 Visual Themes, Auto-Sync Engine, Master Kill Switch, Video Turbo.
  */
 
 chrome.runtime.onInstalled.addListener(() => {
-  console.log('[Extension] BraveShield Bypass Pro v5.2.0 installed/updated.');
+  console.log('[Extension] BraveShield Bypass Pro v5.2.1 installed/updated.');
   chrome.storage.local.set({
     enabled: true,
     masterEnabled: true,
@@ -59,10 +59,10 @@ chrome.runtime.onInstalled.addListener(() => {
     whitelist: [],
     blacklist: [],
     theme: 'obsidian_noir',
-    version: '5.2.0',
+    version: '5.2.1',
     lastSyncTime: Date.now(),
     remoteSyncStatus: 'synced',
-    remoteVersion: '5.2.0'
+    remoteVersion: '5.2.1'
   });
 
   // Setup periodic 6-hour background remote updater alarm

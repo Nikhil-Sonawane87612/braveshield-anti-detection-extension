@@ -5,7 +5,7 @@
 # 🛡️ BraveShield Bypass Pro & Android Super Suite
 ### Universal Stealth, Anti-Detection, Spotify Unlocked & Turbo Automation Suite
 
-[![Version](https://img.shields.io/badge/version-v5.2.0-6366f1?style=for-the-badge&logo=semver&logoColor=white)](https://github.com/Nikhil-Sonawane87612/braveshield-anti-detection-extension/releases/latest)
+[![Version](https://img.shields.io/badge/version-v5.2.1-6366f1?style=for-the-badge&logo=semver&logoColor=white)](https://github.com/Nikhil-Sonawane87612/braveshield-anti-detection-extension/releases/latest)
 [![Manifest](https://img.shields.io/badge/manifest-v3-10b981?style=for-the-badge&logo=googlechrome&logoColor=white)](#-desktop-installation)
 [![Android](https://img.shields.io/badge/Android-55%2B%20Features-3ddc84?style=for-the-badge&logo=android&logoColor=white)](#-android-super-suite-setup)
 [![Modules](https://img.shields.io/badge/modules-55%2B%20Armed-8b5cf6?style=for-the-badge&logo=shield&logoColor=white)](#-the-core-stealth-modules)
@@ -78,6 +78,7 @@ A global emergency toggle in popup and options headers to instantly pause or re-
 - Strictly excludes Blogger/WordPress pagination links (`reverse-paginate`) to eliminate infinite reload loops.
 
 ### 🛑 6. Mobile Protection & Usability
+- **🔞 18+ Age & Adult Consent Fast-Pass**: Auto-preseeds age verification cookies/storage (`age_verified`, `is_adult`, `accessAgeDisclaimer`) and auto-clicks "I am 18 or older / Enter" buttons on adult & restricted sites while unhiding blocked media content.
 - **Android Back-Button Trap Neutralizer**: Suppresses malicious `history.pushState` redirect traps.
 - **Anti-Vibration & Fake Alert Blocker**: Silences `navigator.vibrate` and fake virus warning dialogs.
 - **⚡ Direct Media Stream Sniffer**: Auto-detects raw `.mp4`/`.m3u8` video streams with 1-tap VLC streaming.

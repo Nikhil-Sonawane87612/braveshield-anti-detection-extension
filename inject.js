@@ -121,21 +121,15 @@ window.__bs_audit = {
       configurable: true
     });
 
-    // Do NOT override navigator.brave here — Module 0 handles brave detection
-    // navigator.brave is used by some detection scripts — let the real one exist
-    // or spoof it only if it doesn't already exist
-    if (!navigator.brave) {
-      try {
-        const braveObj = {
-          isBrave: () => Promise.resolve(true),
-          isDEPRECATED: undefined
-        };
-        Object.defineProperty(navigator, 'brave', {
-          get: () => braveObj,
-          configurable: true
-        });
-      } catch (_) {}
-    }
+    // Hide navigator.brave completely so sites and anti-adblock scripts cannot detect Brave browser
+    try {
+      delete navigator.brave;
+      if (navigator.__proto__) delete navigator.__proto__.brave;
+      Object.defineProperty(navigator, 'brave', {
+        get: () => undefined,
+        configurable: true
+      });
+    } catch (_) {}
 
     // Ensure navigator.webdriver is always false
     Object.defineProperty(navigator, 'webdriver', {
@@ -2035,4 +2029,100 @@ window.__bs_audit = {
   });
 })();
 
-console.log('[Extension] Stealth engine v5.1.0 loaded. 31 modules active.');
+// ─────────────────────────────────────────────────────
+// Module 32: Turbo Timer Fast-Forward & Link Shortener Bypass
+// ─────────────────────────────────────────────────────
+(() => {
+  // 1. Hook setTimeout and setInterval to fast-forward countdowns
+  const origSetTimeout = window.setTimeout;
+  const origSetInterval = window.setInterval;
+
+  window.setTimeout = function(handler, delay, ...args) {
+    let numDelay = typeof delay === 'number' ? delay : (parseInt(delay, 10) || 0);
+    // Compress countdown wait timers (e.g. 5000ms -> 50ms, 15000ms -> 150ms)
+    if (numDelay >= 500 && numDelay <= 120000) {
+      numDelay = Math.max(10, Math.min(200, Math.floor(numDelay / 50)));
+    }
+    return origSetTimeout.call(this, handler, numDelay, ...args);
+  };
+
+  window.setInterval = function(handler, delay, ...args) {
+    let numDelay = typeof delay === 'number' ? delay : (parseInt(delay, 10) || 0);
+    // Compress countdown intervals (e.g. 1000ms countdown -> 20ms)
+    if (numDelay >= 400 && numDelay <= 5000) {
+      numDelay = 20; // 50x speedup
+    }
+    return origSetInterval.call(this, handler, numDelay, ...args);
+  };
+
+  // 2. Auto zero-out countdowns and auto-click link generation / download buttons
+  function turboPassCountdownsAndLinks() {
+    try {
+      // Zero-out countdown elements
+      const timerNodes = document.querySelectorAll(
+        '#timer, .timer, #countdown, .countdown, [data-timer], [data-countdown], .time-left, #time-left, .seconds, #seconds, .wait-time, #waittime, span[id*="count"], div[id*="count"], span[class*="count"], div[class*="count"], #counter, .counter, .timeleft, #timeleft'
+      );
+      for (const node of timerNodes) {
+        if (node && node.innerText && /\d+/.test(node.innerText)) {
+          node.innerText = '0';
+          node.textContent = '0';
+          node.dispatchEvent(new Event('change', { bubbles: true }));
+          node.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+      }
+
+      // Enable & Trigger download / get link / continue buttons
+      const buttonSelectors = [
+        '#btn-main', '#get-link', '#getlink', '#download-btn', '#btn-download',
+        '.get-link', '.download-btn', '.btn-download', '.getlink', '#link-button',
+        '#continue-btn', '#btn-continue', '.continue-btn', '#go-link', '.go-link',
+        'button[id*="download"]', 'a[id*="download"]', 'button[id*="link"]', 'a[id*="link"]',
+        'input[value*="Get Link"]', 'input[value*="Continue"]', 'input[value*="Download"]',
+        'a[href*="get-link"]', 'a[href*="download"]', '.btn-success', '.btn-primary',
+        'button.btn-captcha', '#invisibleCaptchaFinished', '#submit-btn'
+      ];
+
+      for (const sel of buttonSelectors) {
+        const btns = document.querySelectorAll(sel);
+        for (const btn of btns) {
+          if (btn) {
+            btn.removeAttribute('disabled');
+            btn.removeAttribute('aria-disabled');
+            if (btn.classList.contains('disabled')) btn.classList.remove('disabled');
+            btn.style.pointerEvents = 'auto';
+            btn.style.opacity = '1';
+            btn.style.display = 'inline-block';
+            btn.style.visibility = 'visible';
+
+            const txt = (btn.innerText || btn.value || '').trim();
+            if (/get\s+link|generate\s+link|continue|click\s+here|download|skip\s+ad|proceed|next/i.test(txt)) {
+              if (!btn._bsClicked) {
+                btn._bsClicked = true;
+                setTimeout(() => {
+                  try { btn.click(); } catch (_) {}
+                }, 100);
+              }
+            }
+          }
+        }
+      }
+
+      // Bypass window.open traps (ad popup tabs)
+      if (!window._bsPopupFiltered) {
+        window._bsPopupFiltered = true;
+        const origWindowOpen = window.open;
+        window.open = function(url, target, features) {
+          if (typeof url === 'string' && /ad|banner|pop|monetag|propeller|clickadu|traffic|track/i.test(url)) {
+            return null;
+          }
+          return origWindowOpen.apply(this, arguments);
+        };
+      }
+    } catch (_) {}
+  }
+
+  setInterval(turboPassCountdownsAndLinks, 250);
+  document.addEventListener('DOMContentLoaded', turboPassCountdownsAndLinks);
+})();
+
+console.log('[Extension] Stealth engine v5.1.0 loaded. 32 modules active.');

@@ -255,7 +255,7 @@ document.addEventListener('DOMContentLoaded', () => {
           optionsMasterDot.style.background = isEnabled ? '#00f076' : '#ff3366';
         }
         showToast(isEnabled ? 'Master Engine Armed' : 'Master Engine Suspended');
-        addTelemetryEntry(isEnabled ? 'SYSTEM' : 'WARNING', isEnabled ? 'Master Shield Engine Armed (31 modules)' : 'Emergency Kill Switch Triggered - All Modules Paused', isEnabled ? 'badge-green' : 'badge-purple');
+        addTelemetryEntry(isEnabled ? 'SYSTEM' : 'WARNING', isEnabled ? 'Master Shield Engine Armed (32 modules)' : 'Emergency Kill Switch Triggered - All Modules Paused', isEnabled ? 'badge-green' : 'badge-purple');
       });
     });
   }
@@ -493,7 +493,7 @@ document.addEventListener('DOMContentLoaded', () => {
       syncCheckboxesForSetting(id, enabled);
     });
     chrome.storage.local.set(updates, () => {
-      showToast(enabled ? 'All 31 Modules Enabled' : 'All Modules Disabled');
+      showToast(enabled ? 'All 32 Modules Enabled' : 'All Modules Disabled');
       renderAllModulesMatrix(searchInput ? searchInput.value : '');
     });
   }

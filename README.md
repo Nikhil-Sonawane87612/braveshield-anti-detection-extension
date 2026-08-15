@@ -1,8 +1,8 @@
 # 🛡️ BraveShield Bypass Pro — Anti-Detection Engine v5.1.0
 
-**31 modules** that bypass everything: Brave Shields, adblock traps, link shorteners, cookie consents, countdown timers, click-image-wait patterns, WebRTC leaks, and auto-clicks download buttons — all from a single lightweight extension. Plus Master Kill Switch, Video Turbo Engine (16x ad fast-forward, background video playback, universal PiP), Live Privacy Audit Score (Grade A+), 1-Click Disposable Identity, and 14 WebGL GPU profiles.
+**32 modules** that bypass everything: Brave Shields, adblock traps, link shorteners, cookie consents, countdown timers, click-image-wait patterns, WebRTC leaks, and auto-clicks download buttons — all from a single lightweight extension. Plus Master Kill Switch, Video Turbo Engine (16x ad fast-forward, background video playback, universal PiP), Live Privacy Audit Score (Grade A+), 1-Click Disposable Identity, 14 WebGL GPU profiles, and Turbo Countdown Accelerator (50x speedup on link shortener timers).
 
-> **v5.1.0** — Master Kill Switch & Video Turbo update. Added emergency Master Kill Switch, Option C (Video Turbo Engine with 16x ad acceleration, anti-tab-switch pause defeat, universal PiP), Option D (Live Privacy & Stealth Audit Score Grade A+, 1-Click Disposable Identity Switcher), 14 WebGL GPU profiles, and full Obsidian Glassmorphic UI redesign.
+> **v5.1.0** — Master Kill Switch & Video Turbo update. Added emergency Master Kill Switch, Turbo Timer & Countdown Fast-Forward Engine (Module 32), Option C (Video Turbo Engine with 16x ad acceleration, anti-tab-switch pause defeat, universal PiP), Option D (Live Privacy & Stealth Audit Score Grade A+, 1-Click Disposable Identity Switcher), 14 WebGL GPU profiles, and full Obsidian Glassmorphic UI redesign.
 
 ---
 
@@ -10,7 +10,8 @@
 
 | Area                          | Capabilities                                                                                                                                                                             |
 | ----------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Master Kill Switch**        | 1-click global emergency toggle in popup and options headers to instantly pause/arm all 31 stealth modules, DNR rules, and network hooks                                               |
+| **Master Kill Switch**        | 1-click global emergency toggle in popup and options headers to instantly pause/arm all 32 stealth modules, DNR rules, and network hooks                                               |
+| **Turbo Countdown Engine**    | 50x-100x timer fast-forwarding (`setInterval` / `setTimeout` compression) that completes 15-60s link shortener timers in < 0.2s, auto-zeros counters, and auto-clicks download links    |
 | **Video Turbo Engine**        | 16x video ad fast-forwarder & auto-mute, background video playback (prevents pause on tab switch), universal Picture-in-Picture (PiP) on all players                                    |
 | **Live Privacy & Stealth**    | Real-time Privacy & Stealth Audit Grade (A+ / 100%) in popup, live counter of defused traps, sanitized fingerprints, and bypassed sites                                                  |
 | **Disposable Identity**       | 1-click "New Identity" HUD button that rolls random realistic modern User-Agent + WebGL GPU profiles and clears site tracking storage                                                    |
@@ -29,9 +30,9 @@
 
 1. **Extract** the ZIP file (right-click → Extract All)
 2. Open Brave/Chrome → go to `brave://extensions` (or `chrome://extensions`)
- 3. Enable **Developer mode** (top-right toggle)
- 4. Click **"Load unpacked"** and select the extracted folder (the one containing `manifest.json`)
- 5. Done! All 31 modules are active by default.
+3. Enable **Developer mode** (top-right toggle)
+4. Click **"Load unpacked"** and select the extracted folder (the one containing `manifest.json`)
+5. Done! All 32 modules are active by default.
 
 > ⚠️ Do NOT drag-and-drop the ZIP. You must extract first, then use **Load unpacked**.
 

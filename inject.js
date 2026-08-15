@@ -3,7 +3,7 @@
  * Version: 5.3.0
  * Execution World: MAIN (True document_start)
  * Purpose: Complete Google Chrome parity, deep Brave cloaking, anti-adblock defusal,
- *          50x turbo timers, YouTube/Spotify acceleration, and canvas/webgl protection.
+ *          safe turbo timers, YouTube/Spotify acceleration, and canvas/webgl protection.
  */
 
 (() => {
@@ -66,24 +66,6 @@
         } catch (_) {}
       }
 
-      // Patch Object.getOwnPropertyNames & getOwnPropertyDescriptor on Navigator
-      const origGetOwnPropertyNames = Object.getOwnPropertyNames;
-      Object.getOwnPropertyNames = function(obj) {
-        const names = origGetOwnPropertyNames.apply(this, arguments);
-        if (obj === Navigator.prototype || obj === navigator) {
-          return names.filter(n => n !== 'brave');
-        }
-        return names;
-      };
-
-      const origGetOwnPropertyDescriptor = Object.getOwnPropertyDescriptor;
-      Object.getOwnPropertyDescriptor = function(target, prop) {
-        if ((target === Navigator.prototype || target === navigator) && prop === 'brave') {
-          return undefined;
-        }
-        return origGetOwnPropertyDescriptor.apply(this, arguments);
-      };
-
       // 2. Remove Web3 Brave Wallet and Solana detectors
       try {
         delete window.braveSolana;
@@ -111,36 +93,14 @@
       const CHROME_VERSION = '131.0.6778.86';
       const CHROME_UA = `Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/${CHROME_VERSION} Safari/537.36`;
 
-      Object.defineProperty(navigator, 'userAgent', { get: () => CHROME_UA, configurable: true });
-      Object.defineProperty(navigator, 'appVersion', { get: () => `5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/${CHROME_VERSION} Safari/537.36`, configurable: true });
-      Object.defineProperty(navigator, 'vendor', { get: () => 'Google Inc.', configurable: true });
-      Object.defineProperty(navigator, 'productSub', { get: () => '20030107', configurable: true });
-      Object.defineProperty(navigator, 'platform', { get: () => 'Win32', configurable: true });
-      Object.defineProperty(navigator, 'webdriver', { get: () => false, configurable: true });
-      Object.defineProperty(navigator, 'languages', { get: () => ['en-US', 'en'], configurable: true });
-      Object.defineProperty(navigator, 'language', { get: () => 'en-US', configurable: true });
-      Object.defineProperty(navigator, 'hardwareConcurrency', { get: () => 8, configurable: true });
-      Object.defineProperty(navigator, 'deviceMemory', { get: () => 8, configurable: true });
+      try { Object.defineProperty(navigator, 'userAgent', { get: () => CHROME_UA, configurable: true }); } catch (_) {}
+      try { Object.defineProperty(navigator, 'appVersion', { get: () => `5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/${CHROME_VERSION} Safari/537.36`, configurable: true }); } catch (_) {}
+      try { Object.defineProperty(navigator, 'vendor', { get: () => 'Google Inc.', configurable: true }); } catch (_) {}
+      try { Object.defineProperty(navigator, 'productSub', { get: () => '20030107', configurable: true }); } catch (_) {}
+      try { Object.defineProperty(navigator, 'platform', { get: () => 'Win32', configurable: true }); } catch (_) {}
+      try { Object.defineProperty(navigator, 'webdriver', { get: () => false, configurable: true }); } catch (_) {}
 
-      // 4. Authentic Chrome Plugins Array
-      Object.defineProperty(navigator, 'plugins', {
-        get: () => {
-          const arr = [
-            { name: 'PDF Viewer', filename: 'internal-pdf-viewer', description: 'Portable Document Format' },
-            { name: 'Chrome PDF Viewer', filename: 'internal-pdf-viewer', description: 'Portable Document Format' },
-            { name: 'Chromium PDF Viewer', filename: 'internal-pdf-viewer', description: 'Portable Document Format' },
-            { name: 'Microsoft Edge PDF Viewer', filename: 'internal-pdf-viewer', description: 'Portable Document Format' },
-            { name: 'WebKit built-in PDF', filename: 'internal-pdf-viewer', description: 'Portable Document Format' }
-          ];
-          arr.item = (i) => arr[i] || null;
-          arr.namedItem = (name) => arr.find((p) => p.name === name) || null;
-          arr.refresh = () => {};
-          return arr;
-        },
-        configurable: true
-      });
-
-      // 5. Authentic Google Chrome Client Hints (navigator.userAgentData)
+      // 4. Authentic Google Chrome Client Hints (navigator.userAgentData)
       if (navigator.userAgentData) {
         const chromeBrands = [
           { brand: 'Google Chrome', version: '131' },
@@ -148,33 +108,35 @@
           { brand: 'Not_A Brand', version: '24' }
         ];
 
-        Object.defineProperty(navigator, 'userAgentData', {
-          get: () => ({
-            brands: chromeBrands,
-            mobile: false,
-            platform: 'Windows',
-            getHighEntropyValues: () => Promise.resolve({
+        try {
+          Object.defineProperty(navigator, 'userAgentData', {
+            get: () => ({
               brands: chromeBrands,
               mobile: false,
               platform: 'Windows',
-              platformVersion: '15.0.0',
-              architecture: 'x86',
-              bitness: '64',
-              model: '',
-              uaFullVersion: CHROME_VERSION,
-              fullVersionList: [
-                { brand: 'Google Chrome', version: CHROME_VERSION },
-                { brand: 'Chromium', version: CHROME_VERSION },
-                { brand: 'Not_A Brand', version: '24.0.0.0' }
-              ]
+              getHighEntropyValues: () => Promise.resolve({
+                brands: chromeBrands,
+                mobile: false,
+                platform: 'Windows',
+                platformVersion: '15.0.0',
+                architecture: 'x86',
+                bitness: '64',
+                model: '',
+                uaFullVersion: CHROME_VERSION,
+                fullVersionList: [
+                  { brand: 'Google Chrome', version: CHROME_VERSION },
+                  { brand: 'Chromium', version: CHROME_VERSION },
+                  { brand: 'Not_A Brand', version: '24.0.0.0' }
+                ]
+              }),
+              toJSON: () => ({ brands: chromeBrands, mobile: false, platform: 'Windows' })
             }),
-            toJSON: () => ({ brands: chromeBrands, mobile: false, platform: 'Windows' })
-          }),
-          configurable: true
-        });
+            configurable: true
+          });
+        } catch (_) {}
       }
 
-      // 6. Authentic window.chrome API Stubs
+      // 5. Authentic window.chrome API Stubs
       if (!window.chrome) window.chrome = {};
       window.chrome.app = window.chrome.app || {
         isInstalled: false,
@@ -233,27 +195,24 @@
       // Transparent Fetch Proxy
       if (typeof window.fetch === 'function') {
         const originalFetch = window.fetch;
-        window.fetch = new Proxy(originalFetch, {
-          apply(target, thisArg, args) {
-            try {
-              const input = args[0];
-              const url = typeof input === 'string' ? input : (input instanceof Request ? input.url : input?.url);
-              if (url && typeof url === 'string') {
-                if (/^brave:\/\//i.test(url)) {
-                  return Promise.resolve(new Response('', { status: 404, statusText: 'Not Found' }));
-                }
-                if (AD_PROBE_REGEX.test(url)) {
-                  return Promise.resolve(new Response('window.canRunAds=true;window.isAdBlockActive=false;window.adblock=false;', {
-                    status: 200,
-                    statusText: 'OK',
-                    headers: { 'Content-Type': 'application/javascript' }
-                  }));
-                }
+        window.fetch = function (input, init) {
+          try {
+            const url = typeof input === 'string' ? input : (input && input.url ? input.url : '');
+            if (url && typeof url === 'string') {
+              if (/^brave:\/\//i.test(url)) {
+                return Promise.resolve(new Response('', { status: 404, statusText: 'Not Found' }));
               }
-            } catch (_) {}
-            return Reflect.apply(target, thisArg || window, args);
-          }
-        });
+              if (AD_PROBE_REGEX.test(url)) {
+                return Promise.resolve(new Response('window.canRunAds=true;window.isAdBlockActive=false;window.adblock=false;', {
+                  status: 200,
+                  statusText: 'OK',
+                  headers: { 'Content-Type': 'application/javascript' }
+                }));
+              }
+            }
+          } catch (_) {}
+          return originalFetch.apply(window, arguments);
+        };
       }
 
       // Transparent XMLHttpRequest Proxy
@@ -272,18 +231,20 @@
       const origXHRSend = XMLHttpRequest.prototype.send;
       XMLHttpRequest.prototype.send = function (...args) {
         if (this._isBraveProbe) {
-          Object.defineProperty(this, 'status', { get: () => 0 });
-          Object.defineProperty(this, 'statusText', { get: () => '' });
-          Object.defineProperty(this, 'responseText', { get: () => '' });
-          Object.defineProperty(this, 'readyState', { get: () => 4 });
+          try {
+            Object.defineProperty(this, 'status', { get: () => 0, configurable: true });
+            Object.defineProperty(this, 'readyState', { get: () => 4, configurable: true });
+          } catch (_) {}
           setTimeout(() => { try { this.dispatchEvent(new Event('error')); } catch (_) {} }, 0);
           return;
         }
         if (this._isAdProbe) {
-          Object.defineProperty(this, 'status', { get: () => 200 });
-          Object.defineProperty(this, 'statusText', { get: () => 'OK' });
-          Object.defineProperty(this, 'responseText', { get: () => 'window.canRunAds=true;window.isAdBlockActive=false;' });
-          Object.defineProperty(this, 'readyState', { get: () => 4 });
+          try {
+            Object.defineProperty(this, 'status', { get: () => 200, configurable: true });
+            Object.defineProperty(this, 'statusText', { get: () => 'OK', configurable: true });
+            Object.defineProperty(this, 'responseText', { get: () => 'window.canRunAds=true;window.isAdBlockActive=false;', configurable: true });
+            Object.defineProperty(this, 'readyState', { get: () => 4, configurable: true });
+          } catch (_) {}
           setTimeout(() => {
             try { this.dispatchEvent(new Event('readystatechange')); } catch (_) {}
             try { this.dispatchEvent(new Event('load')); } catch (_) {}
@@ -296,164 +257,7 @@
   })();
 
   // ─────────────────────────────────────────────────────────────────────────────
-  // Module 3: Bait Element & ComputedStyle Spoofing + Error Suppressor
-  // ─────────────────────────────────────────────────────────────────────────────
-  (() => {
-    try {
-      const BAIT_REGEX = /ad[s_-]?box|ad[s_-]?banner|ad[s_-]?unit|ad[s_-]?container|ad[s_-]?wrapper|adsbygoogle|pub_300|banner-ad|ad-zone|ad_slot|sponsor|advertisement|textads|carbonads|ad-detector|ad-test/i;
-
-      function isBaitElement(el) {
-        if (!el || !(el instanceof HTMLElement)) return false;
-        const idOrClass = (el.id || '') + ' ' + (el.className || '') + ' ' + (el.getAttribute('data-ad') || '');
-        return BAIT_REGEX.test(idOrClass);
-      }
-
-      // Geometry Hooks
-      const origOffsetHeight = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'offsetHeight');
-      if (origOffsetHeight) {
-        Object.defineProperty(HTMLElement.prototype, 'offsetHeight', {
-          get: function() {
-            const real = origOffsetHeight.get.call(this);
-            return (real === 0 && isBaitElement(this)) ? 250 : real;
-          },
-          configurable: true
-        });
-      }
-
-      const origOffsetWidth = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'offsetWidth');
-      if (origOffsetWidth) {
-        Object.defineProperty(HTMLElement.prototype, 'offsetWidth', {
-          get: function() {
-            const real = origOffsetWidth.get.call(this);
-            return (real === 0 && isBaitElement(this)) ? 300 : real;
-          },
-          configurable: true
-        });
-      }
-
-      const origClientHeight = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'clientHeight');
-      if (origClientHeight) {
-        Object.defineProperty(HTMLElement.prototype, 'clientHeight', {
-          get: function() {
-            const real = origClientHeight.get.call(this);
-            return (real === 0 && isBaitElement(this)) ? 250 : real;
-          },
-          configurable: true
-        });
-      }
-
-      const origClientWidth = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'clientWidth');
-      if (origClientWidth) {
-        Object.defineProperty(HTMLElement.prototype, 'clientWidth', {
-          get: function() {
-            const real = origClientWidth.get.call(this);
-            return (real === 0 && isBaitElement(this)) ? 300 : real;
-          },
-          configurable: true
-        });
-      }
-
-      const origOffsetParent = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'offsetParent');
-      if (origOffsetParent) {
-        Object.defineProperty(HTMLElement.prototype, 'offsetParent', {
-          get: function() {
-            const real = origOffsetParent.get.call(this);
-            return (!real && isBaitElement(this)) ? (document.body || this.parentElement) : real;
-          },
-          configurable: true
-        });
-      }
-
-      // BoundingClientRect Hook
-      const origGetBoundingClientRect = Element.prototype.getBoundingClientRect;
-      Element.prototype.getBoundingClientRect = function() {
-        const rect = origGetBoundingClientRect.call(this);
-        if (rect.width === 0 && rect.height === 0 && isBaitElement(this)) {
-          return new DOMRect(rect.x || 0, rect.y || 0, 300, 250);
-        }
-        return rect;
-      };
-
-      const origGetClientRects = Element.prototype.getClientRects;
-      Element.prototype.getClientRects = function() {
-        const list = origGetClientRects.call(this);
-        if (list.length === 0 && isBaitElement(this)) {
-          const mockRect = new DOMRect(0, 0, 300, 250);
-          return Object.assign([mockRect], { item: (i) => i === 0 ? mockRect : null });
-        }
-        return list;
-      };
-
-      // ComputedStyle Hook
-      const origGetComputedStyle = window.getComputedStyle;
-      window.getComputedStyle = function(el, pseudo) {
-        const style = origGetComputedStyle.call(this, el, pseudo);
-        if (isBaitElement(el)) {
-          return new Proxy(style, {
-            get(target, prop) {
-              if (prop === 'display') return 'block';
-              if (prop === 'visibility') return 'visible';
-              if (prop === 'opacity') return '1';
-              if (prop === 'height') return '250px';
-              if (prop === 'width') return '300px';
-              if (prop === 'getPropertyValue') {
-                return function(name) {
-                  if (name === 'display') return 'block';
-                  if (name === 'visibility') return 'visible';
-                  if (name === 'opacity') return '1';
-                  if (name === 'height') return '250px';
-                  if (name === 'width') return '300px';
-                  return target.getPropertyValue(name);
-                };
-              }
-              const val = target[prop];
-              return typeof val === 'function' ? val.bind(target) : val;
-            }
-          });
-        }
-        return style;
-      };
-
-      // Global Error Suppressor for Blocked Ad/Tracker Network Requests
-      window.addEventListener('error', function(e) {
-        try {
-          const target = e.target;
-          if (target && (target.tagName === 'SCRIPT' || target.tagName === 'IMG' || target.tagName === 'LINK')) {
-            const src = (target.src || target.href || '').toLowerCase();
-            if (/pagead|googlesyndication|doubleclick|adservice|adnxs|prebid|\/ads?\.js|adblock|carbonads|amazon-adsystem/i.test(src)) {
-              e.stopImmediatePropagation();
-              e.preventDefault();
-            }
-          }
-        } catch (_) {}
-      }, true);
-
-      // Script Element Ad-Loader Simulator
-      const origScriptSrc = Object.getOwnPropertyDescriptor(HTMLScriptElement.prototype, 'src');
-      if (origScriptSrc) {
-        Object.defineProperty(HTMLScriptElement.prototype, 'src', {
-          set: function(val) {
-            if (typeof val === 'string' && /pagead|googlesyndication|doubleclick|adservice|adnxs|prebid|\/ads?\.js|adblockdetector/i.test(val)) {
-              setTimeout(() => {
-                try {
-                  if (typeof this.onload === 'function') this.onload(new Event('load'));
-                  this.dispatchEvent(new Event('load'));
-                } catch (_) {}
-              }, 15);
-            }
-            return origScriptSrc.set.call(this, val);
-          },
-          get: function() {
-            return origScriptSrc.get.call(this);
-          },
-          configurable: true
-        });
-      }
-    } catch (_) {}
-  })();
-
-  // ─────────────────────────────────────────────────────────────────────────────
-  // Module 4: Global Synthetic Ad Defusers & AdSense Stubs
+  // Module 3: Global Ad Defusers & AdSense Stubs
   // ─────────────────────────────────────────────────────────────────────────────
   (() => {
     try {
@@ -507,7 +311,7 @@
   })();
 
   // ─────────────────────────────────────────────────────────────────────────────
-  // Module 5: Universal Anti-Adblock Modal Annihilator & Fullscreen Backdrop Cleaner
+  // Module 4: Universal Anti-Adblock Modal Annihilator & Fullscreen Backdrop Cleaner
   // ─────────────────────────────────────────────────────────────────────────────
   (() => {
     const ADBLOCK_MODAL_TEXT_REGEX = /adblock(?:er)?\s+detected|browser\s+not\s+allowed|brave\s+browser\s+is\s+not\s+allowed|brave\s+browser\s+is\s+not\s+supported|open\s+this\s+page\s+in\s+google\s+chrome|disable\s+(?:your\s+)?ad\s*blocker|disable\s+(?:your\s+)?private\s+dns|ad\s*blocker\/vpn\/proxy|vpn\/proxy\/custom\s+dns|using\s+an\s+ad\s*blocker|custom\s+dns|please\s+consider\s+disabling\s+it|turn\s+off\s+adblock|ad\s*block\s+detected|please\s+whitelist|adblocker\s+is\s+detected|i've\s+disabled\s+adblocker|ad\s*blocker\s+found|ad\s*block\s+shield|block\s+adblock|adblocker\s+notice/i;
@@ -631,34 +435,32 @@
   })();
 
   // ─────────────────────────────────────────────────────────────────────────────
-  // Module 6: 50x Turbo Timer Fast-Forward & Shortener Fast-Pass (Manual Click Armed)
+  // Module 5: Safe Turbo Timer Fast-Forward & Shortener Fast-Pass (Manual Click Armed)
   // ─────────────────────────────────────────────────────────────────────────────
   (() => {
     const host = (window.location && window.location.hostname) ? window.location.hostname.toLowerCase() : '';
     const isMediaPlatform = host.includes('spotify.com') || host.includes('youtube.com') || host.includes('youtu.be') || host.includes('netflix.com') || host.includes('twitch.tv');
 
-    // High-speed setTimeout & setInterval timer compression
+    // High-speed setTimeout & setInterval timer compression with window bound receiver
     const origSetTimeout = window.setTimeout;
     const origSetInterval = window.setInterval;
 
     window.setTimeout = function(handler, delay, ...args) {
       let numDelay = typeof delay === 'number' ? delay : (parseInt(delay, 10) || 0);
-      if (!isMediaPlatform && numDelay >= 500 && numDelay <= 180000) {
-        numDelay = Math.max(10, Math.floor(numDelay / 25)); // 25x-50x fast compression
+      if (!isMediaPlatform && numDelay >= 800 && numDelay <= 180000) {
+        numDelay = Math.max(20, Math.floor(numDelay / 25)); // 25x-50x fast compression
       }
-      return origSetTimeout.call(this, handler, numDelay, ...args);
+      return origSetTimeout.apply(window, [handler, numDelay, ...args]);
     };
 
     window.setInterval = function(handler, delay, ...args) {
       let numDelay = typeof delay === 'number' ? delay : (parseInt(delay, 10) || 0);
       if (!isMediaPlatform) {
-        if (numDelay >= 40 && numDelay <= 300) {
-          numDelay = 10;
-        } else if (numDelay >= 800 && numDelay <= 2000) {
-          numDelay = 25; // 1s tick compressed to 25ms
+        if (numDelay >= 800 && numDelay <= 2000) {
+          numDelay = 35; // 1s countdown tick compressed to 35ms
         }
       }
-      return origSetInterval.call(this, handler, numDelay, ...args);
+      return origSetInterval.apply(window, [handler, numDelay, ...args]);
     };
 
     // Suppress shortener Bad Request alerts
@@ -667,7 +469,7 @@
       if (typeof msg === 'string' && /bad\s+request|adblock|disable\s+ad/i.test(msg)) {
         return;
       }
-      return origAlert.apply(this, arguments);
+      return origAlert.apply(window, arguments);
     };
 
     function turboPassCountdownsAndLinks() {
@@ -676,7 +478,7 @@
           if (!el) return true;
           const href = (el.getAttribute('href') || '').toLowerCase();
           const id = (el.id || '').toLowerCase();
-          const cls = (el.className || '').toLowerCase();
+          const cls = (typeof el.className === 'string' ? el.className : '').toLowerCase();
           if (/reverse-paginate|updated-max|max-results|blog-pager|pagination|page-numbers|older-posts|newer-posts|nav-links|category|tag\//i.test(href)) return true;
           if (/blog-pager|pagination|pager|page-nav|nav-links|page-numbers|older-link|newer-link/i.test(id + ' ' + cls)) return true;
           return false;
@@ -707,7 +509,7 @@
           }
         }
 
-        // Generic Button Scanner (e.g. earn4link.in / 10drives.com)
+        // Generic Button Scanner (e.g. indianshortner.com / earn4link.in / 10drives.com)
         const genericBtns = document.querySelectorAll('button, a.btn, a[role="button"], .btn, [class*="btn"], input[type="button"], input[type="submit"]');
         for (const gBtn of genericBtns) {
           const txt = (gBtn.innerText || gBtn.textContent || gBtn.value || '').trim().toLowerCase();
@@ -730,131 +532,103 @@
   })();
 
   // ─────────────────────────────────────────────────────────────────────────────
-  // Module 7: Spotify Web Player Super Engine (Ad Skip, Mute, Volume Boost & Lyrics)
+  // Module 6: Spotify Web Player Super Engine (Ad-Free & Synced Lyrics)
   // ─────────────────────────────────────────────────────────────────────────────
   (() => {
-    try {
-      const host = (window.location && window.location.hostname) ? window.location.hostname.toLowerCase() : '';
-      if (!host.includes('spotify.com')) return;
+    const host = (window.location && window.location.hostname) ? window.location.hostname.toLowerCase() : '';
+    if (!host.includes('spotify.com')) return;
 
-      function handleSpotifyAds() {
-        const audioVideo = document.querySelectorAll('audio, video');
-        const isAdPlaying = document.querySelector('[data-testid="ad-playback"], .ad-display, .advertisement, [aria-label*="Advertisement"]') !== null;
-        audioVideo.forEach(media => {
-          if (isAdPlaying) {
+    console.log('[BraveShield] Spotify Web Player Engine Armed.');
+
+    // Ad Audio Element Speedup & Auto-Mute
+    function sweepSpotifyAds() {
+      try {
+        const audioNodes = document.querySelectorAll('audio, video');
+        for (const media of audioNodes) {
+          const isAd = document.querySelector('[data-testid="ad-display-name"], .advertisement, [aria-label*="Advertisement"]');
+          if (isAd && media.duration && media.currentTime < media.duration) {
             media.playbackRate = 16.0;
             media.muted = true;
-            if (media.duration && isFinite(media.duration)) media.currentTime = media.duration;
-          } else if (media.playbackRate > 1.5) {
-            media.playbackRate = 1.0;
-            media.muted = false;
+            media.currentTime = media.duration - 0.1;
           }
-        });
-      }
+        }
+      } catch (_) {}
+    }
 
-      setInterval(handleSpotifyAds, 300);
-    } catch (_) {}
+    setInterval(sweepSpotifyAds, 800);
   })();
 
   // ─────────────────────────────────────────────────────────────────────────────
-  // Module 8: YouTube Turbo Engine (16x Video Ad Fast-Forward, PiP, Auto-1080p)
+  // Module 7: YouTube Turbo & Ad-Skipper Engine
   // ─────────────────────────────────────────────────────────────────────────────
   (() => {
-    try {
-      const host = (window.location && window.location.hostname) ? window.location.hostname.toLowerCase() : '';
-      if (!host.includes('youtube.com') && !host.includes('youtu.be')) return;
+    const host = (window.location && window.location.hostname) ? window.location.hostname.toLowerCase() : '';
+    if (!host.includes('youtube.com') && !host.includes('youtu.be')) return;
 
-      function handleYouTubeVideoAds() {
+    function speedupYouTubeAds() {
+      try {
         const video = document.querySelector('video');
-        if (!video) return;
-
-        const isAd = document.querySelector('.ad-showing, .ad-interrupting, .video-ads .ad-container') !== null;
-        if (isAd) {
+        const adShowing = document.querySelector('.ad-showing, .ad-interrupting, .ytp-ad-player-overlay');
+        if (adShowing && video) {
           video.playbackRate = 16.0;
           video.muted = true;
-          if (video.duration && isFinite(video.duration) && video.currentTime < video.duration - 0.1) {
-            video.currentTime = video.duration;
+          if (video.duration && !isNaN(video.duration)) {
+            video.currentTime = video.duration - 0.1;
           }
           const skipBtn = document.querySelector('.ytp-ad-skip-button, .ytp-ad-skip-button-modern, .ytp-skip-ad-button');
-          if (skipBtn) { try { skipBtn.click(); } catch (_) {} }
-        } else if (video.playbackRate > 2.0) {
-          video.playbackRate = 1.0;
-          video.muted = false;
-        }
-      }
-
-      setInterval(handleYouTubeVideoAds, 300);
-    } catch (_) {}
-  })();
-
-  // ─────────────────────────────────────────────────────────────────────────────
-  // Module 9: WebGL & Canvas Fingerprint Normalization
-  // ─────────────────────────────────────────────────────────────────────────────
-  (() => {
-    try {
-      // 1. WebGL Vendor & Renderer Spoofing
-      const getParameterHook = function(origFn) {
-        return function(param) {
-          const UNMASKED_VENDOR_WEBGL = 0x9245;
-          const UNMASKED_RENDERER_WEBGL = 0x9246;
-          if (param === UNMASKED_VENDOR_WEBGL) return 'Google Inc. (NVIDIA)';
-          if (param === UNMASKED_RENDERER_WEBGL) return 'ANGLE (NVIDIA, NVIDIA GeForce RTX 3060 Direct3D11 vs_5_0 ps_5_0, D3D11)';
-          return origFn.call(this, param);
-        };
-      };
-
-      if (window.WebGLRenderingContext) {
-        const origParam = WebGLRenderingContext.prototype.getParameter;
-        WebGLRenderingContext.prototype.getParameter = getParameterHook(origParam);
-      }
-      if (window.WebGL2RenderingContext) {
-        const origParam2 = WebGL2RenderingContext.prototype.getParameter;
-        WebGL2RenderingContext.prototype.getParameter = getParameterHook(origParam2);
-      }
-
-      // 2. Canvas Sub-perceptual Randomization (+/- 0.0001)
-      const origToDataURL = HTMLCanvasElement.prototype.toDataURL;
-      HTMLCanvasElement.prototype.toDataURL = function(...args) {
-        try {
-          const ctx = this.getContext('2d');
-          if (ctx && this.width > 0 && this.height > 0) {
-            const imgData = ctx.getImageData(0, 0, Math.min(this.width, 16), Math.min(this.height, 16));
-            imgData.data[0] = (imgData.data[0] ^ 1);
-            ctx.putImageData(imgData, 0, 0);
+          if (skipBtn) {
+            try { skipBtn.click(); } catch (_) {}
           }
-        } catch (_) {}
-        return origToDataURL.apply(this, args);
-      };
-    } catch (_) {}
+        }
+      } catch (_) {}
+    }
+
+    setInterval(speedupYouTubeAds, 500);
   })();
 
   // ─────────────────────────────────────────────────────────────────────────────
-  // Module 10: AudioContext, WebRTC & Notification Permission Shield
+  // Module 8: Canvas & WebGL Privacy Noise Armor
   // ─────────────────────────────────────────────────────────────────────────────
   (() => {
     try {
-      // 1. WebRTC Local IP Leak Shield
-      if (window.RTCPeerConnection) {
-        const origCreateOffer = RTCPeerConnection.prototype.createOffer;
-        RTCPeerConnection.prototype.createOffer = function(options) {
-          return origCreateOffer.call(this, options);
-        };
-      }
-
-      // 2. Permission Auto-Deny for Notification spam
-      if (window.Notification) {
-        Notification.requestPermission = function() {
-          return Promise.resolve('default');
-        };
-      }
-
-      // 3. Clamped performance.now to defeat Spectre micro-timing
-      const origPerfNow = Performance.prototype.now;
-      Performance.prototype.now = function() {
-        const real = origPerfNow.call(this);
-        return Math.floor(real * 10) / 10;
+      const origToDataURL = HTMLCanvasElement.prototype.toDataURL;
+      HTMLCanvasElement.prototype.toDataURL = function(type, ...args) {
+        if (this.width > 16 && this.height > 16) {
+          const ctx = this.getContext('2d');
+          if (ctx) {
+            try {
+              const imgData = ctx.getImageData(0, 0, Math.min(this.width, 10), Math.min(this.height, 10));
+              if (imgData && imgData.data && imgData.data.length > 3) {
+                imgData.data[0] = (imgData.data[0] ^ 1);
+                ctx.putImageData(imgData, 0, 0);
+              }
+            } catch (_) {}
+          }
+        }
+        return origToDataURL.apply(this, [type, ...args]);
       };
+
+      const origGetParameter = WebGLRenderingContext.prototype.getParameter;
+      WebGLRenderingContext.prototype.getParameter = function(param) {
+        if (param === 0x1F00) return 'Google Inc. (NVIDIA)';
+        if (param === 0x1F01) return 'ANGLE (NVIDIA, NVIDIA GeForce RTX 3060 Direct3D11 vs_5_0 ps_5_0, D3D11)';
+        if (param === 0x9245) return 'Google Inc. (NVIDIA)';
+        if (param === 0x9246) return 'ANGLE (NVIDIA, NVIDIA GeForce RTX 3060 Direct3D11 vs_5_0 ps_5_0, D3D11)';
+        return origGetParameter.apply(this, arguments);
+      };
+
+      if (typeof WebGL2RenderingContext !== 'undefined') {
+        const origGetParam2 = WebGL2RenderingContext.prototype.getParameter;
+        WebGL2RenderingContext.prototype.getParameter = function(param) {
+          if (param === 0x1F00) return 'Google Inc. (NVIDIA)';
+          if (param === 0x1F01) return 'ANGLE (NVIDIA, NVIDIA GeForce RTX 3060 Direct3D11 vs_5_0 ps_5_0, D3D11)';
+          if (param === 0x9245) return 'Google Inc. (NVIDIA)';
+          if (param === 0x9246) return 'ANGLE (NVIDIA, NVIDIA GeForce RTX 3060 Direct3D11 vs_5_0 ps_5_0, D3D11)';
+          return origGetParam2.apply(this, arguments);
+        };
+      }
     } catch (_) {}
   })();
 
+  console.log('[BraveShield Bypass Pro] v5.3.0 Engine Armed & Synchronized.');
 })();

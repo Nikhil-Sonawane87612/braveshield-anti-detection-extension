@@ -1,20 +1,14 @@
-# Build artifacts
-_metadata/
+# Backups
+backup_*/
+additional featured extension/
+
+# Archives & build artifacts (releases are hosted on GitHub Releases)
+*.zip
 *.crx
+_metadata/
 
-# Allow release zip
-!BraveShield-Bypass-Pro-*.zip
-
-# Tooling artifact
+# Tooling and editor artifacts
 .opencode/
-
-# OS files
-.DS_Store
-Thumbs.db
-desktop.ini
-ehthumbs.db
-
-# Editor files
 .vscode/
 .idea/
 *.swp
@@ -23,16 +17,22 @@ ehthumbs.db
 .project
 .settings/
 
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+ehthumbs.db
+
 # Node
 node_modules/
 package-lock.json
 
-# Temp files
+# Temp & log files
 *.tmp
 *.bak
 *.log
 
-# Memory files (local only, never commit)
+# Dev memory notes (local only)
 MEMORY.md
 MEMORY_MAP.md
 FUTURE-PROJECTS.md

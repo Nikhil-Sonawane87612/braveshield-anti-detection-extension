@@ -463,13 +463,22 @@
       return origSetInterval.apply(window, [handler, numDelay, ...args]);
     };
 
-    // Suppress shortener Bad Request alerts
+    // Suppress shortener Bad Request and YuThemeStore credit alerts
     const origAlert = window.alert;
     window.alert = function(msg) {
-      if (typeof msg === 'string' && /bad\s+request|adblock|disable\s+ad/i.test(msg)) {
+      if (typeof msg === 'string' && /yuthemestore|yuidea|theme\s+is\s+made\s+by|copyright|credit|bad\s+request|adblock|disable\s+ad/i.test(msg)) {
+        console.log('[BraveShield] Suppressed annoying alert:', msg);
         return;
       }
       return origAlert.apply(window, arguments);
+    };
+
+    const origConfirm = window.confirm;
+    window.confirm = function(msg) {
+      if (typeof msg === 'string' && /yuthemestore|yuidea|theme\s+is\s+made\s+by|copyright|credit|bad\s+request|adblock|disable\s+ad/i.test(msg)) {
+        return true;
+      }
+      return origConfirm.apply(window, arguments);
     };
 
     function turboPassCountdownsAndLinks() {
@@ -482,6 +491,18 @@
           if (/reverse-paginate|updated-max|max-results|blog-pager|pagination|page-numbers|older-posts|newer-posts|nav-links|category|tag\//i.test(href)) return true;
           if (/blog-pager|pagination|pager|page-nav|nav-links|page-numbers|older-link|newer-link/i.test(id + ' ' + cls)) return true;
           return false;
+        }
+
+        // Trigger shortener theme link generators if present
+        const siteRevealFunctions = [
+          'showDownloadButton', 'showDownloadBtn', 'getDownloadLink', 'getDownloadBtn',
+          'generateLink', 'getLink', 'showLink', 'startTimer', 'clickOnAd', 'verifyAdClick',
+          'directDownload', 'finalDownloadLink', 'unhideLink', 'openDownload', 'createDownloadLink'
+        ];
+        for (const fn of siteRevealFunctions) {
+          if (typeof window[fn] === 'function') {
+            try { window[fn](); } catch (_) {}
+          }
         }
 
         const buttonSelectors = [
@@ -505,6 +526,12 @@
               btn.style.setProperty('opacity', '1', 'important');
               btn.style.setProperty('display', 'inline-block', 'important');
               btn.style.setProperty('visibility', 'visible', 'important');
+              btn.style.setProperty('cursor', 'pointer', 'important');
+              const txt = (btn.innerText || btn.textContent || btn.value || '').trim();
+              if (/getting\s+link|generating/i.test(txt)) {
+                btn.innerText = 'GET LINK';
+                btn.textContent = 'GET LINK';
+              }
             }
           }
         }
@@ -513,7 +540,7 @@
         const genericBtns = document.querySelectorAll('button, a.btn, a[role="button"], .btn, [class*="btn"], input[type="button"], input[type="submit"]');
         for (const gBtn of genericBtns) {
           const txt = (gBtn.innerText || gBtn.textContent || gBtn.value || '').trim().toLowerCase();
-          if (/click\s+here\s+to\s+continue|get\s*link|continue|download|generate\s*link|proceed|verify/i.test(txt) && !isPaginationOrNavigation(gBtn)) {
+          if (/click\s+here\s+to\s+continue|get\s*link|continue|download|generate\s*link|proceed|verify|getting\s+link/i.test(txt) && !isPaginationOrNavigation(gBtn)) {
             gBtn.removeAttribute('disabled');
             gBtn.removeAttribute('aria-disabled');
             if (gBtn.classList.contains('disabled')) gBtn.classList.remove('disabled');
@@ -521,6 +548,22 @@
             gBtn.style.setProperty('opacity', '1', 'important');
             gBtn.style.setProperty('display', 'inline-block', 'important');
             gBtn.style.setProperty('visibility', 'visible', 'important');
+            gBtn.style.setProperty('cursor', 'pointer', 'important');
+            if (/getting\s+link|generating/i.test(txt)) {
+              gBtn.innerText = 'GET LINK';
+              gBtn.textContent = 'GET LINK';
+            }
+          }
+        }
+
+        // Unhide direct destination links
+        const destLinks = document.querySelectorAll('a[href*="/links/"], a[href*="/go/"], a[href*="indianshortner.com/"], a[href*="drive.google"], a[href*="mediafire"], a[href*="mega.nz"], a[href*="pixeldrain"], a[href*="gofile"], a[href*="uploadrar"]');
+        for (const dLink of destLinks) {
+          if (!isPaginationOrNavigation(dLink)) {
+            dLink.style.setProperty('display', 'inline-block', 'important');
+            dLink.style.setProperty('visibility', 'visible', 'important');
+            dLink.style.setProperty('opacity', '1', 'important');
+            dLink.style.setProperty('pointer-events', 'auto', 'important');
           }
         }
       } catch (_) {}

@@ -160,17 +160,21 @@
       }
 
       // Arm buttons (remove disabled, show button, set pointer-events: auto)
-      const btns = document.querySelectorAll('#btn-main, #get-link, #getlink, #download-btn, #btn-download, .get-link, .download-btn, .btn-download, #wpsafe-generate, #continue-btn, #btn-continue, a.btn, button.btn');
+      const btns = document.querySelectorAll('#btn-main, #get-link, #getlink, #download-btn, #btn-download, .get-link, .download-btn, .btn-download, #wpsafe-generate, #continue-btn, #btn-continue, a.btn, button.btn, [class*="btn"], button, input[type="button"], input[type="submit"]');
       for (const btn of btns) {
         if (btn && !isPagination(btn)) {
-          const txt = (btn.innerText || btn.value || '').trim();
-          if (/getting\s+link|please\s+wait|loading|generating/i.test(txt)) continue;
+          const txt = (btn.innerText || btn.value || btn.textContent || '').trim();
           btn.removeAttribute('disabled');
           btn.removeAttribute('aria-disabled');
           if (btn.classList.contains('disabled')) btn.classList.remove('disabled');
           btn.style.setProperty('pointer-events', 'auto', 'important');
           btn.style.setProperty('opacity', '1', 'important');
           btn.style.setProperty('display', 'inline-block', 'important');
+          btn.style.setProperty('cursor', 'pointer', 'important');
+          if (/getting\s+link|generating/i.test(txt)) {
+            btn.innerText = 'GET LINK';
+            btn.textContent = 'GET LINK';
+          }
         }
       }
     } catch (_) {}

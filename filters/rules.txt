@@ -1,0 +1,52 @@
+! Title: BraveShield Anti-Detection & Defuser Filter List
+! Description: Universal AdGuard & uBlock Origin filter rules to defuse anti-adblock traps, modal overlays, scroll locks, and detection scripts.
+! Version: 1.0.0
+! Homepage: https://github.com/Nikhil-Sonawane87612/braveshield-anti-detection-extension
+! Last Modified: 2026-08-15
+! Expires: 4 days (update frequency)
+
+! ==============================================================================
+! SECTION 1: SCRIPTLET DEFUSERS (AdGuard / uBlock Origin Scriptlets)
+! ==============================================================================
+#%#//scriptlet('set-constant', 'canRunAds', 'true')
+#%#//scriptlet('set-constant', 'isAdBlockActive', 'false')
+#%#//scriptlet('set-constant', 'adblockDetected', 'false')
+#%#//scriptlet('set-constant', 'adBlockDetected', 'false')
+#%#//scriptlet('set-constant', 'hasAdblock', 'false')
+#%#//scriptlet('set-constant', 'isAdBlocked', 'false')
+#%#//scriptlet('set-constant', 'adblock', 'false')
+#%#//scriptlet('abort-on-property-read', 'FuckAdBlock')
+#%#//scriptlet('abort-on-property-read', 'fuckAdBlock')
+#%#//scriptlet('abort-on-property-read', 'BlockAdBlock')
+#%#//scriptlet('abort-on-property-read', 'blockAdBlock')
+#%#//scriptlet('abort-on-property-read', 'adblockDetector')
+#%#//scriptlet('abort-on-property-read', 'admiral')
+
+! ==============================================================================
+! SECTION 2: ANTI-ADBLOCK MODAL & BACKDROP SUPPRESSION
+! ==============================================================================
+##.adblock-modal
+##.adblock-backdrop
+##.adblock-overlay
+##.adblock-warning
+##.adblock-notice
+##.adblock-banner
+##.fc-ab-root
+##.sp_veil
+##.sp_message_container
+##.ad-shield-overlay
+##div[id*="adblock-detector"]
+##div[id*="adblock-notice"]
+##div[class*="adblock-modal"]
+##div[class*="anti-adblock"]
+##div[id*="anti-adblock"]
+##div[class*="adblock-blocker"]
+##div[class*="adblocker-modal"]
+##div[id*="adblocker-backdrop"]
+##.swal2-container:has(> .swal2-popup:has-text(/adblock|ad-block|disable\s+ad/i))
+
+! ==============================================================================
+! SECTION 3: CSS OVERRIDES & SCROLL RESTORATION
+! ==============================================================================
+#$#html, body { overflow: auto !important; position: static !important; filter: none !important; }
+#$#main, #main, .container, .card, body > div { filter: none !important; backdrop-filter: none !important; }

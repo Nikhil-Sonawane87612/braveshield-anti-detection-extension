@@ -27,18 +27,36 @@ Welcome to the **BraveShield Android Super Suite**! This guide walks you through
 
 ## 🚀 Setup 1: AdGuard for Android (Recommended — System-Wide All-In-One)
 
-*Runs system-wide across Google Chrome, Brave Android, Samsung Internet, and all mobile games.*
+*Runs system-wide across Google Chrome, Brave Android, Samsung Internet, and mobile apps/games.*
 
 1. **Install AdGuard for Android**: Download the standalone APK from [adguard.com](https://adguard.com/en/adguard-android/overview.html).
-2. **Add the BraveShield Userscript**:
-   - Open AdGuard → Go to **Settings (⚙️)** → **Extensions** → **Userscripts**.
-   - Tap **+ Add Userscript** → Choose **From File / URL**.
-   - Select [`braveshield-android.user.js`](file:///c:/Users/hinik/Downloads/braveshield-anti-detection-extension/braveshield-android.user.js) (or paste its GitHub raw link).
-   - Toggle **Enable**.
-3. **Add Custom DNS Blocklist**:
-   - In AdGuard → Go to **DNS Protection** → **DNS Blocklists**.
-   - Tap **+ Add Blocklist** → Import [`braveshield-dns-blocklist.txt`](file:///c:/Users/hinik/Downloads/braveshield-anti-detection-extension/braveshield-dns-blocklist.txt).
-4. **Done!** Every browser on your phone now automatically runs the 55+ stealth engine!
+2. **Prerequisite (Critical)**: Ensure **HTTPS filtering** is enabled (*Protection tab 🛡️ → Ad blocking → HTTPS filtering*), otherwise AdGuard cannot inject userscripts or element-hiding rules into HTTPS web pages.
+
+### Option A: Adding as a Userscript / Extension (`.user.js`)
+1. Open **AdGuard for Android**.
+2. Tap the **Settings icon** (⚙️ gear icon) in the bottom navigation bar.
+3. Tap **Extensions** *(or **Filtering → Extensions** on newer v4.x builds)*.
+4. Tap **Add extension** (or the **`+`** floating action button).
+5. Choose **Import from URL** and paste the raw GitHub link to [`braveshield-android.user.js`](braveshield-android.user.js) (or tap **Import from file** if downloaded locally).
+6. Enable the toggle switch next to the added extension.
+
+### Option B: Adding Custom Filter Lists, User Rules & DNS Blocklist
+* **Custom Filter Lists (URLs):**
+  1. Open AdGuard → tap **Protection** (🛡️ shield icon in bottom bar).
+  2. Tap **Ad blocking** → **Filters** → **Custom filters**.
+  3. Tap **Add custom filter**, paste the URL of [`filters/rules.txt`](filters/rules.txt) (or raw GitHub link), and tap **Next → Add**.
+
+* **Custom User Rules:**
+  1. Open AdGuard → tap **Protection** (🛡️ shield icon).
+  2. Tap **Ad blocking** → scroll down and tap **User rules**.
+  3. Tap **Add user rule** (or `+`), paste your custom rule lines, and tap **Save**.
+
+* **DNS Blocklist (System-Wide In-App & Telemetry Block):**
+  1. In AdGuard → tap **Protection** (🛡️) → **DNS protection**.
+  2. Tap **DNS filtering** → **DNS blocklists** → **+ Add blocklist**.
+  3. Import [`braveshield-dns-blocklist.txt`](braveshield-dns-blocklist.txt) or add via URL.
+
+4. **Done!** Every browser and app on your phone now runs the stealth and ad-blocking engine!
 
 ---
 

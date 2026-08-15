@@ -74,10 +74,60 @@
       };
     }
 
-    // B4: Fake Adblock & Analytics Variables
-    WIN.canRunAds = true;
-    WIN.isAdBlockActive = false;
-    WIN.adblock = false;
+    // B4: Fake Adblock & Analytics Variables + Scriptlet Defusers
+    const defusedConstants = {
+      canRunAds: true,
+      isAdBlockActive: false,
+      adblockDetected: false,
+      adBlockDetected: false,
+      hasAdblock: false,
+      isAdBlocked: false,
+      adblock: false,
+      adBlock: false,
+      ad_block: false,
+      isAdblock: false,
+      is_adblock: false
+    };
+
+    for (const [key, val] of Object.entries(defusedConstants)) {
+      try {
+        Object.defineProperty(WIN, key, {
+          get: () => val,
+          set: () => {},
+          configurable: true,
+          enumerable: true
+        });
+      } catch (_) {
+        WIN[key] = val;
+      }
+    }
+
+    // Universal Anti-Adblock Trap Interceptors
+    const UniversalAdBlockMock = function(options) {
+      this.check = function() {};
+      this.clearEvent = function() {};
+      this.on = function(detected, callback) {
+        if (!detected && typeof callback === 'function') setTimeout(callback, 20);
+        return this;
+      };
+      this.onDetected = function() { return this; };
+      this.onNotDetected = function(cb) { if (typeof cb === 'function') setTimeout(cb, 20); return this; };
+      this.setOption = function() { return this; };
+      if (options && typeof options.onNotDetected === 'function') setTimeout(options.onNotDetected, 20);
+    };
+
+    WIN.FuckAdBlock = UniversalAdBlockMock;
+    WIN.BlockAdBlock = UniversalAdBlockMock;
+    WIN.fuckAdBlock = new UniversalAdBlockMock();
+    WIN.blockAdBlock = WIN.fuckAdBlock;
+    WIN.SAB = UniversalAdBlockMock;
+    WIN.SimpleAdBlock = UniversalAdBlockMock;
+    WIN.adblockDetector = new UniversalAdBlockMock();
+    WIN.adblockChecker = new UniversalAdBlockMock();
+    WIN.babasbml = { isAdblockEnabled: () => false };
+    WIN.admiral = WIN.admiral || function() {};
+    WIN.snackBar = WIN.snackBar || { show: () => {} };
+
     WIN.adsbygoogle = WIN.adsbygoogle || [];
     WIN.adsbygoogle.loaded = true;
     WIN.google_ad_status = 1;

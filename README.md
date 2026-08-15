@@ -16,7 +16,7 @@
   Keep Brave Shields at maximum strength while appearing as pure Google Chrome. Enjoy ad-free Spotify with live synced lyrics, 16x YouTube fast-forwarding, 50x timer bypass, and system-wide in-app ad blocking.
 </p>
 
-[📥 Download Extension (.ZIP)](https://github.com/Nikhil-Sonawane87612/braveshield-anti-detection-extension/releases/download/v5.1.0/BraveShield-Bypass-Pro-v5.1.0.zip) • [⚡ Fast CDN Mirror (.ZIP)](https://cdn.jsdelivr.net/gh/Nikhil-Sonawane87612/braveshield-anti-detection-extension@main/BraveShield-Bypass-Pro-v5.1.0.zip) • [📱 Android Userscript (`.user.js`)](braveshield-android.user.js) • [📖 Android Guide](ANDROID-SETUP.md)
+[📥 Download Extension (.ZIP)](https://github.com/Nikhil-Sonawane87612/braveshield-anti-detection-extension/releases/download/v5.1.0/BraveShield-Bypass-Pro-v5.1.0.zip) • [⚡ Fast CDN Mirror (.ZIP)](https://cdn.jsdelivr.net/gh/Nikhil-Sonawane87612/braveshield-anti-detection-extension@main/BraveShield-Bypass-Pro-v5.1.0.zip) • [📱 Android Userscript (`.user.js`)](braveshield-android.user.js) • [🛡️ AdGuard Filters (`rules.txt`)](filters/rules.txt) • [📖 Android Guide](ANDROID-SETUP.md)
 
 ---
 
@@ -106,11 +106,11 @@ You do **not** need Kiwi Browser or a PC-like desktop browser to use BraveShield
 ```
 
 ### 🚀 Setup A: AdGuard for Android (System-Wide + All Browsers)
-1. Download **AdGuard for Android** APK from [adguard.com](https://adguard.com/en/adguard-android/overview.html).
-2. In AdGuard → Go to **Settings (⚙️)** → **Extensions** → **Userscripts** → Tap **+ Add Userscript**.
-3. Select [`braveshield-android.user.js`](braveshield-android.user.js).
-4. In AdGuard → Go to **DNS Protection** → **DNS Blocklists** → Import [`braveshield-dns-blocklist.txt`](braveshield-dns-blocklist.txt).
-5. **Done!** Works automatically across Google Chrome, Brave Android, Samsung Internet, and apps.
+1. Download & install **AdGuard for Android** from [adguard.com](https://adguard.com/en/adguard-android/overview.html).
+2. **Prerequisite**: Ensure **HTTPS filtering** is enabled (*Protection 🛡️ → Ad blocking → HTTPS filtering*).
+3. **Add Userscript**: Go to **Settings (⚙️)** → **Extensions** (or **Filtering → Extensions**) → Tap **Add extension (+)** → Choose **Import from URL** and paste the [`braveshield-android.user.js`](braveshield-android.user.js) link.
+4. **Add DNS Blocklist**: In AdGuard → **Protection (🛡️)** → **DNS protection** → **DNS blocklists** → Import [`braveshield-dns-blocklist.txt`](braveshield-dns-blocklist.txt).
+5. **Done!** Works automatically across Google Chrome, Brave Android, Samsung Internet, and background apps.
 
 ### 🦊 Setup B: Firefox Mobile / Mull Browser (100% Free)
 1. Open **Firefox for Android** → Tap **Menu (⋮)** → **Add-ons**.
@@ -190,6 +190,8 @@ braveshield-anti-detection-extension/
 ├── popup.html / .css / .js        # Glassmorphic Popup Dashboard
 ├── options.html / .css / .js      # Full-page Configuration Suite
 ├── icons/                        # High-res extension icons (16, 48, 128)
+├── filters/
+│   └── rules.txt                 # AdGuard / uBlock Origin formatted filter list
 ├── braveshield-android.user.js   # Universal Android Userscript (55+ features)
 ├── braveshield-dns-blocklist.txt # Curated System-Wide DNS Hostlist
 ├── ANDROID-SETUP.md              # Complete Android Setup & Deployment Guide

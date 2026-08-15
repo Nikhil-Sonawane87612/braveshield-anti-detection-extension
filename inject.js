@@ -310,6 +310,34 @@ window.__bs_audit = {
     window.adb = false;
     window._adsEnabled = true;
 
+    // Scriptlet constant defusers (set-constant)
+    const defusedConstants = {
+      canRunAds: true,
+      isAdBlockActive: false,
+      adblockDetected: false,
+      adBlockDetected: false,
+      hasAdblock: false,
+      isAdBlocked: false,
+      adblock: false,
+      adBlock: false,
+      ad_block: false,
+      isAdblock: false,
+      is_adblock: false
+    };
+
+    for (const [key, val] of Object.entries(defusedConstants)) {
+      try {
+        Object.defineProperty(window, key, {
+          get: () => val,
+          set: () => {},
+          configurable: true,
+          enumerable: true
+        });
+      } catch (_) {
+        window[key] = val;
+      }
+    }
+
     // Google AdSense stubs
     window.adsbygoogle = window.adsbygoogle || [];
     window.adsbygoogle.loaded = true;
@@ -351,8 +379,8 @@ window.__bs_audit = {
       enableServices: () => {}
     };
 
-    // FuckAdBlock / BlockAdBlock / Sniffer
-    window.FuckAdBlock = function(options) {
+    // Universal Anti-Adblock Trap Interceptors (FuckAdBlock, BlockAdBlock, SAB, Admiral, Detector)
+    const UniversalAdBlockMock = function(options) {
       this.check = function() {};
       this.clearEvent = function() {};
       this.on = function(detected, callback) {
@@ -361,11 +389,20 @@ window.__bs_audit = {
       };
       this.onDetected = function() { return this; };
       this.onNotDetected = function(cb) { if (typeof cb === 'function') setTimeout(cb, 20); return this; };
-      if (options && options.onNotDetected) setTimeout(options.onNotDetected, 20);
+      this.setOption = function() { return this; };
+      if (options && typeof options.onNotDetected === 'function') setTimeout(options.onNotDetected, 20);
     };
-    window.BlockAdBlock = window.FuckAdBlock;
-    window.fuckAdBlock = new window.FuckAdBlock();
+
+    window.FuckAdBlock = UniversalAdBlockMock;
+    window.BlockAdBlock = UniversalAdBlockMock;
+    window.fuckAdBlock = new UniversalAdBlockMock();
     window.blockAdBlock = window.fuckAdBlock;
+    window.SAB = UniversalAdBlockMock;
+    window.SimpleAdBlock = UniversalAdBlockMock;
+    window.adblockDetector = new UniversalAdBlockMock();
+    window.adblockChecker = new UniversalAdBlockMock();
+    window.babasbml = { isAdblockEnabled: () => false };
+    window.admiral = window.admiral || function() {};
     window.snackBar = window.snackBar || { show: () => {} };
   } catch (_) {}
 

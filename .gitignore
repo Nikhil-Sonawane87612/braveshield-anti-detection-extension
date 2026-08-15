@@ -3,6 +3,7 @@ backup_*/
 additional featured extension/
 
 # Archives & build artifacts
+*.zip
 !BraveShield-Bypass-Pro-v5.1.0.zip
 *.crx
 _metadata/

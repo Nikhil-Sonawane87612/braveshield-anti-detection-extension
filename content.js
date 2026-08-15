@@ -281,6 +281,16 @@
   // "Click On Ads To Get Download Link" Universal Fast-Pass Engine
   function bypassClickOnAdsPattern() {
     try {
+      let targetDownloadUrl = '';
+      const allAnchors = document.querySelectorAll('a[href]');
+      for (const a of allAnchors) {
+        const h = a.href || '';
+        if (h && (h.includes('dupload.net') || h.includes('drive.google') || h.includes('mega.nz') || h.includes('mediafire') || h.includes('pixeldrain') || h.includes('gofile') || h.includes('1fichier') || h.includes('apkadmin') || h.includes('uploadrar') || h.includes('/go/') || h.includes('/links/'))) {
+          targetDownloadUrl = h;
+          break;
+        }
+      }
+
       const AD_CLICK_TEXT_REGEX = /click\s+(?:on\s+)?ads?\s+(?:to\s+get|and\s+wait|\&amp;\s+wait|\&\s+wait)|click\s+on\s+ad\s+to\s+get\s+download|click\s+any\s+ad\s+to\s+unlock|click\s+an\s+ad\s+to\s+continue|click\s+on\s+banner\s+to\s+get\s+link|verify\s+ad\s+click|click\s+ad\s+to\s+download/i;
 
       const candidates = document.querySelectorAll('button, a, div, span, p, input[type="button"]');
@@ -289,14 +299,29 @@
         const txt = el.innerText.trim();
 
         if (AD_CLICK_TEXT_REGEX.test(txt)) {
-          if (!el._bsAdTriggered) {
-            el._bsAdTriggered = true;
-            try { el.click(); } catch (_) {}
+          el.removeAttribute('disabled');
+          el.removeAttribute('aria-disabled');
+          el.style.setProperty('pointer-events', 'auto', 'important');
+          el.style.setProperty('cursor', 'pointer', 'important');
+          el.style.setProperty('opacity', '1', 'important');
+          el.style.setProperty('background', 'linear-gradient(135deg, #10b981, #059669)', 'important');
+          el.style.setProperty('color', '#ffffff', 'important');
+          el.innerText = targetDownloadUrl ? '⚡ Get Download Link (Ready)' : '⚡ Get Download Link';
+
+          if (!el._bsRewired) {
+            el._bsRewired = true;
+            el.onclick = function(e) {
+              e.preventDefault();
+              e.stopPropagation();
+              if (targetDownloadUrl) {
+                window.open(targetDownloadUrl, '_blank');
+              }
+            };
           }
 
           // Unhide hidden download buttons
           const hiddenTargets = document.querySelectorAll(
-            '#download-link, #download-btn, #downloadBtn, #direct-download, #final-download, #server-links, #link-box, .download-link, .download-btn, .server-download, [id*="download"], [class*="download"], a[href*="drive.google"], a[href*="mega."], a[href*="mediafire"], a[href*="pixeldrain"], a[href*="gofile"], a[href*="1fichier"], a[href*="workers.dev"], a[href*="t.me"]'
+            '#download-link, #download-btn, #downloadBtn, #direct-download, #final-download, #server-links, #link-box, .download-link, .download-btn, .server-download, [id*="download"], [class*="download"], a[href*="drive.google"], a[href*="mega."], a[href*="mediafire"], a[href*="pixeldrain"], a[href*="gofile"], a[href*="1fichier"], a[href*="workers.dev"], a[href*="t.me"], a[href*="dupload.net"], a[href*="apkadmin"], a[href*="uploadrar"]'
           );
 
           for (const target of hiddenTargets) {

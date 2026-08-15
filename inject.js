@@ -2299,7 +2299,7 @@ window.__bs_audit = {
   // 4. "Click On Ads To Get Download Link" Universal Fast-Pass Engine
   function bypassClickOnAdsPattern() {
     try {
-      // Fake global ad-click flags used by download verification scripts
+      // Set all standard safelink/verification globals
       window.adClicked = true;
       window.isAdClicked = true;
       window.hasClickedAd = true;
@@ -2308,12 +2308,39 @@ window.__bs_audit = {
       window.ad_status = 1;
       window.adClickCount = 1;
       window.isAdOpened = true;
+      window.cookies_status = 1;
+      window.is_ad_clicked = true;
+      window.click_status = 1;
       try {
         sessionStorage.setItem('ad_clicked', 'true');
         sessionStorage.setItem('adClicked', 'true');
+        sessionStorage.setItem('is_ad_clicked', 'true');
         localStorage.setItem('ad_clicked', 'true');
         localStorage.setItem('adClicked', 'true');
       } catch (_) {}
+
+      // Automatically execute any site-defined link reveal functions
+      const siteRevealFunctions = [
+        'showDownloadButton', 'showDownloadBtn', 'getDownloadLink', 'getDownloadBtn',
+        'generateLink', 'getLink', 'showLink', 'startTimer', 'clickOnAd', 'verifyAdClick',
+        'directDownload', 'finalDownloadLink', 'unhideLink', 'openDownload', 'createDownloadLink'
+      ];
+      for (const fn of siteRevealFunctions) {
+        if (typeof window[fn] === 'function') {
+          try { window[fn](); } catch (_) {}
+        }
+      }
+
+      // Discover destination download link from page DOM, scripts, or attributes
+      let targetDownloadUrl = '';
+      const allAnchors = document.querySelectorAll('a[href]');
+      for (const a of allAnchors) {
+        const h = a.href || '';
+        if (h && (h.includes('dupload.net') || h.includes('drive.google') || h.includes('mega.nz') || h.includes('mediafire') || h.includes('pixeldrain') || h.includes('gofile') || h.includes('1fichier') || h.includes('apkadmin') || h.includes('uploadrar') || h.includes('/go/') || h.includes('/links/'))) {
+          targetDownloadUrl = h;
+          break;
+        }
+      }
 
       const AD_CLICK_TEXT_REGEX = /click\s+(?:on\s+)?ads?\s+(?:to\s+get|and\s+wait|\&amp;\s+wait|\&\s+wait)|click\s+on\s+ad\s+to\s+get\s+download|click\s+any\s+ad\s+to\s+unlock|click\s+an\s+ad\s+to\s+continue|click\s+on\s+banner\s+to\s+get\s+link|verify\s+ad\s+click|click\s+ad\s+to\s+download/i;
 
@@ -2323,18 +2350,37 @@ window.__bs_audit = {
         const txt = el.innerText.trim();
 
         if (AD_CLICK_TEXT_REGEX.test(txt)) {
-          // A. Trigger click/focus simulation
-          if (!el._bsAdTriggered) {
-            el._bsAdTriggered = true;
-            try {
-              window.dispatchEvent(new Event('blur'));
-              setTimeout(() => window.dispatchEvent(new Event('focus')), 50);
-            } catch (_) {}
+          // Unblock the button completely
+          el.removeAttribute('disabled');
+          el.removeAttribute('aria-disabled');
+          el.style.setProperty('pointer-events', 'auto', 'important');
+          el.style.setProperty('cursor', 'pointer', 'important');
+          el.style.setProperty('opacity', '1', 'important');
+          el.style.setProperty('background', 'linear-gradient(135deg, #10b981, #059669)', 'important');
+          el.style.setProperty('color', '#ffffff', 'important');
+          el.innerText = targetDownloadUrl ? '⚡ Get Download Link (Ready)' : '⚡ Get Download Link';
 
-            try { el.click(); } catch (_) {}
+          // Direct click handler
+          if (!el._bsRewired) {
+            el._bsRewired = true;
+            el.onclick = function(e) {
+              e.preventDefault();
+              e.stopPropagation();
+              if (targetDownloadUrl) {
+                window.open(targetDownloadUrl, '_blank');
+              } else {
+                // Trigger any underlying script
+                window.adClicked = true;
+                window.isAdClicked = true;
+                try {
+                  window.dispatchEvent(new Event('blur'));
+                  setTimeout(() => window.dispatchEvent(new Event('focus')), 50);
+                } catch (_) {}
+              }
+            };
           }
 
-          // B. Unhide hidden download buttons
+          // Unhide all real download buttons
           const hiddenTargets = document.querySelectorAll(
             '#download-link, #download-btn, #downloadBtn, #direct-download, #final-download, #server-links, #link-box, .download-link, .download-btn, .server-download, [id*="download"], [class*="download"], a[href*="drive.google"], a[href*="mega."], a[href*="mediafire"], a[href*="pixeldrain"], a[href*="gofile"], a[href*="1fichier"], a[href*="workers.dev"], a[href*="t.me"], a[href*="dupload.net"], a[href*="apkadmin"], a[href*="uploadrar"]'
           );
@@ -2350,17 +2396,6 @@ window.__bs_audit = {
                 target.parentElement.style.setProperty('display', 'block', 'important');
                 target.parentElement.style.setProperty('visibility', 'visible', 'important');
               }
-            }
-          }
-
-          // C. Zero out any attached wait timer
-          const timers = document.querySelectorAll('.timer, #timer, .countdown, #countdown, span[id*="timer"], span[id*="time"], div[id*="time"]');
-          for (const t of timers) {
-            if (t && /\d+/.test(t.innerText)) {
-              t.innerText = '0';
-              t.textContent = '0';
-              t.dispatchEvent(new Event('change', { bubbles: true }));
-              t.dispatchEvent(new Event('input', { bubbles: true }));
             }
           }
         }

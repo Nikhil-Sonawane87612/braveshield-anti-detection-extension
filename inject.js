@@ -212,84 +212,246 @@ window.__bs_audit = {
 })();
 
 // ─────────────────────────────────────────────────────
-// Module 3: Ad Creative Stub Blocks
+// ─────────────────────────────────────────────────────
+// Module 3: Anti-Adblock Trap Defusal & Synthetic Ad Globals
 // ─────────────────────────────────────────────────────
 (() => {
-  const AD_SELECTORS = [
-    '[id*="google_ads"]',
-    '[class*="ad-container"]',
-    '[class*="adsbygoogle"]',
-    '[data-ad-slot]',
-    '[id*="ad-slot"]',
-    '.ad-wrapper',
-    '.sponsored',
-    '[id*="doubleclick"]',
-    'iframe[src*="doubleclick"]',
-    'iframe[src*="googlesyndication"]',
-    'ins.adsbygoogle'
-  ];
-  const STUB = '<div style="display:none!important"></div>';
+  // 1. Universal Fake Ad Globals to defeat script detectors
+  try {
+    window.canRunAds = true;
+    window.isAdBlockActive = false;
+    window.adblock = false;
+    window.adBlocker = false;
+    window.adsBlocked = false;
+    window.adblockDetected = false;
+    window.hasAdBlocker = false;
+    window.isAdblock = false;
+    window.adBlockDetected = false;
+    window.adBlockerDetected = false;
+    window.is_adblock_detected = false;
+    window.ad_block_detected = false;
+    window.adb = false;
+    window._adsEnabled = true;
 
-  const observer = new MutationObserver((mutations) => {
-    for (const m of mutations) {
-      for (const node of m.addedNodes) {
-        if (node.nodeType !== 1) continue;
-        for (const sel of AD_SELECTORS) {
-          try {
-            if (node.matches && node.matches(sel)) {
-              node.remove();
-              return;
-            }
-            const inner = node.querySelectorAll?.(sel);
-            if (inner?.length) inner.forEach((el) => el.remove());
-          } catch (_) {}
-        }
-      }
+    // Google AdSense stubs
+    window.adsbygoogle = window.adsbygoogle || [];
+    window.adsbygoogle.loaded = true;
+    window.adsbygoogle.push = function(o) { return 1; };
+    window.google_ad_client = 'ca-pub-9999999999999999';
+    window.google_ad_status = 1;
+
+    // Analytics & Telemetry stubs
+    window.ga = window.ga || function() {};
+    window.gtag = window.gtag || function() {};
+    window.dataLayer = window.dataLayer || [];
+
+    // Prebid & Ad Networks
+    window.pbjs = window.pbjs || {
+      que: [],
+      getAdserverTargeting: () => ({}),
+      requestBids: (o) => { try { o?.bidsBackHandler?.(); } catch(_) {} },
+      adUnits: []
+    };
+
+    window.googletag = window.googletag || {
+      cmd: [],
+      apiReady: true,
+      pubads: () => ({
+        addEventListener: () => {},
+        enableSingleRequest: () => {},
+        enableServices: () => {},
+        setTargeting: () => {},
+        collapseEmptyDivs: () => {},
+        clear: () => {},
+        refresh: () => {}
+      }),
+      display: () => {},
+      defineSlot: () => ({
+        addService: () => ({ setTargeting: () => {} }),
+        setTargeting: () => {},
+        renderEnded: () => {}
+      }),
+      enableServices: () => {}
+    };
+
+    // FuckAdBlock / BlockAdBlock / Sniffer
+    window.FuckAdBlock = function(options) {
+      this.check = function() {};
+      this.clearEvent = function() {};
+      this.on = function(detected, callback) {
+        if (!detected && typeof callback === 'function') setTimeout(callback, 20);
+        return this;
+      };
+      this.onDetected = function() { return this; };
+      this.onNotDetected = function(cb) { if (typeof cb === 'function') setTimeout(cb, 20); return this; };
+      if (options && options.onNotDetected) setTimeout(options.onNotDetected, 20);
+    };
+    window.BlockAdBlock = window.FuckAdBlock;
+    window.fuckAdBlock = new window.FuckAdBlock();
+    window.blockAdBlock = window.fuckAdBlock;
+    window.snackBar = window.snackBar || { show: () => {} };
+  } catch (_) {}
+
+  // 2. DOM Bait Trap Hook: Prevent offsetHeight === 0 or clientHeight === 0 detection
+  try {
+    const AD_BAIT_REGEX = /ad[s_-]?box|ad[s_-]?banner|ad[s_-]?unit|ad[s_-]?container|ad[s_-]?wrapper|adsbygoogle|pub_300|banner-ad|ad-zone|ad_slot|sponsor|advertisement|textads|carbonads|ad-detector|ad-test/i;
+
+    const origOffsetHeight = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'offsetHeight');
+    const origOffsetWidth = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'offsetWidth');
+    const origClientHeight = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'clientHeight');
+    const origClientWidth = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'clientWidth');
+    const origOffsetParent = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'offsetParent');
+
+    function isBaitElement(el) {
+      if (!el || !(el instanceof HTMLElement)) return false;
+      const idOrClass = (el.id || '') + ' ' + (el.className || '') + ' ' + (el.getAttribute('data-ad') || '');
+      return AD_BAIT_REGEX.test(idOrClass);
     }
-  });
-  observer.observe(document.documentElement, { childList: true, subtree: true });
+
+    if (origOffsetHeight) {
+      Object.defineProperty(HTMLElement.prototype, 'offsetHeight', {
+        get: function() {
+          const real = origOffsetHeight.get.call(this);
+          if (real === 0 && isBaitElement(this)) return 250;
+          return real;
+        },
+        configurable: true
+      });
+    }
+
+    if (origOffsetWidth) {
+      Object.defineProperty(HTMLElement.prototype, 'offsetWidth', {
+        get: function() {
+          const real = origOffsetWidth.get.call(this);
+          if (real === 0 && isBaitElement(this)) return 300;
+          return real;
+        },
+        configurable: true
+      });
+    }
+
+    if (origClientHeight) {
+      Object.defineProperty(HTMLElement.prototype, 'clientHeight', {
+        get: function() {
+          const real = origClientHeight.get.call(this);
+          if (real === 0 && isBaitElement(this)) return 250;
+          return real;
+        },
+        configurable: true
+      });
+    }
+
+    if (origClientWidth) {
+      Object.defineProperty(HTMLElement.prototype, 'clientWidth', {
+        get: function() {
+          const real = origClientWidth.get.call(this);
+          if (real === 0 && isBaitElement(this)) return 300;
+          return real;
+        },
+        configurable: true
+      });
+    }
+
+    if (origOffsetParent) {
+      Object.defineProperty(HTMLElement.prototype, 'offsetParent', {
+        get: function() {
+          const real = origOffsetParent.get.call(this);
+          if (!real && isBaitElement(this)) return document.body || this.parentElement;
+          return real;
+        },
+        configurable: true
+      });
+    }
+  } catch (_) {}
 })();
 
 // ─────────────────────────────────────────────────────
-// Module 4: DOM Mutation Traps for Anti-Adblock
+// Module 4: Universal Anti-Adblock Modal Annihilator & Page Restorer
 // ─────────────────────────────────────────────────────
 (() => {
-  const ANTI_ADBLOCK_SELECTORS = [
-    '[class*="adblock"]',
-    '[id*="adblock"]',
-    '[class*="adb-modal"]',
-    '[class*="adb-overlay"]',
-    '[class*="adb-dialog"]',
-    '[class*="anti-adblock"]',
-    '[id*="anti-adblock"]',
-    '[class*="blocker-notice"]',
-    '[id*="blocker-notice"]',
-    '[class*="adblock-modal"]',
-    '[class*="adblocker"]',
-    '.adb-overlay',
-    '.adb-modal',
-    '#adb-overlay',
-    '#adb-modal'
-  ];
+  const ADBLOCK_MODAL_TEXT_REGEX = /adblock(?:er)?\s+detected|disable\s+(?:your\s+)?ad\s*blocker|disable\s+(?:your\s+)?private\s+dns|ads\s+help\s+us\s+keep|turn\s+off\s+adblock|ad\s*block\s+detected|please\s+whitelist|adblocker\s+is\s+detected|i've\s+disabled\s+adblocker|ad\s*blocker\s+found|ad\s*block\s+shield|block\s+adblock|adblocker\s+notice/i;
 
-  const trapObserver = new MutationObserver((mutations) => {
-    for (const m of mutations) {
-      for (const node of m.addedNodes) {
-        if (node.nodeType !== 1) continue;
-        for (const sel of ANTI_ADBLOCK_SELECTORS) {
-          try {
-            if (node.matches && node.matches(sel)) {
-              node.remove();
-              return;
+  function annihilateAntiAdblockModals() {
+    try {
+      const candidates = document.querySelectorAll('div, section, dialog, [role="dialog"], [role="alertdialog"], .modal, .swal2-container, .sweet-alert, .overlay, .popup, [class*="modal"], [class*="overlay"], [class*="popup"], [id*="modal"], [id*="overlay"], [id*="adblock"]');
+      
+      for (const el of candidates) {
+        if (!el || !el.innerText) continue;
+        
+        if (ADBLOCK_MODAL_TEXT_REGEX.test(el.innerText)) {
+          let target = el;
+          let parent = el.parentElement;
+          while (parent && parent !== document.body && parent !== document.documentElement) {
+            const style = window.getComputedStyle(parent);
+            if (style.position === 'fixed' || style.position === 'absolute' || parent.classList.contains('modal') || parent.classList.contains('overlay') || parent.classList.contains('swal2-container')) {
+              target = parent;
             }
-            const inner = node.querySelectorAll?.(sel);
-            if (inner?.length) inner.forEach((el) => el.remove());
-          } catch (_) {}
+            parent = parent.parentElement;
+          }
+
+          // Auto-click "I've Disabled AdBlocker" button or close button
+          const buttons = target.querySelectorAll('button, a, input[type="button"], input[type="submit"], [role="button"]');
+          for (const btn of buttons) {
+            if (/disabled\s+adblocker|i've\s+disabled|continue|close|ok|dismiss|i\s+understand/i.test(btn.innerText || btn.value || '')) {
+              try { btn.click(); } catch (_) {}
+            }
+          }
+
+          // Annihilate the modal
+          try {
+            target.remove();
+          } catch (_) {
+            target.style.setProperty('display', 'none', 'important');
+            target.style.setProperty('visibility', 'hidden', 'important');
+            target.style.setProperty('opacity', '0', 'important');
+            target.style.setProperty('pointer-events', 'none', 'important');
+          }
+
+          // Remove backdrops & blur overlays
+          document.querySelectorAll('.modal-backdrop, .swal2-backdrop, .swal2-container, .overlay-backdrop, [class*="backdrop"], [class*="overlay"]').forEach(b => {
+            try { b.remove(); } catch (_) { b.style.display = 'none'; }
+          });
+
+          // Restore Page Scrolling & Interactivity
+          document.body.style.setProperty('overflow', 'auto', 'important');
+          document.body.style.setProperty('position', 'static', 'important');
+          document.body.style.setProperty('filter', 'none', 'important');
+          document.body.style.setProperty('pointer-events', 'auto', 'important');
+          document.documentElement.style.setProperty('overflow', 'auto', 'important');
+          document.documentElement.style.setProperty('filter', 'none', 'important');
+
+          // Remove blur from main content
+          document.querySelectorAll('*').forEach(node => {
+            if (node.style && node.style.filter && node.style.filter.includes('blur')) {
+              node.style.setProperty('filter', 'none', 'important');
+            }
+            if (node.style && node.style.backdropFilter && node.style.backdropFilter.includes('blur')) {
+              node.style.setProperty('backdrop-filter', 'none', 'important');
+            }
+          });
+
+          if (window.__bs_audit) window.__bs_audit.trapsBypassed++;
         }
       }
-    }
+    } catch (_) {}
+  }
+
+  // Run immediately and periodically
+  annihilateAntiAdblockModals();
+  const trapInterval = setInterval(annihilateAntiAdblockModals, 300);
+  setTimeout(() => clearInterval(trapInterval), 15000);
+
+  // Also observe DOM changes
+  const trapObserver = new MutationObserver(() => {
+    annihilateAntiAdblockModals();
   });
-  trapObserver.observe(document.documentElement, { childList: true, subtree: true });
+  if (document.documentElement) {
+    trapObserver.observe(document.documentElement, { childList: true, subtree: true });
+  } else {
+    document.addEventListener('DOMContentLoaded', () => {
+      trapObserver.observe(document.documentElement, { childList: true, subtree: true });
+    });
+  }
 })();
 
 // ─────────────────────────────────────────────────────
@@ -789,44 +951,54 @@ window.__bs_audit = {
 })();
 
 // ─────────────────────────────────────────────────────
-// Module 15: Network Bait Faking (Fake Ad Request Responses)
+// Module 15: Network Bait Faking (Fake Ad Request Responses & DNS Probes)
 // ─────────────────────────────────────────────────────
 (() => {
-  // Intercept requests that look like ad requests and return realistic fake responses
+  const AD_PATTERNS = [
+    /doubleclick\.net/i,
+    /googlesyndication\.com/i,
+    /googleadservices\.com/i,
+    /adservice\.google\./i,
+    /pagead2\.googlesyndication\.com/i,
+    /pagead2\.google/i,
+    /ad\.nativex\.com/i,
+    /ads\.mediavine\.com/i,
+    /prebid/i,
+    /amazon-adsystem\.com/i,
+    /criteo\.com/i,
+    /taboola\.com/i,
+    /outbrain\.com/i,
+    /monetag\.com/i,
+    /propellerads\.com/i,
+    /adsterra\.com/i,
+    /adnxs\.com/i,
+    /clarity\.ms/i,
+    /clickadu\.com/i,
+    /popads\.net/i,
+    /\/ads?\.js/i,
+    /\/adframe\.js/i,
+    /\/advert\.js/i,
+    /\/adblock\.js/i,
+    /\/show_ads\.js/i
+  ];
+
   const origFetch = window.fetch;
   window.fetch = function (input, init) {
-    const url = typeof input === 'string' ? input : input?.url;
+    const url = typeof input === 'string' ? input : (input instanceof Request ? input.url : input?.url);
     if (!url) return origFetch.apply(this, arguments);
-
-    // Fake ad server responses to prevent detection
-    const AD_PATTERNS = [
-      /doubleclick\.net/i,
-      /googlesyndication\.com/i,
-      /googleadservices\.com/i,
-      /adservice\.google\.com/i,
-      /pagead2\.googlesyndication\.com/i,
-      /ad\.nativex\.com/i,
-      /ads\.mediavine\.com/i,
-      /prebid/i,
-      /amazon-adsystem\.com/i,
-      /criteo\.com/i,
-      /taboola\.com/i,
-      /outbrain\.com/i
-    ];
 
     const isAdRequest = AD_PATTERNS.some((p) => p.test(url));
     if (isAdRequest) {
-      // Return a realistic empty ad response
-      return Promise.resolve(new Response(JSON.stringify({
-        success: true,
-        ads: [],
-        impressions: 0,
-        clickthroughs: 0
-      }), {
+      const isJs = /\.js/i.test(url);
+      const body = isJs 
+        ? 'window.canRunAds=true;window.isAdBlockActive=false;window.adblock=false;' 
+        : JSON.stringify({ success: true, ads: [], impressions: 0, clickthroughs: 0 });
+      
+      return Promise.resolve(new Response(body, {
         status: 200,
         statusText: 'OK',
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': isJs ? 'application/javascript' : 'application/json',
           'Cache-Control': 'no-cache'
         }
       }));
@@ -835,34 +1007,27 @@ window.__bs_audit = {
     return origFetch.apply(this, arguments);
   };
 
-  // Also intercept XHR ad requests
   const origXHROpen = XMLHttpRequest.prototype.open;
   const origXHRSend = XMLHttpRequest.prototype.send;
-  const AD_PATTERNS = [
-    /doubleclick\.net/i,
-    /googlesyndication\.com/i,
-    /googleadservices\.com/i,
-    /adservice\.google\.com/i,
-    /pagead2\.googlesyndication\.com/i,
-    /amazon-adsystem\.com/i,
-    /criteo\.com/i,
-    /taboola\.com/i,
-    /outbrain\.com/i
-  ];
 
   XMLHttpRequest.prototype.open = function (method, url, ...rest) {
-    this._bypassAdRequest = AD_PATTERNS.some((p) => p.test(url));
+    this._bypassAdRequest = typeof url === 'string' && AD_PATTERNS.some((p) => p.test(url));
+    this._bypassUrl = url;
     return origXHROpen.apply(this, [method, url, ...rest]);
   };
 
   XMLHttpRequest.prototype.send = function (...args) {
     if (this._bypassAdRequest) {
-      // Simulate a successful empty ad response
+      const isJs = typeof this._bypassUrl === 'string' && /\.js/i.test(this._bypassUrl);
+      const resp = isJs 
+        ? 'window.canRunAds=true;window.isAdBlockActive=false;window.adblock=false;' 
+        : '{"success":true,"ads":[]}';
+
       Object.defineProperty(this, 'readyState', { writable: true, value: 4 });
       Object.defineProperty(this, 'status', { writable: true, value: 200 });
       Object.defineProperty(this, 'statusText', { writable: true, value: 'OK' });
-      Object.defineProperty(this, 'responseText', { writable: true, value: '{"success":true,"ads":[]}' });
-      Object.defineProperty(this, 'response', { writable: true, value: '{"success":true,"ads":[]}' });
+      Object.defineProperty(this, 'responseText', { writable: true, value: resp });
+      Object.defineProperty(this, 'response', { writable: true, value: resp });
       setTimeout(() => {
         this.dispatchEvent(new Event('readystatechange'));
         this.dispatchEvent(new Event('load'));

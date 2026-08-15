@@ -145,7 +145,87 @@
       to { transform: translateX(100%); opacity: 0; }
     }
   `;
-  (document.head || document.documentElement).appendChild(style);
+  try { (document.head || document.documentElement).appendChild(style); } catch (_) {}
+
+  // ─────────────────────────────────────────────────────
+  // Universal Anti-Adblock Modal Annihilator & Scroll Unlocker
+  // ─────────────────────────────────────────────────────
+  const ADBLOCK_MODAL_TEXT_REGEX = /adblock(?:er)?\s+detected|disable\s+(?:your\s+)?ad\s*blocker|disable\s+(?:your\s+)?private\s+dns|ads\s+help\s+us\s+keep|turn\s+off\s+adblock|ad\s*block\s+detected|please\s+whitelist|adblocker\s+is\s+detected|i've\s+disabled\s+adblocker|ad\s*blocker\s+found|ad\s*block\s+shield|block\s+adblock|adblocker\s+notice/i;
+
+  function annihilateAntiAdblockModals() {
+    try {
+      const candidates = document.querySelectorAll('div, section, dialog, [role="dialog"], [role="alertdialog"], .modal, .swal2-container, .sweet-alert, .overlay, .popup, [class*="modal"], [class*="overlay"], [class*="popup"], [id*="modal"], [id*="overlay"], [id*="adblock"]');
+      
+      for (const el of candidates) {
+        if (!el || !el.innerText) continue;
+        
+        if (ADBLOCK_MODAL_TEXT_REGEX.test(el.innerText)) {
+          let target = el;
+          let parent = el.parentElement;
+          while (parent && parent !== document.body && parent !== document.documentElement) {
+            const style = window.getComputedStyle(parent);
+            if (style.position === 'fixed' || style.position === 'absolute' || parent.classList.contains('modal') || parent.classList.contains('overlay') || parent.classList.contains('swal2-container')) {
+              target = parent;
+            }
+            parent = parent.parentElement;
+          }
+
+          // Auto-click "I've Disabled AdBlocker" button or close button
+          const buttons = target.querySelectorAll('button, a, input[type="button"], input[type="submit"], [role="button"]');
+          for (const btn of buttons) {
+            if (/disabled\s+adblocker|i've\s+disabled|continue|close|ok|dismiss|i\s+understand/i.test(btn.innerText || btn.value || '')) {
+              try { btn.click(); } catch (_) {}
+            }
+          }
+
+          // Annihilate the modal
+          try {
+            target.remove();
+          } catch (_) {
+            target.style.setProperty('display', 'none', 'important');
+            target.style.setProperty('visibility', 'hidden', 'important');
+            target.style.setProperty('opacity', '0', 'important');
+            target.style.setProperty('pointer-events', 'none', 'important');
+          }
+
+          // Remove backdrops & blur overlays
+          document.querySelectorAll('.modal-backdrop, .swal2-backdrop, .swal2-container, .overlay-backdrop, [class*="backdrop"], [class*="overlay"]').forEach(b => {
+            try { b.remove(); } catch (_) { b.style.display = 'none'; }
+          });
+
+          // Restore Page Scrolling & Interactivity
+          document.body.style.setProperty('overflow', 'auto', 'important');
+          document.body.style.setProperty('position', 'static', 'important');
+          document.body.style.setProperty('filter', 'none', 'important');
+          document.body.style.setProperty('pointer-events', 'auto', 'important');
+          document.documentElement.style.setProperty('overflow', 'auto', 'important');
+          document.documentElement.style.setProperty('filter', 'none', 'important');
+
+          // Remove blur from main content
+          document.querySelectorAll('*').forEach(node => {
+            if (node.style && node.style.filter && node.style.filter.includes('blur')) {
+              node.style.setProperty('filter', 'none', 'important');
+            }
+            if (node.style && node.style.backdropFilter && node.style.backdropFilter.includes('blur')) {
+              node.style.setProperty('backdrop-filter', 'none', 'important');
+            }
+          });
+        }
+      }
+    } catch (_) {}
+  }
+
+  // Run immediately and monitor DOM
+  annihilateAntiAdblockModals();
+  const trapInterval = setInterval(annihilateAntiAdblockModals, 300);
+  setTimeout(() => clearInterval(trapInterval), 15000);
+
+  const trapObserver = new MutationObserver(() => {
+    annihilateAntiAdblockModals();
+  });
+  if (document.documentElement) {
+    trapObserver.observe(document.documentElement, { childList: true, subtree: true });
+  }
 
   function showBypassToast(message, type) {
     const toast = document.createElement('div');
@@ -158,13 +238,13 @@
     }, 3000);
   }
 
-  // Notify on link shortener detection (generic messaging to avoid fingerprinting)
+  // Notify on link shortener detection
   if (detectLinkShortener()) {
     showBypassToast('Redirect detected - proceeding...');
     chrome.runtime.sendMessage({ type: 'BYPASS_COMPLETE', hostname: window.location.hostname });
   }
 
-  // Notify on countdown detection (generic messaging)
+  // Notify on countdown detection
   if (detectCountdown()) {
     showBypassToast('Processing - please wait...', 'warning');
   }

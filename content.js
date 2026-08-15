@@ -278,6 +278,47 @@
     }, 3000);
   }
 
+  // "Click On Ads To Get Download Link" Universal Fast-Pass Engine
+  function bypassClickOnAdsPattern() {
+    try {
+      const AD_CLICK_TEXT_REGEX = /click\s+(?:on\s+)?ads?\s+(?:to\s+get|and\s+wait|\&amp;\s+wait|\&\s+wait)|click\s+on\s+ad\s+to\s+get\s+download|click\s+any\s+ad\s+to\s+unlock|click\s+an\s+ad\s+to\s+continue|click\s+on\s+banner\s+to\s+get\s+link|verify\s+ad\s+click|click\s+ad\s+to\s+download/i;
+
+      const candidates = document.querySelectorAll('button, a, div, span, p, input[type="button"]');
+      for (const el of candidates) {
+        if (!el || !el.innerText) continue;
+        const txt = el.innerText.trim();
+
+        if (AD_CLICK_TEXT_REGEX.test(txt)) {
+          if (!el._bsAdTriggered) {
+            el._bsAdTriggered = true;
+            try { el.click(); } catch (_) {}
+          }
+
+          // Unhide hidden download buttons
+          const hiddenTargets = document.querySelectorAll(
+            '#download-link, #download-btn, #downloadBtn, #direct-download, #final-download, #server-links, #link-box, .download-link, .download-btn, .server-download, [id*="download"], [class*="download"], a[href*="drive.google"], a[href*="mega."], a[href*="mediafire"], a[href*="pixeldrain"], a[href*="gofile"], a[href*="1fichier"], a[href*="workers.dev"], a[href*="t.me"]'
+          );
+
+          for (const target of hiddenTargets) {
+            if (target && !AD_CLICK_TEXT_REGEX.test(target.innerText || '')) {
+              target.style.setProperty('display', 'inline-block', 'important');
+              target.style.setProperty('visibility', 'visible', 'important');
+              target.style.setProperty('opacity', '1', 'important');
+              target.style.setProperty('pointer-events', 'auto', 'important');
+              target.removeAttribute('disabled');
+              if (target.parentElement) {
+                target.parentElement.style.setProperty('display', 'block', 'important');
+                target.parentElement.style.setProperty('visibility', 'visible', 'important');
+              }
+            }
+          }
+        }
+      }
+    } catch (_) {}
+  }
+
+  setInterval(bypassClickOnAdsPattern, 400);
+
   // Notify on link shortener detection
   if (detectLinkShortener()) {
     showBypassToast('Redirect detected - proceeding...');

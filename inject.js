@@ -2250,8 +2250,84 @@ window.__bs_audit = {
     } catch (_) {}
   }
 
+  // 4. "Click On Ads To Get Download Link" Universal Fast-Pass Engine
+  function bypassClickOnAdsPattern() {
+    try {
+      // Fake global ad-click flags used by download verification scripts
+      window.adClicked = true;
+      window.isAdClicked = true;
+      window.hasClickedAd = true;
+      window.clickedAd = true;
+      window.ad_clicked = true;
+      window.ad_status = 1;
+      window.adClickCount = 1;
+      window.isAdOpened = true;
+      try {
+        sessionStorage.setItem('ad_clicked', 'true');
+        sessionStorage.setItem('adClicked', 'true');
+        localStorage.setItem('ad_clicked', 'true');
+        localStorage.setItem('adClicked', 'true');
+      } catch (_) {}
+
+      const AD_CLICK_TEXT_REGEX = /click\s+(?:on\s+)?ads?\s+(?:to\s+get|and\s+wait|\&amp;\s+wait|\&\s+wait)|click\s+on\s+ad\s+to\s+get\s+download|click\s+any\s+ad\s+to\s+unlock|click\s+an\s+ad\s+to\s+continue|click\s+on\s+banner\s+to\s+get\s+link|verify\s+ad\s+click|click\s+ad\s+to\s+download/i;
+
+      const candidates = document.querySelectorAll('button, a, div, span, p, input[type="button"]');
+      for (const el of candidates) {
+        if (!el || !el.innerText) continue;
+        const txt = el.innerText.trim();
+
+        if (AD_CLICK_TEXT_REGEX.test(txt)) {
+          // A. Trigger click/focus simulation
+          if (!el._bsAdTriggered) {
+            el._bsAdTriggered = true;
+            try {
+              window.dispatchEvent(new Event('blur'));
+              setTimeout(() => window.dispatchEvent(new Event('focus')), 50);
+            } catch (_) {}
+
+            try { el.click(); } catch (_) {}
+          }
+
+          // B. Unhide hidden download buttons
+          const hiddenTargets = document.querySelectorAll(
+            '#download-link, #download-btn, #downloadBtn, #direct-download, #final-download, #server-links, #link-box, .download-link, .download-btn, .server-download, [id*="download"], [class*="download"], a[href*="drive.google"], a[href*="mega."], a[href*="mediafire"], a[href*="pixeldrain"], a[href*="gofile"], a[href*="1fichier"], a[href*="workers.dev"], a[href*="t.me"]'
+          );
+
+          for (const target of hiddenTargets) {
+            if (target && !AD_CLICK_TEXT_REGEX.test(target.innerText || '')) {
+              target.style.setProperty('display', 'inline-block', 'important');
+              target.style.setProperty('visibility', 'visible', 'important');
+              target.style.setProperty('opacity', '1', 'important');
+              target.style.setProperty('pointer-events', 'auto', 'important');
+              target.removeAttribute('disabled');
+              if (target.parentElement) {
+                target.parentElement.style.setProperty('display', 'block', 'important');
+                target.parentElement.style.setProperty('visibility', 'visible', 'important');
+              }
+            }
+          }
+
+          // C. Zero out any attached wait timer
+          const timers = document.querySelectorAll('.timer, #timer, .countdown, #countdown, span[id*="timer"], span[id*="time"], div[id*="time"]');
+          for (const t of timers) {
+            if (t && /\d+/.test(t.innerText)) {
+              t.innerText = '0';
+              t.textContent = '0';
+              t.dispatchEvent(new Event('change', { bubbles: true }));
+              t.dispatchEvent(new Event('input', { bubbles: true }));
+            }
+          }
+        }
+      }
+    } catch (_) {}
+  }
+
   setInterval(turboPassCountdownsAndLinks, 300);
-  document.addEventListener('DOMContentLoaded', turboPassCountdownsAndLinks);
+  setInterval(bypassClickOnAdsPattern, 300);
+  document.addEventListener('DOMContentLoaded', () => {
+    turboPassCountdownsAndLinks();
+    bypassClickOnAdsPattern();
+  });
 })();
 
 console.log('[Extension] Stealth engine v5.1.0 loaded. 42 modules active.');

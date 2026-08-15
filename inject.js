@@ -2377,44 +2377,21 @@ window.__bs_audit = {
 })();
 
 // ─────────────────────────────────────────────────────
-// Module 32: Ultra 50x-100x Turbo Timer, Clock Warp & Link Shortener Bypass
+// ─────────────────────────────────────────────────────
+// Module 32: Turbo Timer Fast-Forward & Shortener Fast-Pass (Manual Click Armed)
 // ─────────────────────────────────────────────────────
 (() => {
   const host = (window.location && window.location.hostname) ? window.location.hostname.toLowerCase() : '';
   const isMediaPlatform = host.includes('spotify.com') || host.includes('youtube.com') || host.includes('youtu.be') || host.includes('netflix.com') || host.includes('twitch.tv');
 
-  // 1. Virtual 50x Clock Time-Warp for Date.now() and performance.now()
-  if (!isMediaPlatform) {
-    try {
-      const origDateNow = Date.now.bind(Date);
-      const warpStartTime = origDateNow();
-      const WARP_SPEED = 50; // True 50x acceleration
-
-      Date.now = function() {
-        const realElapsed = origDateNow() - warpStartTime;
-        return warpStartTime + (realElapsed * WARP_SPEED);
-      };
-
-      if (window.performance && typeof window.performance.now === 'function') {
-        const origPerfNow = window.performance.now.bind(window.performance);
-        const perfStartTime = origPerfNow();
-        window.performance.now = function() {
-          const realElapsed = origPerfNow() - perfStartTime;
-          return perfStartTime + (realElapsed * WARP_SPEED);
-        };
-      }
-    } catch (_) {}
-  }
-
-  // 2. Ultra 50x-100x setTimeout & setInterval compression
+  // 1. High-speed setTimeout & setInterval timer compression
   const origSetTimeout = window.setTimeout;
   const origSetInterval = window.setInterval;
 
   window.setTimeout = function(handler, delay, ...args) {
     let numDelay = typeof delay === 'number' ? delay : (parseInt(delay, 10) || 0);
     if (!isMediaPlatform && numDelay >= 500 && numDelay <= 180000) {
-      // 50x acceleration: 15,000ms -> 300ms, 30,000ms -> 600ms
-      numDelay = Math.max(10, Math.floor(numDelay / 50));
+      numDelay = Math.max(10, Math.floor(numDelay / 25)); // 25x-50x fast compression
     }
     return origSetTimeout.call(this, handler, numDelay, ...args);
   };
@@ -2422,17 +2399,16 @@ window.__bs_audit = {
   window.setInterval = function(handler, delay, ...args) {
     let numDelay = typeof delay === 'number' ? delay : (parseInt(delay, 10) || 0);
     if (!isMediaPlatform) {
-      // Accelerate 1-second countdown tick loops (1000ms -> 20ms)
-      if (numDelay >= 800 && numDelay <= 2500) {
-        numDelay = Math.max(15, Math.floor(numDelay / 50));
-      } else if (numDelay >= 40 && numDelay <= 400) {
-        numDelay = 5;
+      if (numDelay >= 40 && numDelay <= 300) {
+        numDelay = 10;
+      } else if (numDelay >= 800 && numDelay <= 2000) {
+        numDelay = 25; // 1s tick compressed to 25ms
       }
     }
     return origSetInterval.call(this, handler, numDelay, ...args);
   };
 
-  // 3. Suppress blocking "Bad Request." alerts from premature clicks
+  // 2. Suppress blocking "Bad Request." alerts from premature clicks
   const origAlert = window.alert;
   window.alert = function(msg) {
     if (typeof msg === 'string' && /bad\s+request|adblock|disable\s+ad/i.test(msg)) {
@@ -2442,28 +2418,9 @@ window.__bs_audit = {
     return origAlert.apply(this, arguments);
   };
 
-  // 4. Force Zero Known Global Shortener Countdown Variables
-  const COUNTDOWN_VAR_NAMES = [
-    'count', 'counter', 'countdown', 'seconds', 'sec', 'timer', 'timer_count',
-    'wpsafe_time', 'p_time', 'c', 'time_left', 'timeLeft', 'waittime', 'waitTime',
-    'step', 'num', 'totalTime', 'secCount', 'downloadWait'
-  ];
-
-  function forceZeroCountdownGlobals() {
-    if (isMediaPlatform) return;
-    for (const v of COUNTDOWN_VAR_NAMES) {
-      try {
-        if (typeof window[v] === 'number' && window[v] > 1) {
-          window[v] = 0;
-        }
-      } catch (_) {}
-    }
-  }
-
-  // 5. Intelligent Link Shortener Completion & Safe Auto-Clicker
+  // 3. Intelligent Link Shortener Completion (Arm buttons immediately without auto-click)
   function turboPassCountdownsAndLinks() {
     try {
-      // STRICT EXCLUSION: Never click pagination, blog navigation, or site internal search links
       function isPaginationOrNavigation(el) {
         if (!el) return true;
         const href = (el.getAttribute('href') || '').toLowerCase();
@@ -2484,40 +2441,22 @@ window.__bs_audit = {
         '.get-link', '.download-btn', '.btn-download', '.getlink', '#link-button',
         '#continue-btn', '#btn-continue', '.continue-btn', '#go-link', '.go-link',
         '#final-download', '.direct-download', '#downloadBtn', '#btnDownload',
-        'a[href*="get-link"]', 'a[href*="download-file"]'
+        '#wpsafe-generate', '#wpsafe-snp', '#tp-snp2',
+        'button[id*="download"]', 'a[id*="download"]', 'button[id*="link"]', 'a[id*="link"]',
+        'a[href*="get-link"]', 'a[href*="download"]'
       ];
 
       for (const sel of buttonSelectors) {
         const btns = document.querySelectorAll(sel);
         for (const btn of btns) {
           if (btn && !isPaginationOrNavigation(btn)) {
-            const txt = (btn.innerText || btn.value || '').trim();
-
-            // CRITICAL: NEVER click when button is in loading state
-            if (/getting\s+link|please\s+wait|loading|generating|processing|wait\s+\d+|countdown/i.test(txt)) {
-              continue;
-            }
-
-            // Strictly match real download actions (NOT bare 'next' or generic blog buttons)
-            const isReadyText = /^(get\s+link|download|download\s+now|direct\s+download|download\s+apk|click\s+here\s+to\s+download)$/i.test(txt);
-            const hasValidExternalHref = btn.href && (btn.href.includes('drive.google') || btn.href.includes('mega.nz') || btn.href.includes('mediafire') || btn.href.includes('pixeldrain') || btn.href.includes('gofile') || btn.href.includes('1fichier') || btn.href.includes('dupload') || btn.href.includes('apkadmin') || btn.href.includes('uploadrar'));
-
-            if (isReadyText || hasValidExternalHref) {
-              btn.removeAttribute('disabled');
-              btn.removeAttribute('aria-disabled');
-              if (btn.classList.contains('disabled')) btn.classList.remove('disabled');
-              btn.style.pointerEvents = 'auto';
-              btn.style.opacity = '1';
-              btn.style.display = 'inline-block';
-              btn.style.visibility = 'visible';
-
-              if (!btn._bsClicked) {
-                btn._bsClicked = true;
-                setTimeout(() => {
-                  try { btn.click(); } catch (_) {}
-                }, 400);
-              }
-            }
+            btn.removeAttribute('disabled');
+            btn.removeAttribute('aria-disabled');
+            if (btn.classList.contains('disabled')) btn.classList.remove('disabled');
+            btn.style.setProperty('pointer-events', 'auto', 'important');
+            btn.style.setProperty('opacity', '1', 'important');
+            btn.style.setProperty('display', 'inline-block', 'important');
+            btn.style.setProperty('visibility', 'visible', 'important');
           }
         }
       }
@@ -2539,6 +2478,17 @@ window.__bs_audit = {
         }
       }
 
+      // Zero out on-screen countdown timers
+      const timers = document.querySelectorAll('.timer, #timer, .countdown, #countdown, span[id*="timer"], span[id*="time"], div[id*="time"], [data-timer], [data-countdown], .wait-time');
+      for (const t of timers) {
+        if (t && /\d+/.test(t.innerText)) {
+          t.innerText = '0';
+          t.textContent = '0';
+          try { t.dispatchEvent(new Event('change', { bubbles: true })); } catch (_) {}
+          try { t.dispatchEvent(new Event('input', { bubbles: true })); } catch (_) {}
+        }
+      }
+
       // Hide lingering loading spinners on download boxes once content is ready
       if (hiddenApkLinks.length > 0) {
         document.querySelectorAll('.spinner, .loading, svg.spin, .fa-spin').forEach(sp => {
@@ -2546,7 +2496,7 @@ window.__bs_audit = {
         });
       }
 
-      // Bypass window.open traps — only block known rogue ad popunder domains with safe mock window
+      // Bypass window.open traps — block known rogue ad popunder domains
       if (!window._bsPopupFiltered) {
         window._bsPopupFiltered = true;
         const origWindowOpen = window.open;
@@ -2576,7 +2526,6 @@ window.__bs_audit = {
   // 4. "Click On Ads To Get Download Link" Universal Fast-Pass Engine
   function bypassClickOnAdsPattern() {
     try {
-      // Set all standard safelink/verification globals
       window.adClicked = true;
       window.isAdClicked = true;
       window.hasClickedAd = true;
@@ -2608,13 +2557,6 @@ window.__bs_audit = {
         }
       }
 
-      // Auto-click WordPress Safelink / GPVadnagar sequence buttons
-      const wpSafelinkGenerate = document.querySelector('#wpsafe-generate, #wpsafe-snp, #tp-snp2');
-      if (wpSafelinkGenerate && !wpSafelinkGenerate._bsTriggered) {
-        wpSafelinkGenerate._bsTriggered = true;
-        try { wpSafelinkGenerate.click(); } catch (_) {}
-      }
-
       // Discover destination download link from page DOM, scripts, or attributes
       let targetDownloadUrl = '';
       const allAnchors = document.querySelectorAll('a[href]');
@@ -2622,7 +2564,6 @@ window.__bs_audit = {
         const h = a.href || '';
         if (h && (h.includes('dupload.net') || h.includes('drive.google') || h.includes('mega.nz') || h.includes('mediafire') || h.includes('pixeldrain') || h.includes('gofile') || h.includes('1fichier') || h.includes('apkadmin') || h.includes('uploadrar') || h.includes('/go/') || h.includes('/links/'))) {
           targetDownloadUrl = h;
-          // Highlight the real link
           a.style.setProperty('display', 'inline-block', 'important');
           a.style.setProperty('visibility', 'visible', 'important');
           a.style.setProperty('opacity', '1', 'important');
@@ -2631,7 +2572,6 @@ window.__bs_audit = {
         }
       }
 
-      // ONLY target real button elements (never header/footer banner divs!)
       const AD_CLICK_TEXT_REGEX = /click\s+(?:on\s+)?ads?\s+(?:to\s+get|and\s+wait|\&amp;\s+wait|\&\s+wait)|click\s+on\s+ad\s+to\s+get\s+download|click\s+any\s+ad\s+to\s+unlock|click\s+an\s+ad\s+to\s+continue|click\s+on\s+banner\s+to\s+get\s+link|verify\s+ad\s+click|click\s+ad\s+to\s+download/i;
 
       const candidates = document.querySelectorAll('button, input[type="button"], input[type="submit"], [role="button"], a.btn, a.button');

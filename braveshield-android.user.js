@@ -333,35 +333,15 @@
   setInterval(annihilateModalsAndBackdrops, 400);
 
   // ══════════════════════════════════════════════════════════════════════
-  // GROUP C: ULTRA 50x-100x TURBO TIMER, CLOCK WARP & SHORTENER FAST-PASS
+  // GROUP C: TURBO TIMER & SHORTENER FAST-PASS (MANUAL CLICK ARMED)
   // ══════════════════════════════════════════════════════════════════════
-  if (!IS_SPOTIFY && !IS_YOUTUBE) {
-    try {
-      const origDateNow = Date.now.bind(Date);
-      const warpStart = origDateNow();
-      const WARP_SPEED = 50;
-
-      Date.now = function() {
-        return warpStart + ((origDateNow() - warpStart) * WARP_SPEED);
-      };
-
-      if (WIN.performance && typeof WIN.performance.now === 'function') {
-        const origPerf = WIN.performance.now.bind(WIN.performance);
-        const perfStart = origPerf();
-        WIN.performance.now = function() {
-          return perfStart + ((origPerf() - perfStart) * WARP_SPEED);
-        };
-      }
-    } catch (_) {}
-  }
-
   const origSetTimeout = WIN.setTimeout;
   const origSetInterval = WIN.setInterval;
 
   WIN.setTimeout = function(handler, delay, ...args) {
     let numDelay = typeof delay === 'number' ? delay : (parseInt(delay, 10) || 0);
     if (!IS_SPOTIFY && !IS_YOUTUBE && numDelay >= 500 && numDelay <= 180000) {
-      numDelay = Math.max(10, Math.floor(numDelay / 50));
+      numDelay = Math.max(10, Math.floor(numDelay / 25));
     }
     return origSetTimeout.call(this, handler, numDelay, ...args);
   };
@@ -369,10 +349,10 @@
   WIN.setInterval = function(handler, delay, ...args) {
     let numDelay = typeof delay === 'number' ? delay : (parseInt(delay, 10) || 0);
     if (!IS_SPOTIFY && !IS_YOUTUBE) {
-      if (numDelay >= 800 && numDelay <= 2500) {
-        numDelay = Math.max(15, Math.floor(numDelay / 50)); // 1000ms -> 20ms
-      } else if (numDelay >= 40 && numDelay <= 400) {
-        numDelay = 5; // Decimal fast countdown
+      if (numDelay >= 40 && numDelay <= 300) {
+        numDelay = 10;
+      } else if (numDelay >= 800 && numDelay <= 2000) {
+        numDelay = 25; // 1s tick compressed to 25ms
       }
     }
     return origSetInterval.call(this, handler, numDelay, ...args);
@@ -389,7 +369,7 @@
     return origWindowOpen.apply(this, arguments);
   };
 
-  // C4, C5, C6: Safelink Auto-Solver with Strict Pagination Exclusion
+  // C4, C5, C6: Safelink Fast-Pass with Strict Pagination Exclusion
   function isPagination(el) {
     if (!el) return true;
     const h = (el.getAttribute('href') || '').toLowerCase();
@@ -404,29 +384,31 @@
         '#btn-main', '#get-link', '#getlink', '#download-btn', '#btn-download',
         '.get-link', '.download-btn', '.btn-download', '.getlink', '#link-button',
         '#continue-btn', '#btn-continue', '.continue-btn', '#go-link', '.go-link',
-        '#final-download', '.direct-download', '#wpsafe-generate', '#wpsafe-snp', '#tp-snp2'
+        '#final-download', '.direct-download', '#wpsafe-generate', '#wpsafe-snp', '#tp-snp2',
+        'button[id*="download"]', 'a[id*="download"]', 'button[id*="link"]', 'a[id*="link"]'
       ];
 
       for (const sel of buttonSelectors) {
         const btns = DOC.querySelectorAll(sel);
         for (const btn of btns) {
           if (btn && !isPagination(btn)) {
-            const txt = (btn.innerText || btn.value || '').trim();
-            if (/getting\s+link|please\s+wait|loading|generating|processing|wait\s+\d+|countdown/i.test(txt)) continue;
-
-            const isReady = /^(get\s+link|download|download\s+now|direct\s+download|download\s+apk|click\s+here\s+to\s+download|next)$/i.test(txt);
-            const hasMirrorHref = btn.href && (btn.href.includes('drive.google') || btn.href.includes('mega.nz') || btn.href.includes('mediafire') || btn.href.includes('dupload') || btn.href.includes('apkadmin') || btn.href.includes('uploadrar') || btn.href.includes('pixeldrain') || btn.href.includes('gofile'));
-
-            if (isReady || hasMirrorHref) {
-              btn.removeAttribute('disabled');
-              btn.style.pointerEvents = 'auto';
-              btn.style.display = 'inline-block';
-              if (!btn._bsClicked) {
-                btn._bsClicked = true;
-                setTimeout(() => { try { btn.click(); } catch (_) {} }, 350);
-              }
-            }
+            btn.removeAttribute('disabled');
+            btn.removeAttribute('aria-disabled');
+            btn.style.setProperty('pointer-events', 'auto', 'important');
+            btn.style.setProperty('opacity', '1', 'important');
+            btn.style.setProperty('display', 'inline-block', 'important');
           }
+        }
+      }
+
+      // Zero out on-screen countdown timers
+      const timers = DOC.querySelectorAll('.timer, #timer, .countdown, #countdown, span[id*="timer"], span[id*="time"], div[id*="time"], [data-timer], [data-countdown], .wait-time');
+      for (const t of timers) {
+        if (t && /\d+/.test(t.innerText)) {
+          t.innerText = '0';
+          t.textContent = '0';
+          try { t.dispatchEvent(new Event('change', { bubbles: true })); } catch (_) {}
+          try { t.dispatchEvent(new Event('input', { bubbles: true })); } catch (_) {}
         }
       }
     } catch (_) {}

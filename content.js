@@ -414,14 +414,6 @@
           btn.style.setProperty('pointer-events', 'auto', 'important');
           btn.style.setProperty('opacity', '1', 'important');
           btn.style.setProperty('display', 'inline-block', 'important');
-
-          if (!btn._bsAutoFastClicked && (/^(get\s+link|download|continue|next|download\s+now|direct\s+download)$/i.test(txt) || btn.id === 'wpsafe-generate')) {
-            btn._bsAutoFastClicked = true;
-            setTimeout(() => {
-              try { btn.click(); } catch (_) {}
-              try { btn.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true })); } catch (_) {}
-            }, 300);
-          }
         }
       }
     } catch (_) {}

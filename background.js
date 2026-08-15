@@ -1,10 +1,10 @@
 /**
- * BraveShield Bypass Pro v4.0 - Service Worker
- * Badge management, storage, messaging, tab tracking, per-site whitelist.
+ * BraveShield Bypass Pro v4.7.0 - Service Worker
+ * Stealth-enhanced badge management, storage, messaging, tab tracking.
  */
 
 chrome.runtime.onInstalled.addListener(() => {
-  console.log('[BraveShield Bypass] v4.6.1 installed/updated.');
+  console.log('[Extension] v4.7.0 installed/updated.');
   chrome.storage.local.set({
     enabled: true,
     autoBypassLinks: true,
@@ -36,6 +36,9 @@ chrome.runtime.onInstalled.addListener(() => {
     cleanCSS: true,
     youtubeAds: true,
     sponsorBlock: true,
+    videoDownloaderMp3: false,
+    videoDownloaderMp4: false,
+    devMode: false,
     forceRightClick: true,
     forceTextSelect: true,
     antiScrollLock: true,
@@ -50,7 +53,7 @@ chrome.runtime.onInstalled.addListener(() => {
     bypassedSites: [],
     whitelist: [],
     blacklist: [],
-    version: '4.6.1'
+    version: '5.0.0'
   });
 });
 
@@ -90,9 +93,14 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
         // Check link shortener
         const SHORTENER_HOSTS = [
           'ouo.io', 'ouo.us', 'bc.vc', 'sh.st', 'adf.ly', 'shorte.st',
-          'linkvertise.com', 'clk.sh', 'tp.st', 'lr.in', 'rekonise.com',
-          'work.ink', 'lootlinks.co', 'megalink.pro', 'linksfire.com',
-          'exe.io', 'droplink.co', 'gplinks.co', 'xpshort.com'
+          'linkvertise.com', 'linkvertise.de', 'clk.sh', 'tp.st', 'lr.in',
+          'rekonise.com', 'work.ink', 'lootlinks.co', 'megalink.pro',
+          'linksfire.com', 'exe.io', 'droplink.co', 'gplinks.co',
+          'xpshort.com', 'tnlink.in', 'za.gl', 'safelinku.com',
+          'shrink.to', 'shrink.gg', 'shrink.fun', 'shorturl.at',
+          'ultra.link', 'go.kg', 'go2l.ink', 'anylinks.xyz',
+          'linktr.ee', 'linkhub.cc', 'linkhub.lol', 'sk8.sh',
+          'shorturl.co', 's-url.site'
         ];
         const isShortener = SHORTENER_HOSTS.some(h => hostname.includes(h));
         if (isShortener) {
@@ -166,6 +174,20 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       sendResponse({ success: true });
     });
     return true;
+  } else if (message.type === 'TOGGLE_DEV_MODE') {
+    chrome.storage.local.set({ devMode: message.enabled }, () => {
+      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        if (tabs[0]?.id) {
+          chrome.tabs.sendMessage(tabs[0].id, {
+            type: 'TOGGLE_DEV_MODE',
+            enabled: message.enabled
+          });
+        }
+      });
+      sendResponse({ success: true });
+    });
+    return true;
+  } else if (message.type === 'BS_VIDEO_DOWNLOAD') {
   } else if (message.type === 'ADD_WHITELIST') {
     chrome.storage.local.get(['whitelist'], (res) => {
       const list = res.whitelist || [];
@@ -235,6 +257,21 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         sendResponse({ isBlacklisted, isWhitelisted, hostname });
       } catch(e) {
         sendResponse({ isBlacklisted: false, isWhitelisted: false, hostname: '' });
+      }
+    });
+    return true;
+  } else if (message.type === 'BS_VIDEO_DOWNLOAD') {
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      if (tabs[0]?.id) {
+        chrome.tabs.sendMessage(tabs[0].id, {
+          type: 'BS_VIDEO_DOWNLOAD',
+          format: message.format,
+          quality: message.quality
+        }, (response) => {
+          sendResponse(response || { status: 'ok' });
+        });
+      } else {
+        sendResponse({ status: 'error', message: 'No active tab' });
       }
     });
     return true;

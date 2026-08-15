@@ -1,10 +1,22 @@
 /**
- * BraveShield Bypass Pro v4.0 - Content Script Bridge
- * CSS injection, status bridge, link shortener detection, bypass notifications.
+ * BraveShield Bypass Pro v5.0.0 - Content Script Bridge
+ * Anti-detection stealth engine, status bridge, link shortener detection.
  */
 
 (function() {
   'use strict';
+
+  // Forward messages from inject.js (main world) to background script
+  window.addEventListener('message', (event) => {
+    if (event.data?.type === 'bs-video-download') {
+      chrome.runtime.sendMessage({
+        type: 'BS_VIDEO_DOWNLOAD',
+        format: event.data.format,
+        quality: event.data.quality,
+        videoId: event.data.videoId
+      });
+    }
+  });
 
   chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.type === 'CHECK_STATUS') {
@@ -18,6 +30,22 @@
       });
     } else if (request.type === 'PING') {
       sendResponse({ pong: true });
+    } else if (request.type === 'TOGGLE_DEV_MODE') {
+      // Forward dev mode toggle to main world via custom event
+      window.postMessage({
+        type: 'bs-toggle-dev-mode',
+        enabled: request.enabled
+      }, '*');
+      sendResponse({ status: 'ok' });
+     } else if (request.type === 'BS_VIDEO_DOWNLOAD') {
+      // Handle video download request from popup
+      const urlParams = new URLSearchParams(window.location.search);
+      let videoId = urlParams.get('v');
+      if (!videoId) {
+        const match = window.location.pathname.match(/\/embed\/([^/?&]+)/);
+        if (match) videoId = match[1];
+      }
+      sendResponse({ status: 'queued', videoId: videoId });
     }
     return true;
   });
@@ -25,24 +53,45 @@
   function detectLinkShortener() {
     const HOSTS = [
       'ouo.io', 'ouo.us', 'bc.vc', 'sh.st', 'adf.ly', 'shorte.st',
-      'linkvertise.com', 'clk.sh', 'tp.st', 'lr.in', 'rekonise.com',
-      'work.ink', 'lootlinks.co', 'megalink.pro', 'linksfire.com',
-      'cutt.ly', 'bit.ly', 'tinyurl.com', 'exe.io', 'droplink.co',
-      'gplinks.co', 'xpshort.com', 'tnlink.in', 'za.gl', 'safelinku.com'
+      'linkvertise.com', 'linkvertise.de', 'clk.sh', 'tp.st', 'lr.in',
+      'rekonise.com', 'work.ink', 'lootlinks.co', 'megalink.pro',
+      'linksfire.com', 'cutt.ly', 'bit.ly', 'tinyurl.com', 'exe.io',
+      'droplink.co', 'gplinks.co', 'xpshort.com', 'tnlink.in', 'za.gl',
+      'safelinku.com', 'shrink.to', 'shrink.gg', 'shrink.fun',
+      'shorturl.at', 'vipergirls.tk', 'ultralink.me', 'link.short',
+      'go.kg', 'go2l.ink', 'anylinks.xyz', 'linktr.ee', 'linkhub.cc',
+      'linkhub.lol', 'sk8.sh', 'shorturl.co', 's-url.site'
     ];
     return HOSTS.some(h => window.location.hostname.includes(h));
   }
 
   function detectCookieConsent() {
     const IDS = [
-      'onetrust-banner-sdk', 'CybotCookiebotDialog',
-      'cookieconsent', 'cookie-banner', 'gdpr-banner'
+      'onetrust-banner-sdk', 'CybotCookiebotDialog', 'cookieconsent',
+      'cookie-banner', 'gdpr-banner', 'eu-cookie-banner',
+      'privacy-settings', 'cookieWall', 'cookie-wall',
+      'ot-sdk-container', 'optanon-cookie-policy', 'osano-cookie-box',
+      'CookieDeclaration', 'cookieconsent:dialog', 'ccpa-consent',
+      'cookie-settings', 'accept-cookies-button', 'cookieChoice',
+      'wpgdprc-consent', 'complianz-consent', 'borlabs-cookie',
+      'cookieyes', 'cookieyes-banner', 'tarteaucitron',
+      'tarteaucitron-alert', 'wp-cookie-consent', 'cookie-banner-container'
     ];
     return IDS.some(id => document.getElementById(id) !== null);
   }
 
   function detectCountdown() {
-    const SELECTORS = ['.countdown', '.timer', '#timer', '[class*="countdown"]', '[class*="timer"]', '[data-countdown]'];
+    const SELECTORS = [
+      '.countdown', '.timer', '#timer', '[class*="countdown"]',
+      '[class*="timer"]', '[data-countdown]', '[data-timer]',
+      '.countdown-timer', '.redirect-timer', '.wait-timer',
+      '.loading-timer', '.progress-timer', '.waittime',
+      '.time-remaining', '.time-left', '.timeleft',
+      '.cd-timer', '.clock-timer', '.countdown-clock',
+      '.redirect-countdown', '.link-countdown', '.ad-timer',
+      '[id*="countdown"]', '[id*="timer"]', '[id*="wait"]',
+      '[id*="loading"]', '.wait-screen', '.skip-ad-timer'
+    ];
     for (const sel of SELECTORS) {
       if (document.querySelector(sel)) return true;
     }
@@ -51,16 +100,15 @@
            /your\s+link\s+(?:is\s+)?(?:almost\s+)?ready/i.test(bodyText);
   }
 
-  // Inject enhanced styles
+  // Anti-detection CSS obfuscation (no extension-identifiable IDs/classes)
   const style = document.createElement('style');
-  style.id = 'brave-shield-bypass-styles';
   style.textContent = `
     [data-adblock-trap] {
       display: block !important;
       visibility: visible !important;
       opacity: 1 !important;
     }
-    .brave-bypass-toast {
+    .bs-toast {
       position: fixed;
       bottom: 20px;
       right: 20px;
@@ -76,20 +124,20 @@
       display: flex;
       align-items: center;
       gap: 8px;
-      animation: brave-bypass-slide-in 0.3s ease-out;
+      animation: bs-slide-in 0.3s ease-out;
     }
-    .brave-bypass-toast .dot {
+    .bs-toast .dot {
       width: 8px; height: 8px; background: #34d399; border-radius: 50%; flex-shrink: 0;
     }
-    .brave-bypass-toast.warning .dot { background: #F59E0B; }
-    .brave-bypass-toast.hiding {
-      animation: brave-bypass-slide-out 0.3s ease-in forwards;
+    .bs-toast.warning .dot { background: #F59E0B; }
+    .bs-toast.hiding {
+      animation: bs-slide-out 0.3s ease-in forwards;
     }
-    @keyframes brave-bypass-slide-in {
+    @keyframes bs-slide-in {
       from { transform: translateX(100%); opacity: 0; }
       to { transform: translateX(0); opacity: 1; }
     }
-    @keyframes brave-bypass-slide-out {
+    @keyframes bs-slide-out {
       from { transform: translateX(0); opacity: 1; }
       to { transform: translateX(100%); opacity: 0; }
     }
@@ -98,7 +146,7 @@
 
   function showBypassToast(message, type) {
     const toast = document.createElement('div');
-    toast.className = 'brave-bypass-toast' + (type === 'warning' ? ' warning' : '');
+    toast.className = 'bs-toast' + (type === 'warning' ? ' warning' : '');
     toast.innerHTML = '<span class="dot"></span><span>' + message + '</span>';
     document.body.appendChild(toast);
     setTimeout(() => {
@@ -107,18 +155,18 @@
     }, 3000);
   }
 
-  // Notify on link shortener detection
+  // Notify on link shortener detection (generic messaging to avoid fingerprinting)
   if (detectLinkShortener()) {
-    showBypassToast('Link shortener detected - auto-bypassing...');
+    showBypassToast('Redirect detected - proceeding...');
     chrome.runtime.sendMessage({ type: 'BYPASS_COMPLETE', hostname: window.location.hostname });
   }
 
-  // Notify on countdown detection
+  // Notify on countdown detection (generic messaging)
   if (detectCountdown()) {
-    showBypassToast('Countdown detected - accelerating...', 'warning');
+    showBypassToast('Processing - please wait...', 'warning');
   }
 
-  // Pass selected UA to inject.js via custom event
+  // Pass selected UA to inject.js via custom event (generic event name)
   chrome.storage.local.get(['selectedUA'], (res) => {
     if (res.selectedUA && res.selectedUA !== 'random') {
       const UA_MAP = {
@@ -164,13 +212,11 @@
       };
       const uaData = UA_MAP[res.selectedUA];
       if (uaData) {
-        // Store in localStorage for inject.js to read
-        localStorage.setItem('braveshield_ua', JSON.stringify(uaData));
-        // Also dispatch custom event
-        window.dispatchEvent(new CustomEvent('braveshield_ua_update', { detail: uaData }));
+        localStorage.setItem('bs_ua', JSON.stringify(uaData));
+        window.dispatchEvent(new CustomEvent('bs_ua_update', { detail: uaData }));
       }
     }
   });
 
-  console.log('[BraveShield Bypass] v4.0 Content script active on ' + window.location.hostname);
+  console.log('[Content] Active on ' + window.location.hostname);
 })();

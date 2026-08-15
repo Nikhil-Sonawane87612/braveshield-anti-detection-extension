@@ -29,6 +29,9 @@ const SETTINGS_MAP = {
   'clean-css': 'cleanCSS',
   'yt-ads': 'youtubeAds',
   'yt-sponsor': 'sponsorBlock',
+  'yt-downloader-mp3': 'videoDownloaderMp3',
+  'yt-downloader-mp4': 'videoDownloaderMp4',
+  'devmode': 'devMode',
   'enable-rightclick': 'forceRightClick',
   'enable-text-select': 'forceTextSelect',
   'anti-scroll-lock': 'antiScrollLock',
@@ -44,8 +47,9 @@ const SETTINGS_MAP = {
 const POPUP_CATEGORIES = {
   'auto-bypass': ['auto-links', 'auto-timers', 'click-wait', 'auto-cookies', 'auto-scroll', 'auto-redirects', 'auto-popunder', 'adblock-detect', 'fake-bait'],
   'stealth': ['mask-brave', 'mask-brands', 'mask-gpc', 'stub-vars', 'bypass-traps', 'normalize-webgl', 'fix-braveleak', 'fix-storageleak', 'normalize-audio', 'normalize-canvas', 'hide-webdriver', 'prevent-webrtc', 'deny-permissions', 'clamp-timers', 'spoof-navigator', 'clean-css', 'spoof-fonts', 'screen-consistency'],
-  'extra': ['enable-rightclick', 'enable-text-select', 'anti-scroll-lock', 'auto-close-popups', 'anti-clipboard-read', 'anti-notification-spam', 'anti-screenshot-detect'],
-  'youtube': ['yt-ads', 'yt-sponsor'],
+  'extra': ['enable-rightclick', 'enable-text-select', 'anti-scroll-lock', 'auto-close-popups', 'anti-clipboard-read', 'anti-notification-spam', 'anti-screenshot-detect', 'devmode'],
+  'youtube': ['yt-ads', 'yt-sponsor', 'yt-downloader-mp3', 'yt-downloader-mp4'],
+  'youtube-tools': ['yt-ads', 'yt-sponsor', 'yt-downloader-mp4'],
   'accessibility': ['enable-rightclick', 'enable-text-select', 'anti-scroll-lock', 'auto-close-popups'],
   'privacy-region': ['anti-clipboard-read', 'anti-notification-spam', 'anti-screenshot-detect', 'timezone-spoof', 'geolocation-spoof'],
   'sites': [],
@@ -75,7 +79,10 @@ document.addEventListener('DOMContentLoaded', () => {
     'toggle-scroll': 'auto-scroll',
     'toggle-popunder': 'auto-popunder',
     'toggle-adblock': 'adblock-detect',
-    'toggle-youtube': 'yt-ads',
+    'toggle-youtube-ads': 'yt-ads',
+    'toggle-sponsorblock': 'yt-sponsor',
+    'toggle-video-downloader': 'yt-downloader-mp4',
+    'toggle-devmode': 'devmode',
     'toggle-webr': 'hide-webdriver',
     'toggle-webrtc': 'prevent-webrtc',
     'toggle-permissions': 'deny-permissions',
@@ -240,6 +247,35 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
   });
+
+  // Special handler for dev mode toggle - reload page after enabling
+  const devModeToggle = document.getElementById('toggle-devmode');
+  if (devModeToggle) {
+    devModeToggle.addEventListener('change', () => {
+      const enabled = devModeToggle.checked;
+      chrome.storage.local.set({ devMode: enabled });
+      chrome.runtime.sendMessage({ type: 'TOGGLE_DEV_MODE', enabled });
+      if (enabled) {
+        chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+          if (tabs[0]?.id) {
+            chrome.tabs.reload(tabs[0].id);
+          }
+        });
+      }
+    });
+  }
+
+  // Download quality selector handling
+  const downloadFormat = document.getElementById('download-format');
+  const downloadQualityMp3 = document.getElementById('download-quality-mp3');
+  const downloadQualityMp4 = document.getElementById('download-quality-mp4');
+  if (downloadFormat) {
+    downloadFormat.addEventListener('change', () => {
+      const fmt = downloadFormat.value;
+      if (downloadQualityMp3) downloadQualityMp3.style.display = fmt === 'mp3' ? 'inline-block' : 'none';
+      if (downloadQualityMp4) downloadQualityMp4.style.display = fmt === 'mp4' ? 'inline-block' : 'none';
+    });
+  }
 
 // Bulk actions
   function setAllModules(enabled) {

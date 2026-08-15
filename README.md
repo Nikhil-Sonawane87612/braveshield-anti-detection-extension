@@ -1,8 +1,8 @@
-# 🛡️ BraveShield Bypass Pro — Anti-Detection Engine v4.6.1
+# 🛡️ BraveShield Bypass Pro — Anti-Detection Engine v5.0.0
 
-**38 modules** that bypass everything: Brave Shields, adblock traps, link shorteners, cookie consents, countdown timers, click-image-wait patterns, WebRTC leaks, and auto-clicks download buttons — all from a single lightweight extension.
+**31 modules** that bypass everything: Brave Shields, adblock traps, link shorteners, cookie consents, countdown timers, click-image-wait patterns, WebRTC leaks, and auto-clicks download buttons — all from a single lightweight extension. Plus YouTube ad blocking, SponsorBlock, video downloading, and developer mode.
 
-> **v4.6.1** — Icons load-error fixed using a valid logo-based icon set. All 38 module toggles default to **ON** (recommended "Maximum" configuration).
+> **v5.0.0** — YouTube tools expansion. Added YT AdBlocker (Module 28), SponsorBlock (Module 29), Video-to-MP3/MP4 Downloader (Module 30), and Undetectable Developer Mode (Module 31). Extended popup UI with YouTube Tools section and quality selectors. All 31 module toggles default to **ON** (recommended "Maximum" configuration).
 
 ---
 
@@ -15,9 +15,10 @@
 | **Stealth - Core**            | Remove `navigator.brave`, sanitize client-hint brands, mask Global Privacy Control, stub analytics, neutralize DOM traps, normalize WebGL                                                |
 | **Stealth - Fingerprint**     | Fix `brave://` protocol leak, storage quota leak, AudioContext & Canvas fingerprint normalization                                                                                        |
 | **Stealth - Anti-Automation** | Hide `webdriver`, WebRTC IP-leak prevention, permission auto-deny, performance timer clamp, navigator consistency                                                                        |
-| **YouTube**                   | Ad blocking (video/display/overlays/promoted), SponsorBlock segment skipping                                                                                                             |
+| **YouTube**                   | Ad blocking (video/display/overlays/promoted), SponsorBlock segment skipping, video-to-MP3/MP4 downloader                                                                               |
 | **Accessibility**             | Force right-click, force text selection, anti-scroll-lock, auto-close popups                                                                                                             |
 | **Privacy**                   | Block clipboard read, block notification spam, anti-screenshot detection, timezone & geolocation spoofing                                                                                |
+| **Developer Tools**           | Undetectable developer mode — bypass CSP, disable anti-debugging, override devtools restrictions                                                                                         |
 
 ---
 
@@ -25,9 +26,9 @@
 
 1. **Extract** the ZIP file (right-click → Extract All)
 2. Open Brave/Chrome → go to `brave://extensions` (or `chrome://extensions`)
-3. Enable **Developer mode** (top-right toggle)
-4. Click **"Load unpacked"** and select the extracted folder (the one containing `manifest.json`)
-5. Done! All 38 modules are active by default.
+ 3. Enable **Developer mode** (top-right toggle)
+ 4. Click **"Load unpacked"** and select the extracted folder (the one containing `manifest.json`)
+ 5. Done! All 31 modules are active by default.
 
 > ⚠️ Do NOT drag-and-drop the ZIP. You must extract first, then use **Load unpacked**.
 
@@ -47,7 +48,7 @@
 
 ---
 
-## 🧩 All 38 Modules
+## 🧩 All 31 Modules
 
 ### Core Anti-Detection (1–6)
 
@@ -72,38 +73,29 @@
 
 ### Fingerprint Leak Fixes (16–19)
 
-16. **brave:// Protocol Leak Fix** — `document.createElement('a').href='brave://x'` returns `chrome:`
+16. **`brave://` Protocol Leak Fix** — strips Brave protocol leak via `document.createElement('a').href`
 17. **Storage Quota Leak Fix** — fake 2GB quota via `queryUsageAndQuota()`
 18. **AudioContext Normalization** — consistent `OfflineAudioContext` output
 19. **Canvas Fingerprint Fix** — consistent `toDataURL()`/`getImageData()` output
 
 ### Anti-Automation (20–24)
 
-20. **navigator.webdriver Hide** — returns `false`
+20. **Navigator.webdriver Hide** — returns `false`
 21. **WebRTC IP Leak Prevention** — strips ICE servers
 22. **Permission Auto-Deny** — camera, mic, notifications, geolocation
 23. **Performance Timer Clamp** — reduces timing precision
 24. **Navigator Consistency Spoofing** — `productSub`, `platform`, `languages`, `hardwareConcurrency`
 
-### Consistency Spoofing (25–28)
+### Consistency Spoofing (25–31)
 
 25. **CSS Custom Property Cleanup** — removes browser-injected CSS variables
 26. **Font Fingerprint Spoofing** — consistent `document.fonts.check()`
 27. **Screen/Viewport Consistency** — realistic screen dimensions
 28. **WebGL Vendor/Renderer Spoofing** — customizable GPU strings
-
-### Accessibility & Privacy (29–38)
-
-29. **Force Right-Click** — overrides site context-menu blocks
-30. **Force Text Selection** — overrides copy/select blocks
-31. **Anti-Scroll Lock** — overrides `overflow:hidden` locks
-32. **Auto-Close Popups** — closes ad/spam popup windows
-33. **Block Clipboard Read** — prevents sites from reading the clipboard
-34. **Block Notification Spam** — auto-denies notification prompts
-35. **Anti-Screenshot Detection** — blocks canvas-based screenshot detection
-36. **Timezone Spoofing** — matches UA region timezone
-37. **(Optional) YouTube Ad Blocking** — video, display, overlays, promoted
-38. **(Optional) SponsorBlock** — skips sponsored segments on YouTube
+29. **YouTube AdBlocker** — blocks video ads, player overlays, promoted videos, and intercepts ad requests
+30. **YouTube SponsorBlock** — fetches sponsor segments from public API (sponsor.ajay.app) and auto-skips
+31. **Video-to-MP3/MP4 Downloader** — downloads YouTube video/audio with quality selection
+32. **Undetectable Developer Mode** — bypasses CSP, disables anti-debug, overrides devtools restrictions
 
 ---
 
@@ -116,10 +108,12 @@
 - **Enable All / Disable All** bulk actions
 - Real-time bypass status
 - Per-site Whitelist / Blacklist buttons
+- YouTube Tools section: YT AdBlocker, SponsorBlock, Video Downloader with format & quality selectors
+- Developer Mode toggle (Extra Features)
 
 ### Options Page
 
-- All 38 module toggles organized in categorized tabs
+- All 31 module toggles organized in categorized tabs
 - **"All Modules"** tab with live search + bulk actions
 - Collapsible category accordions
 - WebGL vendor/renderer customization
@@ -154,12 +148,12 @@
 ## 📦 Project Structure
 
 ```
-├── manifest.json      # MV3 manifest (v4.6.1)
+├── manifest.json      # MV3 manifest (v4.7.0)
 ├── background.js      # Service worker: settings, badges, storage, messaging
 ├── content.js         # Content script (ISOLATED world)
 ├── inject.js          # Injection script (MAIN world)
 ├── settings.js        # Shared settings map (popup + options)
-├── useragents.js      # 170+ user-agent strings
+├── useragents.js      # 60+ user-agent strings
 ├── rules.json         # Declarative Net Request rules
 ├── popup.html/.css/.js# Popup UI
 ├── options.html/.css/.js # Options / Settings UI
@@ -168,10 +162,27 @@
 
 ---
 
-## 🐛 v4.6.1 — Changelog
+### 🐛 v4.7.0 — Changelog
 
-- ✅ **Fixed**: Corrupt/tiny icons replaced with valid logo-based PNGs — resolves _"Could not load icon 'icons/icon16.png'"_
-- ✅ All 38 module toggles default to **ON** (recommended configuration)
+- ✅ **Hardened**: Removed extension-identifiable strings from CSS IDs (`brave-shield-bypass-styles` → anonymous), class names (`brave-bypass-toast` → `bs-toast`), localStorage keys (`braveshield_ua` → `bs_ua`), custom events (`braveshield_ua_update` → `bs_ua_update`), and console messages
+- ✅ **Expanded**: 40+ link shortener hosts (up from 25)
+- ✅ **Expanded**: 28+ cookie consent framework selectors
+- ✅ **Expanded**: 18+ countdown/timer detection selectors
+- ✅ **Fixed**: Manifest description module count corrected from 37 to 28
+- ✅ **Fixed**: README module count corrected from 38 to 28
+
+### 🐛 v5.0.0 — Changelog
+
+- ✅ **New Module 28**: YouTube AdBlocker — blocks video ads, player overlays, promoted videos, ad breaks, and network ad requests on youtube.com
+- ✅ **New Module 29**: YouTube SponsorBlock — integrates with public SponsorBlock API (sponsor.ajay.app), fetches sponsor segments, and auto-skips with 5s buffer
+- ✅ **New Module 30**: Video-to-MP3/MP4 Downloader — adds download button to YouTube player, supports format and quality selection
+- ✅ **New Module 31**: Undetectable Developer Mode — bypasses Content-Security-Policy, disables anti-debugging, unblocks DevTools shortcuts behind a localStorage flag
+- ✅ **Popup UI**: Added YouTube Tools section with dedicated toggles for AdBlocker, SponsorBlock, and Video Downloader
+- ✅ **Popup UI**: Added Developer Mode toggle in Extra Features section
+- ✅ **Popup UI**: Added format selector (MP3/MP4) and quality dropdowns for video downloader
+- ✅ **Messaging**: Added `TOGGLE_DEV_MODE` and `BS_VIDEO_DOWNLOAD` message handlers in content.js
+- ✅ **Updated**: All module counts bumped from 28 to 31 across popup.html, README, and inject.js
+- ✅ All 28 module toggles default to **ON** (recommended configuration)
 
 ---
 

@@ -29,6 +29,9 @@ const SETTINGS_MAP = {
   'clean-css': 'cleanCSS',
   'yt-ads': 'youtubeAds',
   'yt-sponsor': 'sponsorBlock',
+  'yt-downloader-mp3': 'videoDownloaderMp3',
+  'yt-downloader-mp4': 'videoDownloaderMp4',
+  'devmode': 'devMode',
   'enable-rightclick': 'forceRightClick',
   'enable-text-select': 'forceTextSelect',
   'anti-scroll-lock': 'antiScrollLock',
@@ -69,7 +72,12 @@ const MODULE_CATEGORIES = {
   'youtube': {
     label: 'YouTube',
     icon: 'Y',
-    settings: ['yt-ads', 'yt-sponsor']
+    settings: ['yt-ads', 'yt-sponsor', 'yt-downloader-mp3', 'yt-downloader-mp4']
+  },
+  'dev-tools': {
+    label: 'Developer Tools',
+    icon: '⚙',
+    settings: ['devmode']
   },
   'accessibility': {
     label: 'Accessibility',
@@ -118,6 +126,9 @@ const SETTING_LABELS = {
   'screen-consistency': { title: 'Screen/Viewport', desc: 'Realistic dimensions' },
   'yt-ads': { title: 'YouTube Ad Blocking', desc: 'Video, display, overlays, promoted' },
   'yt-sponsor': { title: 'SponsorBlock', desc: 'Skip sponsored segments' },
+  'yt-downloader-mp3': { title: 'Video to MP3', desc: 'Download audio as MP3' },
+  'yt-downloader-mp4': { title: 'Video to MP4', desc: 'Download video as MP4' },
+  'devmode': { title: 'Undetectable Developer Mode', desc: 'Bypass CSP, anti-debug' },
   'enable-rightclick': { title: 'Force Right-Click', desc: 'Override site blocks' },
   'enable-text-select': { title: 'Force Text Selection', desc: 'Override copy blocks' },
   'anti-scroll-lock': { title: 'Anti-Scroll Lock', desc: 'overflow:hidden override' },
@@ -148,8 +159,8 @@ const USER_PRESETS = {
       youtubeAds: true,
       normalizeWebgl: false, normalizeAudio: false, normalizeCanvas: false,
       clampTimers: false, cleanCSS: false, spoofFonts: false, screenConsistency: false,
-      sponsorBlock: false, autoClosePopups: false,
-      antiScreenshotDetect: false, timezoneSpoof: false, geolocationSpoof: false
+      sponsorBlock: false, videoDownloaderMp3: false, videoDownloaderMp4: false, devMode: false,
+      autoClosePopups: false, antiScreenshotDetect: false, timezoneSpoof: false, geolocationSpoof: false
     }
   },
   'moderate': {
@@ -167,8 +178,8 @@ const USER_PRESETS = {
       youtubeAds: true, sponsorBlock: true, forceRightClick: true,
       forceTextSelect: true, antiScrollLock: true, autoClosePopups: true,
       blockClipboardRead: true, blockNotificationSpam: true,
-      screenConsistency: false, antiScreenshotDetect: false,
-      timezoneSpoof: false, geolocationSpoof: false
+      screenConsistency: false, videoDownloaderMp3: false,
+      antiScreenshotDetect: false, timezoneSpoof: false, geolocationSpoof: false
     }
   },
   'pro': {
@@ -184,6 +195,7 @@ const USER_PRESETS = {
       hideWebdriver: true, preventWebRTC: true, autoDenyPermissions: true,
       clampTimers: true, spoofNavigator: true, cleanCSS: true, spoofFonts: true,
       screenConsistency: true, youtubeAds: true, sponsorBlock: true,
+      videoDownloaderMp3: true, videoDownloaderMp4: true, devMode: true,
       forceRightClick: true, forceTextSelect: true, antiScrollLock: true,
       autoClosePopups: true, blockClipboardRead: true, blockNotificationSpam: true,
       antiScreenshotDetect: true, timezoneSpoof: true, geolocationSpoof: true

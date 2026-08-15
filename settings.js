@@ -38,6 +38,9 @@ const SETTINGS_MAP = {
   // YouTube
   'yt-ads': 'youtubeAds',
   'yt-sponsor': 'sponsorBlock',
+  'yt-downloader-mp3': 'videoDownloaderMp3',
+  'yt-downloader-mp4': 'videoDownloaderMp4',
+  'devmode': 'devMode',
   // Extra - Accessibility
   'enable-rightclick': 'forceRightClick',
   'enable-text-select': 'forceTextSelect',
@@ -82,7 +85,12 @@ const MODULE_CATEGORIES = {
   'youtube': {
     label: 'YouTube',
     icon: 'Y',
-    settings: ['yt-ads', 'yt-sponsor']
+    settings: ['yt-ads', 'yt-sponsor', 'yt-downloader-mp3', 'yt-downloader-mp4']
+  },
+  'dev-tools': {
+    label: 'Developer Tools',
+    icon: '⚙',
+    settings: ['devmode']
   },
   'accessibility': {
     label: 'Accessibility',
@@ -132,6 +140,9 @@ const SETTING_LABELS = {
   'screen-consistency': { title: 'Screen/Viewport', desc: 'Realistic dimensions' },
   'yt-ads': { title: 'YouTube Ad Blocking', desc: 'Video, display, overlays, promoted' },
   'yt-sponsor': { title: 'SponsorBlock', desc: 'Skip sponsored segments' },
+  'yt-downloader-mp3': { title: 'Video to MP3', desc: 'Download audio as MP3' },
+  'yt-downloader-mp4': { title: 'Video to MP4', desc: 'Download video as MP4' },
+  'devmode': { title: 'Undetectable Developer Mode', desc: 'Bypass CSP, anti-debug' },
   'enable-rightclick': { title: 'Force Right-Click', desc: 'Override site blocks' },
   'enable-text-select': { title: 'Force Text Selection', desc: 'Override copy blocks' },
   'anti-scroll-lock': { title: 'Anti-Scroll Lock', desc: 'overflow:hidden override' },
@@ -189,6 +200,9 @@ const USER_PRESETS = {
       screenConsistency: false,
       youtubeAds: true,
       sponsorBlock: false,
+      videoDownloaderMp3: false,
+      videoDownloaderMp4: false,
+      devMode: false,
       autoClosePopups: false,
       antiScreenshotDetect: false,
       timezoneSpoof: false,
@@ -227,6 +241,8 @@ const USER_PRESETS = {
       spoofFonts: true,
       youtubeAds: true,
       sponsorBlock: true,
+      videoDownloaderMp4: true,
+      devMode: false,
       forceRightClick: true,
       forceTextSelect: true,
       antiScrollLock: true,
@@ -235,6 +251,7 @@ const USER_PRESETS = {
       blockNotificationSpam: true,
       // Disabled in Pro (keep screen/geo realistic)
       screenConsistency: false,
+      videoDownloaderMp3: false,
       antiScreenshotDetect: false,
       timezoneSpoof: false,
       geolocationSpoof: false
@@ -273,6 +290,9 @@ const USER_PRESETS = {
       screenConsistency: true,
       youtubeAds: true,
       sponsorBlock: true,
+      videoDownloaderMp3: true,
+      videoDownloaderMp4: true,
+      devMode: true,
       forceRightClick: true,
       forceTextSelect: true,
       antiScrollLock: true,

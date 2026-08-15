@@ -2375,6 +2375,13 @@ window.__bs_audit = {
         }
       }
 
+      // Auto-click WordPress Safelink / GPVadnagar sequence buttons
+      const wpSafelinkGenerate = document.querySelector('#wpsafe-generate, #wpsafe-snp, #tp-snp2');
+      if (wpSafelinkGenerate && !wpSafelinkGenerate._bsTriggered) {
+        wpSafelinkGenerate._bsTriggered = true;
+        try { wpSafelinkGenerate.click(); } catch (_) {}
+      }
+
       // Discover destination download link from page DOM, scripts, or attributes
       let targetDownloadUrl = '';
       const allAnchors = document.querySelectorAll('a[href]');
@@ -2382,38 +2389,38 @@ window.__bs_audit = {
         const h = a.href || '';
         if (h && (h.includes('dupload.net') || h.includes('drive.google') || h.includes('mega.nz') || h.includes('mediafire') || h.includes('pixeldrain') || h.includes('gofile') || h.includes('1fichier') || h.includes('apkadmin') || h.includes('uploadrar') || h.includes('/go/') || h.includes('/links/'))) {
           targetDownloadUrl = h;
+          // Highlight the real link
+          a.style.setProperty('display', 'inline-block', 'important');
+          a.style.setProperty('visibility', 'visible', 'important');
+          a.style.setProperty('opacity', '1', 'important');
+          a.style.setProperty('pointer-events', 'auto', 'important');
           break;
         }
       }
 
+      // ONLY target real button elements (never header/footer banner divs!)
       const AD_CLICK_TEXT_REGEX = /click\s+(?:on\s+)?ads?\s+(?:to\s+get|and\s+wait|\&amp;\s+wait|\&\s+wait)|click\s+on\s+ad\s+to\s+get\s+download|click\s+any\s+ad\s+to\s+unlock|click\s+an\s+ad\s+to\s+continue|click\s+on\s+banner\s+to\s+get\s+link|verify\s+ad\s+click|click\s+ad\s+to\s+download/i;
 
-      const candidates = document.querySelectorAll('button, a, div, span, p, input[type="button"]');
+      const candidates = document.querySelectorAll('button, input[type="button"], input[type="submit"], [role="button"], a.btn, a.button');
       for (const el of candidates) {
         if (!el || !el.innerText) continue;
         const txt = el.innerText.trim();
 
         if (AD_CLICK_TEXT_REGEX.test(txt)) {
-          // Unblock the button completely
           el.removeAttribute('disabled');
           el.removeAttribute('aria-disabled');
           el.style.setProperty('pointer-events', 'auto', 'important');
           el.style.setProperty('cursor', 'pointer', 'important');
           el.style.setProperty('opacity', '1', 'important');
-          el.style.setProperty('background', 'linear-gradient(135deg, #10b981, #059669)', 'important');
-          el.style.setProperty('color', '#ffffff', 'important');
-          el.innerText = targetDownloadUrl ? '⚡ Get Download Link (Ready)' : '⚡ Get Download Link';
 
-          // Direct click handler
           if (!el._bsRewired) {
             el._bsRewired = true;
             el.onclick = function(e) {
-              e.preventDefault();
-              e.stopPropagation();
               if (targetDownloadUrl) {
+                e.preventDefault();
+                e.stopPropagation();
                 window.open(targetDownloadUrl, '_blank');
               } else {
-                // Trigger any underlying script
                 window.adClicked = true;
                 window.isAdClicked = true;
                 try {
@@ -2423,26 +2430,16 @@ window.__bs_audit = {
               }
             };
           }
-
-          // Unhide all real download buttons
-          const hiddenTargets = document.querySelectorAll(
-            '#download-link, #download-btn, #downloadBtn, #direct-download, #final-download, #server-links, #link-box, .download-link, .download-btn, .server-download, [id*="download"], [class*="download"], a[href*="drive.google"], a[href*="mega."], a[href*="mediafire"], a[href*="pixeldrain"], a[href*="gofile"], a[href*="1fichier"], a[href*="workers.dev"], a[href*="t.me"], a[href*="dupload.net"], a[href*="apkadmin"], a[href*="uploadrar"]'
-          );
-
-          for (const target of hiddenTargets) {
-            if (target && !AD_CLICK_TEXT_REGEX.test(target.innerText || '')) {
-              target.style.setProperty('display', 'inline-block', 'important');
-              target.style.setProperty('visibility', 'visible', 'important');
-              target.style.setProperty('opacity', '1', 'important');
-              target.style.setProperty('pointer-events', 'auto', 'important');
-              target.removeAttribute('disabled');
-              if (target.parentElement) {
-                target.parentElement.style.setProperty('display', 'block', 'important');
-                target.parentElement.style.setProperty('visibility', 'visible', 'important');
-              }
-            }
-          }
         }
+      }
+
+      // Auto-scroll to the action button on long blog posts
+      const actionButton = document.querySelector('#wpsafe-link a, #wpsafe-generate, #btn-main, a[href*="dupload.net"], .get-link, .download-btn');
+      if (actionButton && !window._bsScrolled) {
+        window._bsScrolled = true;
+        try {
+          actionButton.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        } catch (_) {}
       }
     } catch (_) {}
   }

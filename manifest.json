@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "BraveShield Bypass Pro — Anti-Detection Stealth Suite v5.2.1",
-  "version": "5.2.1",
-  "description": "Next-gen stealth suite with 18+ Age & Consent Fast-Pass, 10 Visual Themes, Auto-Sync from GitHub, Master Kill Switch, 42 bypass modules, and Video Turbo.",
+  "name": "BraveShield Bypass Pro — Anti-Detection Stealth Suite v5.2.2",
+  "version": "5.2.2",
+  "description": "Advanced anti-detection stealth suite with deep Brave cloaking, turbo timers, universal compliance fast-pass, and 42 bypass modules.",
   "author": "Nikhil Sonawane",
   "icons": {
     "16": "icons/icon16.png",

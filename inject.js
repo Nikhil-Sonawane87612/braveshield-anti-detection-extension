@@ -124,9 +124,32 @@ window.__bs_audit = {
 
   // 1. Deep Purge of all Brave traces from prototype chain & window
   try {
+    try {
+      Object.defineProperty(Navigator.prototype, 'brave', {
+        get: () => undefined,
+        set: () => {},
+        configurable: true,
+        enumerable: false
+      });
+    } catch (_) {}
+
+    try {
+      Object.defineProperty(navigator, 'brave', {
+        get: () => undefined,
+        set: () => {},
+        configurable: true,
+        enumerable: false
+      });
+    } catch (_) {}
+
     delete Navigator.prototype.brave;
     delete navigator.brave;
-    if (navigator.__proto__) delete navigator.__proto__.brave;
+    if (navigator.__proto__) {
+      try {
+        delete navigator.__proto__.brave;
+        navigator.__proto__.brave = undefined;
+      } catch (_) {}
+    }
     
     // Patch Object.getOwnPropertyNames on Navigator prototype
     const origGetOwnPropertyNames = Object.getOwnPropertyNames;
@@ -148,8 +171,13 @@ window.__bs_audit = {
     };
 
     // Remove Brave Crypto/Wallet detectors (Ethereum & Solana)
-    delete window.braveSolana;
-    delete window.solanaBrave;
+    try {
+      delete window.braveSolana;
+      delete window.solanaBrave;
+      window.braveSolana = undefined;
+      window.solanaBrave = undefined;
+    } catch (_) {}
+
     if (window.ethereum) {
       try {
         delete window.ethereum.isBraveWallet;
@@ -636,7 +664,7 @@ window.__bs_audit = {
 // Module 4: Universal Anti-Adblock Modal Annihilator & Fullscreen Backdrop Cleaner
 // ─────────────────────────────────────────────────────
 (() => {
-  const ADBLOCK_MODAL_TEXT_REGEX = /adblock(?:er)?\s+detected|disable\s+(?:your\s+)?ad\s*blocker|disable\s+(?:your\s+)?private\s+dns|brave\s+browser\s+is\s+not\s+supported|ad\s*blocker\/vpn\/proxy|vpn\/proxy\/custom\s+dns|using\s+an\s+ad\s*blocker|custom\s+dns|please\s+consider\s+disabling\s+it|turn\s+off\s+adblock|ad\s*block\s+detected|please\s+whitelist|adblocker\s+is\s+detected|i've\s+disabled\s+adblocker|ad\s*blocker\s+found|ad\s*block\s+shield|block\s+adblock|adblocker\s+notice/i;
+  const ADBLOCK_MODAL_TEXT_REGEX = /adblock(?:er)?\s+detected|browser\s+not\s+allowed|brave\s+browser\s+is\s+not\s+allowed|brave\s+browser\s+is\s+not\s+supported|open\s+this\s+page\s+in\s+google\s+chrome|disable\s+(?:your\s+)?ad\s*blocker|disable\s+(?:your\s+)?private\s+dns|ad\s*blocker\/vpn\/proxy|vpn\/proxy\/custom\s+dns|using\s+an\s+ad\s*blocker|custom\s+dns|please\s+consider\s+disabling\s+it|turn\s+off\s+adblock|ad\s*block\s+detected|please\s+whitelist|adblocker\s+is\s+detected|i've\s+disabled\s+adblocker|ad\s*blocker\s+found|ad\s*block\s+shield|block\s+adblock|adblocker\s+notice/i;
 
   function isProtectedCaptchaOrAuth(el) {
     if (!el) return false;

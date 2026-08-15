@@ -9,15 +9,22 @@
 // Module 0: Brave-Specific Detection Bypass
 // ─────────────────────────────────────────────────────
 (() => {
-  // Block all brave:// URL detection attempts
-  const originalFetch = window.fetch;
-  window.fetch = function (input, init) {
-    const url = typeof input === 'string' ? input : input?.url;
-    if (url && /^brave:\/\//i.test(url)) {
-      return Promise.resolve(new Response('', { status: 404, statusText: 'Not Found' }));
-    }
-    return originalFetch.apply(this, arguments);
-  };
+  // Block all brave:// URL detection attempts with transparent native Proxy
+  if (typeof window.fetch === 'function') {
+    const originalFetch = window.fetch;
+    window.fetch = new Proxy(originalFetch, {
+      apply(target, thisArg, args) {
+        try {
+          const input = args[0];
+          const url = typeof input === 'string' ? input : (input instanceof Request ? input.url : input?.url);
+          if (url && typeof url === 'string' && /^brave:\/\//i.test(url)) {
+            return Promise.resolve(new Response('', { status: 404, statusText: 'Not Found' }));
+          }
+        } catch (_) {}
+        return Reflect.apply(target, thisArg || window, args);
+      }
+    });
+  }
 
   const origXHROpen = XMLHttpRequest.prototype.open;
   XMLHttpRequest.prototype.open = function (method, url, ...rest) {

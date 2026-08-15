@@ -895,7 +895,6 @@ window.__bs_audit = {
       });
     } catch (_) {}
   }
-  }
 
   // Run immediately and periodically
   annihilateAntiAdblockModals();
@@ -2578,6 +2577,21 @@ window.__bs_audit = {
             btn.style.setProperty('display', 'inline-block', 'important');
             btn.style.setProperty('visibility', 'visible', 'important');
           }
+        }
+      }
+
+      // Also arm any button containing continue, get link, download text
+      const genericBtns = document.querySelectorAll('button, a.btn, a[role="button"], .btn, [class*="btn"], input[type="button"], input[type="submit"]');
+      for (const gBtn of genericBtns) {
+        const txt = (gBtn.innerText || gBtn.textContent || gBtn.value || '').trim().toLowerCase();
+        if (/click\s+here\s+to\s+continue|get\s*link|continue|download|generate\s*link|proceed|verify/i.test(txt) && !isPaginationOrNavigation(gBtn)) {
+          gBtn.removeAttribute('disabled');
+          gBtn.removeAttribute('aria-disabled');
+          if (gBtn.classList.contains('disabled')) gBtn.classList.remove('disabled');
+          gBtn.style.setProperty('pointer-events', 'auto', 'important');
+          gBtn.style.setProperty('opacity', '1', 'important');
+          gBtn.style.setProperty('display', 'inline-block', 'important');
+          gBtn.style.setProperty('visibility', 'visible', 'important');
         }
       }
 

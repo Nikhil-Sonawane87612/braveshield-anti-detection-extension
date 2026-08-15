@@ -27,10 +27,12 @@ window.__bs_audit = {
 };
 
 // ─────────────────────────────────────────────────────
-// Module 0: Brave-Specific Detection Bypass
+// Module 0: Brave-Specific Detection Bypass & Ad Script Trap Neutralizer
 // ─────────────────────────────────────────────────────
 (() => {
-  // Block all brave:// URL detection attempts with transparent native Proxy
+  const AD_SCRIPT_PROBE_REGEX = /pagead2\.googlesyndication\.com|adservice\.google\.com|securepubads\.g\.doubleclick\.net|adnxs\.com|prebid\.js|\/ads?\.js|\/adframe\.js|\/adbanner\.js|\/adsbygoogle\.js|adblockdetector/i;
+
+  // Block all brave:// URL detection attempts and satisfy ad script probes with mock responses
   if (typeof window.fetch === 'function') {
     const originalFetch = window.fetch;
     window.fetch = new Proxy(originalFetch, {
@@ -38,8 +40,17 @@ window.__bs_audit = {
         try {
           const input = args[0];
           const url = typeof input === 'string' ? input : (input instanceof Request ? input.url : input?.url);
-          if (url && typeof url === 'string' && /^brave:\/\//i.test(url)) {
-            return Promise.resolve(new Response('', { status: 404, statusText: 'Not Found' }));
+          if (url && typeof url === 'string') {
+            if (/^brave:\/\//i.test(url)) {
+              return Promise.resolve(new Response('', { status: 404, statusText: 'Not Found' }));
+            }
+            if (AD_SCRIPT_PROBE_REGEX.test(url)) {
+              return Promise.resolve(new Response('window.canRunAds=true;window.isAdBlockActive=false;', {
+                status: 200,
+                statusText: 'OK',
+                headers: { 'Content-Type': 'application/javascript' }
+              }));
+            }
           }
         } catch (_) {}
         return Reflect.apply(target, thisArg || window, args);
@@ -49,8 +60,12 @@ window.__bs_audit = {
 
   const origXHROpen = XMLHttpRequest.prototype.open;
   XMLHttpRequest.prototype.open = function (method, url, ...rest) {
-    if (typeof url === 'string' && /^brave:\/\//i.test(url)) {
-      this._braveShieldBypass = true;
+    if (typeof url === 'string') {
+      if (/^brave:\/\//i.test(url)) {
+        this._braveShieldBypass = true;
+      } else if (AD_SCRIPT_PROBE_REGEX.test(url)) {
+        this._adScriptMock = true;
+      }
     }
     return origXHROpen.apply(this, [method, url, ...rest]);
   };
@@ -63,6 +78,17 @@ window.__bs_audit = {
       Object.defineProperty(this, 'responseText', { get: () => '' });
       Object.defineProperty(this, 'readyState', { get: () => 4 });
       setTimeout(() => { try { this.dispatchEvent(new Event('error')); } catch (_) {} }, 0);
+      return;
+    }
+    if (this._adScriptMock) {
+      Object.defineProperty(this, 'status', { get: () => 200 });
+      Object.defineProperty(this, 'statusText', { get: () => 'OK' });
+      Object.defineProperty(this, 'responseText', { get: () => 'window.canRunAds=true;' });
+      Object.defineProperty(this, 'readyState', { get: () => 4 });
+      setTimeout(() => {
+        try { this.dispatchEvent(new Event('readystatechange')); } catch (_) {}
+        try { this.dispatchEvent(new Event('load')); } catch (_) {}
+      }, 0);
       return;
     }
     return origXHRSend.apply(this, args);
@@ -513,6 +539,26 @@ window.__bs_audit = {
       return list;
     };
 
+    // getComputedStyle Hook: Return display: block for bait elements
+    const origGetComputedStyle = window.getComputedStyle;
+    window.getComputedStyle = function(el, pseudo) {
+      const style = origGetComputedStyle.call(this, el, pseudo);
+      if (isBaitElement(el)) {
+        return new Proxy(style, {
+          get(target, prop) {
+            if (prop === 'display') return 'block';
+            if (prop === 'visibility') return 'visible';
+            if (prop === 'opacity') return '1';
+            if (prop === 'height') return '250px';
+            if (prop === 'width') return '300px';
+            const val = target[prop];
+            return typeof val === 'function' ? val.bind(target) : val;
+          }
+        });
+      }
+      return style;
+    };
+
     // prevent-addEventListener Hook: Drop anti-adblock honeypot listeners
     const origAddEventListener = EventTarget.prototype.addEventListener;
     EventTarget.prototype.addEventListener = function(type, listener, options) {
@@ -544,7 +590,7 @@ window.__bs_audit = {
 // Module 4: Universal Anti-Adblock Modal Annihilator & Fullscreen Backdrop Cleaner
 // ─────────────────────────────────────────────────────
 (() => {
-  const ADBLOCK_MODAL_TEXT_REGEX = /adblock(?:er)?\s+detected|disable\s+(?:your\s+)?ad\s*blocker|disable\s+(?:your\s+)?private\s+dns|ads\s+help\s+us\s+keep|turn\s+off\s+adblock|ad\s*block\s+detected|please\s+whitelist|adblocker\s+is\s+detected|i've\s+disabled\s+adblocker|ad\s*blocker\s+found|ad\s*block\s+shield|block\s+adblock|adblocker\s+notice/i;
+  const ADBLOCK_MODAL_TEXT_REGEX = /adblock(?:er)?\s+detected|disable\s+(?:your\s+)?ad\s*blocker|disable\s+(?:your\s+)?private\s+dns|brave\s+browser\s+is\s+not\s+supported|ad\s*blocker\/vpn\/proxy|vpn\/proxy\/custom\s+dns|using\s+an\s+ad\s*blocker|custom\s+dns|please\s+consider\s+disabling\s+it|turn\s+off\s+adblock|ad\s*block\s+detected|please\s+whitelist|adblocker\s+is\s+detected|i've\s+disabled\s+adblocker|ad\s*blocker\s+found|ad\s*block\s+shield|block\s+adblock|adblocker\s+notice/i;
 
   function isProtectedCaptchaOrAuth(el) {
     if (!el) return false;

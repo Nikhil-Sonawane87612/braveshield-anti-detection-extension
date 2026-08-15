@@ -17,7 +17,7 @@
   Keep Brave Shields at maximum strength while appearing as pure Google Chrome. Enjoy ad-free Spotify with live synced lyrics, 16x YouTube fast-forwarding, 50x timer bypass, and system-wide in-app ad blocking.
 </p>
 
-[⚡ 1-Click Fast .CRX (Global CDN)](https://cdn.jsdelivr.net/gh/Nikhil-Sonawane87612/braveshield-anti-detection-extension@main/BraveShield-Bypass-Pro-v5.1.0.crx) • [⚡ Fast .ZIP (CDN)](https://cdn.jsdelivr.net/gh/Nikhil-Sonawane87612/braveshield-anti-detection-extension@main/BraveShield-Bypass-Pro-v5.1.0.zip) • [📱 Android Userscript (`.user.js`)](braveshield-android.user.js) • [📖 Android Guide](ANDROID-SETUP.md)
+[📥 Download Extension (.ZIP)](https://github.com/Nikhil-Sonawane87612/braveshield-anti-detection-extension/releases/download/v5.1.0/BraveShield-Bypass-Pro-v5.1.0.zip) • [⚡ Fast CDN Mirror (.ZIP)](https://cdn.jsdelivr.net/gh/Nikhil-Sonawane87612/braveshield-anti-detection-extension@main/BraveShield-Bypass-Pro-v5.1.0.zip) • [📱 Android Userscript (`.user.js`)](braveshield-android.user.js) • [📖 Android Guide](ANDROID-SETUP.md)
 
 ---
 

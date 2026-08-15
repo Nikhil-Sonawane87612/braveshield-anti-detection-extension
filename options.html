@@ -9,7 +9,7 @@
 <div class="page">
   <div class="hdr">
     <div class="brand-icon"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
-    <div class="hdr-t"><h1>BraveShield Bypass Pro</h1><span>39 module configuration</span></div>
+    <div class="hdr-t"><h1>BraveShield Bypass Pro</h1><span>30 module configuration</span></div>
   </div>
 
 <div class="tabs">
@@ -170,7 +170,7 @@
     </div>
     <!-- Stats Dashboard -->
     <div class="stats-grid">
-      <div class="scard"><div class="sval" id="stat-modules">37</div><div class="slbl">Modules Active</div></div>
+      <div class="scard"><div class="sval" id="stat-modules">30</div><div class="slbl">Modules Active</div></div>
       <div class="scard"><div class="sval" id="stat-bypassed">0</div><div class="slbl">Sites Bypassed</div></div>
       <div class="scard"><div class="sval" id="stat-traps">0</div><div class="slbl">Traps Bypassed</div></div>
       <div class="scard"><div class="sval" id="stat-time">0m</div><div class="slbl">Time Spent</div></div>
@@ -192,7 +192,38 @@
         <div class="preset-desc" id="preset-desc">Choose a preset to instantly configure all modules for your needs.</div>
       </div>
       <div class="card">
-        <div class="card-t"><div class="ci">G</div><h3>WebGL Profile</h3><span>GPU strings</span></div>
+        <div class="card-t"><div class="ci">G</div><h3>WebGL Profile</h3><span>14 GPU Presets</span></div>
+        <div class="fgroup"><label>GPU Preset</label>
+          <select id="webgl-profile-select">
+            <option value="custom">-- Custom GPU Profile --</option>
+            <optgroup label="NVIDIA (Windows)">
+              <option value="nv_rtx4090">NVIDIA GeForce RTX 4090</option>
+              <option value="nv_rtx3080">NVIDIA GeForce RTX 3080</option>
+              <option value="nv_rtx3060" selected>NVIDIA GeForce RTX 3060</option>
+              <option value="nv_gtx1660">NVIDIA GeForce GTX 1660 Ti</option>
+              <option value="nv_rtx4060m">NVIDIA GeForce RTX 4060 Laptop</option>
+            </optgroup>
+            <optgroup label="AMD Radeon (Windows)">
+              <option value="amd_rx7900">AMD Radeon RX 7900 XTX</option>
+              <option value="amd_rx6800">AMD Radeon RX 6800 XT</option>
+              <option value="amd_rx6700">AMD Radeon RX 6700 XT</option>
+            </optgroup>
+            <optgroup label="Intel (Windows)">
+              <option value="intel_iris_xe">Intel Iris Xe Graphics</option>
+              <option value="intel_uhd770">Intel UHD Graphics 770</option>
+              <option value="intel_arc_a770">Intel Arc A770 Graphics</option>
+            </optgroup>
+            <optgroup label="Apple Silicon (macOS)">
+              <option value="apple_m3_max">Apple M3 Max (Metal)</option>
+              <option value="apple_m2_pro">Apple M2 Pro (Metal)</option>
+              <option value="apple_m1">Apple M1 (Metal)</option>
+            </optgroup>
+            <optgroup label="Mobile (Android / iOS)">
+              <option value="adreno_740">Qualcomm Adreno 740</option>
+              <option value="mali_g715">ARM Mali-G715 Immortalis</option>
+            </optgroup>
+          </select>
+        </div>
         <div class="fgroup"><label>Vendor</label><input type="text" id="webgl-vendor" value="Google Inc. (NVIDIA)"></div>
         <div class="fgroup"><label>Renderer</label><input type="text" id="webgl-renderer" value="ANGLE (NVIDIA, NVIDIA GeForce RTX 3060 Direct3D11 vs_5_0 ps_5_0, D3D11)"></div>
       </div>

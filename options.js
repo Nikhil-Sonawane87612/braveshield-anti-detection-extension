@@ -70,7 +70,7 @@ const MODULE_CATEGORIES = {
   'youtube': {
     label: 'YouTube',
     icon: 'Y',
-    settings: ['yt-ads', 'yt-sponsor', 'yt-downloader-mp3', 'yt-downloader-mp4']
+    settings: ['yt-ads', 'yt-sponsor']
   },
   'dev-tools': {
     label: 'Developer Tools',
@@ -124,8 +124,6 @@ const SETTING_LABELS = {
   'screen-consistency': { title: 'Screen/Viewport', desc: 'Realistic dimensions' },
   'yt-ads': { title: 'YouTube Ad Blocking', desc: 'Video, display, overlays, promoted' },
   'yt-sponsor': { title: 'SponsorBlock', desc: 'Skip sponsored segments' },
-  'yt-downloader-mp3': { title: 'Video to MP3', desc: 'Download audio as MP3' },
-  'yt-downloader-mp4': { title: 'Video to MP4', desc: 'Download video as MP4' },
   'devmode': { title: 'Undetectable Developer Mode', desc: 'Bypass CSP, anti-debug' },
   'enable-rightclick': { title: 'Force Right-Click', desc: 'Override site blocks' },
   'enable-text-select': { title: 'Force Text Selection', desc: 'Override copy blocks' },
@@ -139,6 +137,74 @@ const SETTING_LABELS = {
 };
 
 const ALL_SETTING_IDS = Object.keys(SETTINGS_MAP);
+
+// Detailed WebGL GPU Profiles
+const WEBGL_GPU_PROFILES = {
+  'nv_rtx4090': {
+    vendor: 'Google Inc. (NVIDIA)',
+    renderer: 'ANGLE (NVIDIA, NVIDIA GeForce RTX 4090 Direct3D11 vs_5_0 ps_5_0, D3D11)'
+  },
+  'nv_rtx3080': {
+    vendor: 'Google Inc. (NVIDIA)',
+    renderer: 'ANGLE (NVIDIA, NVIDIA GeForce RTX 3080 Direct3D11 vs_5_0 ps_5_0, D3D11)'
+  },
+  'nv_rtx3060': {
+    vendor: 'Google Inc. (NVIDIA)',
+    renderer: 'ANGLE (NVIDIA, NVIDIA GeForce RTX 3060 Direct3D11 vs_5_0 ps_5_0, D3D11)'
+  },
+  'nv_gtx1660': {
+    vendor: 'Google Inc. (NVIDIA)',
+    renderer: 'ANGLE (NVIDIA, NVIDIA GeForce GTX 1660 Ti Direct3D11 vs_5_0 ps_5_0, D3D11)'
+  },
+  'nv_rtx4060m': {
+    vendor: 'Google Inc. (NVIDIA)',
+    renderer: 'ANGLE (NVIDIA, NVIDIA GeForce RTX 4060 Laptop GPU Direct3D11 vs_5_0 ps_5_0, D3D11)'
+  },
+  'amd_rx7900': {
+    vendor: 'Google Inc. (AMD)',
+    renderer: 'ANGLE (AMD, AMD Radeon RX 7900 XTX Direct3D11 vs_5_0 ps_5_0, D3D11)'
+  },
+  'amd_rx6800': {
+    vendor: 'Google Inc. (AMD)',
+    renderer: 'ANGLE (AMD, AMD Radeon RX 6800 XT Direct3D11 vs_5_0 ps_5_0, D3D11)'
+  },
+  'amd_rx6700': {
+    vendor: 'Google Inc. (AMD)',
+    renderer: 'ANGLE (AMD, AMD Radeon RX 6700 XT Direct3D11 vs_5_0 ps_5_0, D3D11)'
+  },
+  'intel_iris_xe': {
+    vendor: 'Google Inc. (Intel)',
+    renderer: 'ANGLE (Intel, Intel(R) Iris(R) Xe Graphics Direct3D11 vs_5_0 ps_5_0, D3D11)'
+  },
+  'intel_uhd770': {
+    vendor: 'Google Inc. (Intel)',
+    renderer: 'ANGLE (Intel, Intel(R) UHD Graphics 770 Direct3D11 vs_5_0 ps_5_0, D3D11)'
+  },
+  'intel_arc_a770': {
+    vendor: 'Google Inc. (Intel)',
+    renderer: 'ANGLE (Intel, Intel(R) Arc(TM) A770 Graphics Direct3D11 vs_5_0 ps_5_0, D3D11)'
+  },
+  'apple_m3_max': {
+    vendor: 'Apple Inc.',
+    renderer: 'Apple M3 Max'
+  },
+  'apple_m2_pro': {
+    vendor: 'Apple Inc.',
+    renderer: 'Apple M2 Pro'
+  },
+  'apple_m1': {
+    vendor: 'Apple Inc.',
+    renderer: 'Apple M1'
+  },
+  'adreno_740': {
+    vendor: 'Qualcomm',
+    renderer: 'Adreno (TM) 740'
+  },
+  'mali_g715': {
+    vendor: 'ARM',
+    renderer: 'Mali-G715-Immortalis MC11'
+  }
+};
 
 // User-level presets: which modules are enabled for each profile tier.
 const USER_PRESETS = {
@@ -211,6 +277,40 @@ document.addEventListener('DOMContentLoaded', () => {
   const searchInput = document.getElementById('all-modules-search');
   const toggleAllOn = document.getElementById('toggle-all-on');
   const toggleAllOff = document.getElementById('toggle-all-off');
+  const webglProfileSelect = document.getElementById('webgl-profile-select');
+  const webglVendorInput = document.getElementById('webgl-vendor');
+  const webglRendererInput = document.getElementById('webgl-renderer');
+
+  // Helper: Synchronize any checkbox for a given setting ID across all panels and grids
+  function syncCheckboxesForSetting(id, checked) {
+    document.querySelectorAll(`input#${id}, input[data-setting-id="${id}"]`).forEach(el => {
+      el.checked = checked;
+    });
+    updateStatsCounter();
+  }
+
+  function syncAllCheckboxes(storageData) {
+    Object.entries(SETTINGS_MAP).forEach(([id, key]) => {
+      if (storageData && storageData[key] !== undefined) {
+        syncCheckboxesForSetting(id, Boolean(storageData[key]));
+      }
+    });
+    updateStatsCounter();
+  }
+
+  function updateStatsCounter() {
+    const statEl = document.getElementById('stat-modules');
+    if (!statEl) return;
+    let activeCount = 0;
+    const seen = new Set();
+    document.querySelectorAll('.panel:not(#panel-all) input[type="checkbox"]').forEach(cb => {
+      if (cb.id && !seen.has(cb.id)) {
+        seen.add(cb.id);
+        if (cb.checked) activeCount++;
+      }
+    });
+    statEl.textContent = activeCount;
+  }
 
   // Tab navigation
   function activateTab(tabName) {
@@ -221,6 +321,14 @@ document.addEventListener('DOMContentLoaded', () => {
       document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
       tabBtn.classList.add('active');
       panel.classList.add('active');
+
+      // If switching to All Modules, ensure switches mirror current state
+      if (tabName === 'all') {
+        const storageKeys = Object.values(SETTINGS_MAP);
+        chrome.storage.local.get(storageKeys, (res) => {
+          syncAllCheckboxes(res);
+        });
+      }
     }
   }
 
@@ -334,7 +442,7 @@ document.addEventListener('DOMContentLoaded', () => {
         html += `
           <div class="row" data-setting="${id}">
             <div class="rinfo"><h4>${label.title}</h4><span>${label.desc}</span></div>
-            <label class="sw"><input type="checkbox" id="${id}"> <span class="sl"></span></label>
+            <label class="sw"><input type="checkbox" data-setting-id="${id}"> <span class="sl"></span></label>
           </div>
         `;
       });
@@ -357,27 +465,22 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     });
 
-    // Attach change listeners
-    allModulesGrid.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+    // Attach change listeners to All Modules grid switches
+    allModulesGrid.querySelectorAll('input[data-setting-id]').forEach(cb => {
       cb.addEventListener('change', () => {
-        const key = SETTINGS_MAP[cb.id];
+        const id = cb.dataset.settingId;
+        const key = SETTINGS_MAP[id];
         if (key) {
+          syncCheckboxesForSetting(id, cb.checked);
           chrome.storage.local.set({ [key]: cb.checked });
-          // Sync with other checkboxes with same ID
-          document.querySelectorAll('#' + cb.id).forEach(other => {
-            if (other !== cb) other.checked = cb.checked;
-          });
         }
       });
     });
 
-    // Load current values
+    // Immediately sync All Modules switches with current storage values
     const storageKeys = Object.values(SETTINGS_MAP);
     chrome.storage.local.get(storageKeys, (res) => {
-      Object.entries(SETTINGS_MAP).forEach(([id, key]) => {
-        const el = document.getElementById(id);
-        if (el && res[key] !== undefined) el.checked = res[key];
-      });
+      syncAllCheckboxes(res);
     });
   }
 
@@ -393,15 +496,26 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 150);
   });
 
-// Bulk actions
+  // Attach change listeners to category panels switches
+  document.querySelectorAll('.panel:not(#panel-all) input[type="checkbox"]').forEach(cb => {
+    cb.addEventListener('change', () => {
+      const id = cb.id;
+      const key = SETTINGS_MAP[id];
+      if (key) {
+        syncCheckboxesForSetting(id, cb.checked);
+        chrome.storage.local.set({ [key]: cb.checked });
+      }
+    });
+  });
+
+  // Bulk actions
   function setAllModules(enabled) {
     const settings = {};
     const enabledMap = {};
     Object.entries(SETTINGS_MAP).forEach(([id, key]) => {
       settings[key] = enabled;
       enabledMap[key] = enabled;
-      const el = document.getElementById(id);
-      if (el) el.checked = enabled;
+      syncCheckboxesForSetting(id, enabled);
     });
     chrome.storage.local.set(settings);
     chrome.runtime.sendMessage({ type: 'TOGGLE_ALL_MODULES', enabled, enabledMap });
@@ -410,6 +524,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
   toggleAllOn.addEventListener('click', () => setAllModules(true));
   toggleAllOff.addEventListener('click', () => setAllModules(false));
+
+  // Flat category map for options page
+  const MODULE_CATEGORIES_FLAT = {};
+  Object.entries(MODULE_CATEGORIES).forEach(([catId, cat]) => {
+    MODULE_CATEGORIES_FLAT[catId] = cat.settings;
+  });
+  MODULE_CATEGORIES_FLAT['page-auto'] = ['auto-cookies', 'auto-scroll', 'auto-redirects', 'auto-popunder'];
+  MODULE_CATEGORIES_FLAT['adblock-det'] = ['adblock-detect', 'fake-bait'];
+  MODULE_CATEGORIES_FLAT['youtube-bypass'] = ['yt-ads', 'yt-sponsor'];
+  MODULE_CATEGORIES_FLAT['auto-bypass'] = MODULE_CATEGORIES['auto-bypass'].settings;
+  MODULE_CATEGORIES_FLAT['stealth'] = Object.values(MODULE_CATEGORIES).filter(c => ['stealth-core','stealth-fingerprint','stealth-anti-auto','stealth-consistency'].includes(Object.keys(MODULE_CATEGORIES).find(k => MODULE_CATEGORIES[k] === c))).flatMap(c => c.settings);
+  MODULE_CATEGORIES_FLAT['extra'] = [...MODULE_CATEGORIES['accessibility'].settings, ...MODULE_CATEGORIES['privacy'].settings, ...MODULE_CATEGORIES['region'].settings];
+  MODULE_CATEGORIES_FLAT['stealth-core'] = MODULE_CATEGORIES['stealth-core'].settings;
+  MODULE_CATEGORIES_FLAT['stealth-fingerprint'] = MODULE_CATEGORIES['stealth-fingerprint'].settings;
+  MODULE_CATEGORIES_FLAT['stealth-anti-auto'] = MODULE_CATEGORIES['stealth-anti-auto'].settings;
+  MODULE_CATEGORIES_FLAT['stealth-consistency'] = MODULE_CATEGORIES['stealth-consistency'].settings;
+  MODULE_CATEGORIES_FLAT['accessibility'] = MODULE_CATEGORIES['accessibility'].settings;
+  MODULE_CATEGORIES_FLAT['privacy'] = MODULE_CATEGORIES['privacy'].settings;
+  MODULE_CATEGORIES_FLAT['youtube'] = MODULE_CATEGORIES['youtube'].settings;
+  MODULE_CATEGORIES_FLAT['region'] = MODULE_CATEGORIES['region'].settings;
+  MODULE_CATEGORIES_FLAT['sites'] = [];
+  MODULE_CATEGORIES_FLAT['profile'] = [];
 
   // Per-category Enable All / Disable All buttons
   function setCategoryModules(category, enabled) {
@@ -425,7 +561,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (key) {
         settings[key] = enabled;
         modulesPayload[key] = enabled;
-        document.querySelectorAll('#' + id).forEach(el => { el.checked = enabled; });
+        syncCheckboxesForSetting(id, enabled);
       }
     });
     chrome.storage.local.set(settings);
@@ -433,32 +569,7 @@ document.addEventListener('DOMContentLoaded', () => {
     showToast(category + ' ' + (enabled ? 'enabled' : 'disabled'));
   }
 
-  // Flat category map for options page (uses MODULE_CATEGORIES keys which are more granular)
-  const MODULE_CATEGORIES_FLAT = {};
-  Object.entries(MODULE_CATEGORIES).forEach(([catId, cat]) => {
-    MODULE_CATEGORIES_FLAT[catId] = cat.settings;
-  });
-
-  // Extra category aliases referenced by options.html card/panel bulk buttons
-  MODULE_CATEGORIES_FLAT['page-auto'] = ['auto-cookies', 'auto-scroll', 'auto-redirects', 'auto-popunder'];
-  MODULE_CATEGORIES_FLAT['adblock-det'] = ['adblock-detect', 'fake-bait'];
-  MODULE_CATEGORIES_FLAT['youtube-bypass'] = ['yt-ads', 'yt-sponsor'];
-  MODULE_CATEGORIES_FLAT['auto-bypass'] = MODULE_CATEGORIES['auto-bypass'].settings;
-  MODULE_CATEGORIES_FLAT['stealth'] = Object.values(MODULE_CATEGORIES).filter(c => ['stealth-core','stealth-fingerprint','stealth-anti-auto','stealth-consistency'].includes(Object.keys(MODULE_CATEGORIES).find(k => MODULE_CATEGORIES[k] === c))).flatMap(c => c.settings);
-  MODULE_CATEGORIES_FLAT['extra'] = [...MODULE_CATEGORIES['accessibility'].settings, ...MODULE_CATEGORIES['privacy'].settings];
-  MODULE_CATEGORIES_FLAT['stealth-core'] = MODULE_CATEGORIES['stealth-core'].settings;
-  MODULE_CATEGORIES_FLAT['stealth-fingerprint'] = MODULE_CATEGORIES['stealth-fingerprint'].settings;
-  MODULE_CATEGORIES_FLAT['stealth-anti-auto'] = MODULE_CATEGORIES['stealth-anti-auto'].settings;
-  MODULE_CATEGORIES_FLAT['stealth-consistency'] = MODULE_CATEGORIES['stealth-consistency'].settings;
-  MODULE_CATEGORIES_FLAT['accessibility'] = MODULE_CATEGORIES['accessibility'].settings;
-  MODULE_CATEGORIES_FLAT['privacy'] = MODULE_CATEGORIES['privacy'].settings;
-  MODULE_CATEGORIES_FLAT['youtube'] = MODULE_CATEGORIES['youtube'].settings;
-  MODULE_CATEGORIES_FLAT['region'] = MODULE_CATEGORIES['region'].settings;
-  // Non-module tabs (Sites, Profile) have no module toggles
-  MODULE_CATEGORIES_FLAT['sites'] = [];
-  MODULE_CATEGORIES_FLAT['profile'] = [];
-
-  // Wire up cat-btn-sm buttons (both mini card buttons and panel bulk buttons)
+  // Wire up cat-btn-sm buttons
   document.querySelectorAll('.cat-btn-sm[data-category]').forEach(btn => {
     btn.addEventListener('click', () => {
       const category = btn.dataset.category;
@@ -467,13 +578,63 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // Load all settings
-  const storageKeys = Object.values(SETTINGS_MAP);
-  chrome.storage.local.get(storageKeys, (res) => {
-    Object.entries(SETTINGS_MAP).forEach(([id, key]) => {
-      const el = document.getElementById(id);
-      if (el && res[key] !== undefined) el.checked = res[key];
+  // === WebGL Profile Presets Handler ===
+  function matchWebGLProfileKey(vendor, renderer) {
+    for (const [key, prof] of Object.entries(WEBGL_GPU_PROFILES)) {
+      if (prof.vendor === vendor && prof.renderer === renderer) {
+        return key;
+      }
+    }
+    return 'custom';
+  }
+
+  if (webglProfileSelect) {
+    webglProfileSelect.addEventListener('change', () => {
+      const selected = webglProfileSelect.value;
+      if (selected && selected !== 'custom' && WEBGL_GPU_PROFILES[selected]) {
+        const prof = WEBGL_GPU_PROFILES[selected];
+        if (webglVendorInput) webglVendorInput.value = prof.vendor;
+        if (webglRendererInput) webglRendererInput.value = prof.renderer;
+        chrome.storage.local.set({
+          webglProfile: selected,
+          webglVendor: prof.vendor,
+          webglRenderer: prof.renderer
+        });
+        showToast('WebGL GPU profile: ' + webglProfileSelect.options[webglProfileSelect.selectedIndex].text);
+      }
     });
+  }
+
+  if (webglVendorInput) {
+    webglVendorInput.addEventListener('input', () => {
+      if (webglProfileSelect) webglProfileSelect.value = 'custom';
+    });
+  }
+
+  if (webglRendererInput) {
+    webglRendererInput.addEventListener('input', () => {
+      if (webglProfileSelect) webglProfileSelect.value = 'custom';
+    });
+  }
+
+  // Load all settings on startup
+  const storageKeys = [...Object.values(SETTINGS_MAP), 'webglVendor', 'webglRenderer', 'webglProfile', 'uaCategory'];
+  chrome.storage.local.get(storageKeys, (res) => {
+    syncAllCheckboxes(res);
+
+    if (res.webglVendor && webglVendorInput) {
+      webglVendorInput.value = res.webglVendor;
+    }
+    if (res.webglRenderer && webglRendererInput) {
+      webglRendererInput.value = res.webglRenderer;
+    }
+    if (webglProfileSelect) {
+      const matched = res.webglProfile || matchWebGLProfileKey(webglVendorInput ? webglVendorInput.value : '', webglRendererInput ? webglRendererInput.value : '');
+      webglProfileSelect.value = matched;
+    }
+    if (res.uaCategory && document.getElementById('ua-select-opt')) {
+      document.getElementById('ua-select-opt').value = res.uaCategory;
+    }
   });
 
   saveBtn.addEventListener('click', () => {
@@ -485,21 +646,25 @@ document.addEventListener('DOMContentLoaded', () => {
       const el = document.getElementById(id);
       if (el) settings[key] = el.checked;
     });
-    settings.webglVendor = document.getElementById('webgl-vendor').value;
-    settings.webglRenderer = document.getElementById('webgl-renderer').value;
+    if (webglVendorInput) settings.webglVendor = webglVendorInput.value;
+    if (webglRendererInput) settings.webglRenderer = webglRendererInput.value;
+    if (webglProfileSelect) settings.webglProfile = webglProfileSelect.value;
+    const uaOpt = document.getElementById('ua-select-opt');
+    if (uaOpt) settings.uaCategory = uaOpt.value;
+
     chrome.storage.local.set(settings, () => {
-      showToast('Saved');
+      showToast('Settings saved successfully');
     });
   });
 
-// === Export / Import settings as JSON ===
+  // === Export / Import settings as JSON ===
   const exportBtn = document.getElementById('btn-export');
   const importBtn = document.getElementById('btn-import');
   const importFile = document.getElementById('import-file');
 
   function gatherAllSettings(cb) {
     chrome.storage.local.get(Object.values(SETTINGS_MAP), (res) => {
-      const data = { version: chrome.runtime.getManifest ? chrome.runtime.getManifest().version : '4.6.0', exportedAt: new Date().toISOString(), settings: res };
+      const data = { version: '5.0.0', exportedAt: new Date().toISOString(), settings: res };
       cb(data);
     });
   }
@@ -511,7 +676,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = 'braveshield-settings.json';
+        a.download = 'braveshield-settings-v5.0.0.json';
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
@@ -524,141 +689,36 @@ document.addEventListener('DOMContentLoaded', () => {
   if (importBtn && importFile) {
     importBtn.addEventListener('click', () => importFile.click());
     importFile.addEventListener('change', (e) => {
-      const file = e.target.files && e.target.files[0];
+      const file = e.target.files[0];
       if (!file) return;
       const reader = new FileReader();
-      reader.onload = () => {
+      reader.onload = (evt) => {
         try {
-          const parsed = JSON.parse(reader.result);
-          const settings = parsed.settings || parsed;
-          // Only import known keys
-          const clean = {};
-          Object.values(SETTINGS_MAP).forEach(key => {
-            if (settings[key] !== undefined) clean[key] = !!settings[key];
-          });
-          if (settings.webglVendor) clean.webglVendor = settings.webglVendor;
-          if (settings.webglRenderer) clean.webglRenderer = settings.webglRenderer;
-          chrome.storage.local.set(clean, () => {
-            // Refresh checkboxes
-            Object.entries(SETTINGS_MAP).forEach(([id, key]) => {
-              const el = document.getElementById(id);
-              if (el && clean[key] !== undefined) el.checked = clean[key];
+          const data = JSON.parse(evt.target.result);
+          if (data && data.settings) {
+            chrome.storage.local.set(data.settings, () => {
+              syncAllCheckboxes(data.settings);
+              showToast('Settings imported successfully');
             });
-            const wv = document.getElementById('webgl-vendor');
-            const wr = document.getElementById('webgl-renderer');
-            if (wv && clean.webglVendor) wv.value = clean.webglVendor;
-            if (wr && clean.webglRenderer) wr.value = clean.webglRenderer;
-            buildAllModulesGrid();
-            showToast('Settings imported');
-          });
-        } catch(err) {
-          showToast('Import failed: invalid JSON');
+          }
+        } catch (_) {
+          showToast('Invalid JSON file');
         }
       };
       reader.readAsText(file);
-      e.target.value = '';
     });
   }
 
-  // === Stats Dashboard ===
-  function loadStats() {
-    const storageKeys = Object.values(SETTINGS_MAP);
-    chrome.storage.local.get(['blockedCounter', 'bypassedSites', 'sessionStart', ...storageKeys], (res) => {
-      const statModules = document.getElementById('stat-modules');
-      const statBypassed = document.getElementById('stat-bypassed');
-      const statTraps = document.getElementById('stat-traps');
-      const statTime = document.getElementById('stat-time');
-
-      if (statModules) {
-        const active = storageKeys.filter(k => res[k] === true).length;
-        statModules.textContent = active;
-      }
-      if (statBypassed) statBypassed.textContent = (res.bypassedSites || []).length;
-      if (statTraps) statTraps.textContent = res.blockedCounter || 0;
-
-      // Session time tracking
-      let sessionStart = res.sessionStart;
-      if (!sessionStart) {
-        sessionStart = Date.now();
-        chrome.storage.local.set({ sessionStart });
-      } else {
-        const elapsed = Math.floor((Date.now() - sessionStart) / 60000);
-        if (statTime) statTime.textContent = elapsed + 'm';
-      }
-    });
-  }
-  loadStats();
-
-  // === Profile Presets (per site) ===
-  const presetSiteInput = document.getElementById('preset-site');
-  const presetList = document.getElementById('preset-list');
-  const btnSavePreset = document.getElementById('btn-save-preset');
-
-  function renderPresets() {
-    if (!presetList) return;
-    chrome.storage.local.get(['presets'], (res) => {
-      const presets = res.presets || {};
-      const entries = Object.keys(presets);
-      if (entries.length === 0) {
-        presetList.innerHTML = '<div class="empty">No presets saved</div>';
-        return;
-      }
-      presetList.innerHTML = '';
-      entries.forEach(site => {
-        const div = document.createElement('div');
-        div.className = 'litem';
-        const applied = Object.values(presets[site]).filter(v => v === true).length;
-        div.innerHTML = '<span>' + site + ' (' + applied + ' on)</span><span class="rm" data-site="' + site + '">Remove</span>';
-        presetList.appendChild(div);
-        // Click to apply
-        div.addEventListener('click', (e) => {
-          if (e.target.className === 'rm') return;
-          const config = presets[site];
-          chrome.storage.local.set(config, () => {
-            Object.entries(SETTINGS_MAP).forEach(([id, key]) => {
-              const el = document.getElementById(id);
-              if (el && config[key] !== undefined) el.checked = config[key];
-            });
-            buildAllModulesGrid();
-            loadStats();
-            showToast('Preset applied: ' + site);
-          });
-        });
-      });
-      presetList.querySelectorAll('.rm').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-          e.stopPropagation();
-          const site = btn.dataset.site;
-          chrome.storage.local.get(['presets'], (res) => {
-            const presets = res.presets || {};
-            delete presets[site];
-            chrome.storage.local.set({ presets }, () => renderPresets());
-          });
-        });
-      });
-    });
-  }
-  renderPresets();
-
-if (btnSavePreset && presetSiteInput) {
-    btnSavePreset.addEventListener('click', () => {
-      const site = presetSiteInput.value.trim();
-      if (!site) { showToast('Enter a site'); return; }
-      gatherAllSettings((data) => {
-        chrome.storage.local.get(['presets'], (res) => {
-          const presets = res.presets || {};
-          presets[site] = data.settings;
-          chrome.storage.local.set({ presets }, () => {
-            presetSiteInput.value = '';
-            renderPresets();
-            showToast('Preset saved: ' + site);
-          });
-        });
-      });
+  // === User Agent Select ===
+  const uaSelect = document.getElementById('ua-select-opt');
+  if (uaSelect) {
+    uaSelect.addEventListener('change', () => {
+      chrome.storage.local.set({ uaCategory: uaSelect.value });
+      showToast('User Agent updated');
     });
   }
 
-  // === User-Level Quick Presets (Normal / Pro / Maximum) ===
+  // === User-Level Quick Presets ===
   const presetSelect = document.getElementById('preset-select');
   const btnApplyPreset = document.getElementById('btn-apply-preset');
   const presetDesc = document.getElementById('preset-desc');
@@ -678,16 +738,8 @@ if (btnSavePreset && presetSiteInput) {
       const preset = USER_PRESETS[presetKey];
       if (!preset) { showToast('Select a preset first'); return; }
 
-      // Apply preset settings to storage
       chrome.storage.local.set(preset.settings, () => {
-        // Update all checkboxes in the UI
-        Object.entries(SETTINGS_MAP).forEach(([id, key]) => {
-          if (preset.settings[key] !== undefined) {
-            document.querySelectorAll('#' + id).forEach(el => { el.checked = preset.settings[key]; });
-          }
-        });
-        buildAllModulesGrid();
-        loadStats();
+        syncAllCheckboxes(preset.settings);
         showToast('Preset applied: ' + preset.label);
       });
     });
@@ -695,33 +747,32 @@ if (btnSavePreset && presetSiteInput) {
 
   // === Keyboard Shortcuts ===
   document.addEventListener('keydown', (e) => {
-    // Ctrl+Shift+E -> Enable all
     if (e.ctrlKey && e.shiftKey && (e.key === 'E' || e.key === 'e')) {
       e.preventDefault();
       setAllModules(true);
-    }
-    // Ctrl+Shift+D -> Disable all
-    else if (e.ctrlKey && e.shiftKey && (e.key === 'D' || e.key === 'd')) {
+    } else if (e.ctrlKey && e.shiftKey && (e.key === 'D' || e.key === 'd')) {
       e.preventDefault();
       setAllModules(false);
-    }
-    // Ctrl+Shift+F -> focus search
-    else if (e.ctrlKey && e.shiftKey && (e.key === 'F' || e.key === 'f')) {
+    } else if (e.ctrlKey && e.shiftKey && (e.key === 'F' || e.key === 'f')) {
       e.preventDefault();
       if (searchInput) searchInput.focus();
     }
   });
 
-  // === Real-time sync ===
-  // Reflect changes made in the popup (or any other context) immediately.
+  // === Real-time sync across popup and options ===
   chrome.storage.onChanged.addListener((changes, area) => {
     if (area !== 'local') return;
     Object.entries(SETTINGS_MAP).forEach(([id, key]) => {
       if (changes[key] && changes[key].newValue !== undefined) {
-        const el = document.getElementById(id);
-        if (el) el.checked = !!changes[key].newValue;
+        syncCheckboxesForSetting(id, Boolean(changes[key].newValue));
       }
     });
+    if (changes.webglVendor && webglVendorInput) {
+      webglVendorInput.value = changes.webglVendor.newValue;
+    }
+    if (changes.webglRenderer && webglRendererInput) {
+      webglRendererInput.value = changes.webglRenderer.newValue;
+    }
   });
 
   function showToast(msg) {

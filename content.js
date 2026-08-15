@@ -6,6 +6,14 @@
 (function() {
   'use strict';
 
+  // Sync WebGL profile strings into sessionStorage/localStorage for inject.js
+  try {
+    chrome.storage.local.get(['webglVendor', 'webglRenderer'], (res) => {
+      if (res && res.webglVendor) sessionStorage.setItem('bs_webgl_vendor', res.webglVendor);
+      if (res && res.webglRenderer) sessionStorage.setItem('bs_webgl_renderer', res.webglRenderer);
+    });
+  } catch (_) {}
+
   chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.type === 'CHECK_STATUS') {
       sendResponse({

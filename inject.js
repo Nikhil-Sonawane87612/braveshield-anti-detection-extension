@@ -291,20 +291,45 @@
 })();
 
 // ─────────────────────────────────────────────────────
-// Module 6: WebGL Fingerprint Farbling
+// Module 6: WebGL Fingerprint Farbling & Profile Spoofing
 // ─────────────────────────────────────────────────────
 (() => {
   if (typeof WebGLRenderingContext === 'undefined') return;
 
+  function getWebGLVendor() {
+    try {
+      return sessionStorage.getItem('bs_webgl_vendor') || localStorage.getItem('bs_webgl_vendor') || 'Google Inc. (NVIDIA)';
+    } catch (_) {
+      return 'Google Inc. (NVIDIA)';
+    }
+  }
+
+  function getWebGLRenderer() {
+    try {
+      return sessionStorage.getItem('bs_webgl_renderer') || localStorage.getItem('bs_webgl_renderer') || 'ANGLE (NVIDIA, NVIDIA GeForce RTX 3060 Direct3D11 vs_5_0 ps_5_0, D3D11)';
+    } catch (_) {
+      return 'ANGLE (NVIDIA, NVIDIA GeForce RTX 3060 Direct3D11 vs_5_0 ps_5_0, D3D11)';
+    }
+  }
+
   const origGetParam = WebGLRenderingContext.prototype.getParameter;
   const origGetExtension = WebGLRenderingContext.prototype.getExtension;
 
+  const debugRendererInfoStub = {
+    UNMASKED_VENDOR_WEBGL: 0x9245,
+    UNMASKED_RENDERER_WEBGL: 0x9246
+  };
+
   // Override common fingerprint parameters
   WebGLRenderingContext.prototype.getParameter = function (param) {
-    // UNMASKED_VENDOR_WEBGL (0x9245) — spoof to generic
-    if (param === 0x9245) return 'Google Inc. (Intel)';
-    // UNMASKED_RENDERER_WEBGL (0x9246) — spoof to generic
-    if (param === 0x9246) return 'ANGLE (Intel, Intel(R) UHD Graphics 630, OpenGL 4.5)';
+    // UNMASKED_VENDOR_WEBGL (0x9245)
+    if (param === 0x9245) return getWebGLVendor();
+    // UNMASKED_RENDERER_WEBGL (0x9246)
+    if (param === 0x9246) return getWebGLRenderer();
+    // VENDOR (0x1F00)
+    if (param === 0x1F00) return 'WebKit';
+    // RENDERER (0x1F01)
+    if (param === 0x1F01) return 'WebKit WebGL';
     // MAX_TEXTURE_SIZE — normalize
     if (param === 0x0D33) return 16384;
     // MAX_RENDERBUFFER_SIZE
@@ -324,17 +349,10 @@
     return origGetParam.apply(this, arguments);
   };
 
-  // Override extension enumeration to hide fingerprinting extensions
   WebGLRenderingContext.prototype.getExtension = function (name) {
-    const HIDDEN = [
-      'WEBGL_debug_renderer_info',
-      'WEBGL_lose_context',
-      'OES_standard_derivatives',
-      'WEBGL_compressed_texture_s3tc',
-      'WEBGL_compressed_texture_etc',
-      'WEBGL_compressed_texture_etc1'
-    ];
-    if (HIDDEN.includes(name)) return null;
+    if (name === 'WEBGL_debug_renderer_info') {
+      return debugRendererInfoStub;
+    }
     return origGetExtension.apply(this, arguments);
   };
 
@@ -342,9 +360,12 @@
   if (typeof WebGL2RenderingContext !== 'undefined') {
     const origGetParam2 = WebGL2RenderingContext.prototype.getParameter;
     const origGetExt2 = WebGL2RenderingContext.prototype.getExtension;
+
     WebGL2RenderingContext.prototype.getParameter = function (param) {
-      if (param === 0x9245) return 'Google Inc. (Intel)';
-      if (param === 0x9246) return 'ANGLE (Intel, Intel(R) UHD Graphics 630, OpenGL 4.5)';
+      if (param === 0x9245) return getWebGLVendor();
+      if (param === 0x9246) return getWebGLRenderer();
+      if (param === 0x1F00) return 'WebKit';
+      if (param === 0x1F01) return 'WebKit WebGL';
       if (param === 0x0D33) return 16384;
       if (param === 0x84E8) return 16384;
       if (param === 0x0D3A) return new Int32Array([32767, 32767]);
@@ -355,16 +376,11 @@
       if ([0x0D52, 0x0D53, 0x0D54, 0x0D55].includes(param)) return 8;
       return origGetParam2.apply(this, arguments);
     };
+
     WebGL2RenderingContext.prototype.getExtension = function (name) {
-      const HIDDEN = [
-        'WEBGL_debug_renderer_info',
-        'WEBGL_lose_context',
-        'OES_standard_derivatives',
-        'WEBGL_compressed_texture_s3tc',
-        'WEBGL_compressed_texture_etc',
-        'WEBGL_compressed_texture_etc1'
-      ];
-      if (HIDDEN.includes(name)) return null;
+      if (name === 'WEBGL_debug_renderer_info') {
+        return debugRendererInfoStub;
+      }
       return origGetExt2.apply(this, arguments);
     };
   }

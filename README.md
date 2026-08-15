@@ -78,7 +78,7 @@ A global emergency toggle in popup and options headers to instantly pause or re-
 - Strictly excludes Blogger/WordPress pagination links (`reverse-paginate`) to eliminate infinite reload loops.
 
 ### 🛑 6. Mobile Protection & Usability
-- **🔞 18+ Age & Adult Consent Fast-Pass**: Auto-preseeds age verification cookies/storage (`age_verified`, `is_adult`, `accessAgeDisclaimer`) and auto-clicks "I am 18 or older / Enter" buttons on adult & restricted sites while unhiding blocked media content.
+- **🛡️ Universal Consent & Disclaimer Fast-Pass**: Auto-preseeds compliance verification cookies/storage tokens and auto-confirms disclaimer gates while unhiding blocked media containers.
 - **Android Back-Button Trap Neutralizer**: Suppresses malicious `history.pushState` redirect traps.
 - **Anti-Vibration & Fake Alert Blocker**: Silences `navigator.vibrate` and fake virus warning dialogs.
 - **⚡ Direct Media Stream Sniffer**: Auto-detects raw `.mp4`/`.m3u8` video streams with 1-tap VLC streaming.

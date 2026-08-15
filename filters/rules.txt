@@ -22,14 +22,10 @@
 #%#//scriptlet('abort-on-property-read', 'adblockDetector')
 #%#//scriptlet('abort-on-property-read', 'admiral')
 #%#//scriptlet('set-cookie', 'age_verified', '1')
-#%#//scriptlet('set-cookie', 'is_adult', '1')
-#%#//scriptlet('set-cookie', 'has_accepted_18', '1')
 #%#//scriptlet('set-cookie', 'disclaimer', '1')
 #%#//scriptlet('set-cookie', 'accessAgeDisclaimer', 'true')
-#%#//scriptlet('set-cookie', 'over18', '1')
 #%#//scriptlet('set-local-storage-item', 'age_verified', 'true')
-#%#//scriptlet('set-local-storage-item', 'has_accepted_18', 'true')
-#%#//scriptlet('set-local-storage-item', 'is_adult', '1')
+#%#//scriptlet('set-local-storage-item', 'disclaimer_accepted', 'true')
 
 ! ==============================================================================
 ! SECTION 2: ANTI-ADBLOCK MODAL & BACKDROP SUPPRESSION

@@ -15,7 +15,8 @@
     "activeTab",
     "declarativeNetRequest",
     "declarativeNetRequestFeedback",
-    "tabs"
+    "tabs",
+    "alarms"
   ],
   "host_permissions": [
     "<all_urls>"

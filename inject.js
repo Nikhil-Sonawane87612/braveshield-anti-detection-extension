@@ -102,7 +102,7 @@ window.__bs_audit = {
     delete navigator.brave;
     if (navigator.__proto__) delete navigator.__proto__.brave;
     
-    // Also patch Object.getOwnPropertyNames on Navigator prototype
+    // Patch Object.getOwnPropertyNames on Navigator prototype
     const origGetOwnPropertyNames = Object.getOwnPropertyNames;
     Object.getOwnPropertyNames = function(obj) {
       const names = origGetOwnPropertyNames.apply(this, arguments);
@@ -112,13 +112,29 @@ window.__bs_audit = {
       return names;
     };
 
-    // Remove Brave Crypto/Wallet detectors
+    // Proxy Object.getOwnPropertyDescriptor to return undefined for brave probes
+    const origGetOwnPropertyDescriptor = Object.getOwnPropertyDescriptor;
+    Object.getOwnPropertyDescriptor = function(target, prop) {
+      if ((target === Navigator.prototype || target === navigator) && prop === 'brave') {
+        return undefined;
+      }
+      return origGetOwnPropertyDescriptor.apply(this, arguments);
+    };
+
+    // Remove Brave Crypto/Wallet detectors (Ethereum & Solana)
     delete window.braveSolana;
+    delete window.solanaBrave;
     if (window.ethereum) {
       try {
         delete window.ethereum.isBraveWallet;
         window.ethereum.isBraveWallet = false;
         window.ethereum.isMetaMask = true;
+      } catch (_) {}
+    }
+    if (window.solana) {
+      try {
+        delete window.solana.isBraveWallet;
+        window.solana.isBraveWallet = false;
       } catch (_) {}
     }
   } catch (_) {}
@@ -476,6 +492,51 @@ window.__bs_audit = {
         configurable: true
       });
     }
+
+    // getBoundingClientRect & getClientRects Hook for Bait Elements
+    const origGetBoundingClientRect = Element.prototype.getBoundingClientRect;
+    Element.prototype.getBoundingClientRect = function() {
+      const rect = origGetBoundingClientRect.call(this);
+      if (rect.width === 0 && rect.height === 0 && isBaitElement(this)) {
+        return new DOMRect(rect.x || 0, rect.y || 0, 300, 250);
+      }
+      return rect;
+    };
+
+    const origGetClientRects = Element.prototype.getClientRects;
+    Element.prototype.getClientRects = function() {
+      const list = origGetClientRects.call(this);
+      if (list.length === 0 && isBaitElement(this)) {
+        const mockRect = new DOMRect(0, 0, 300, 250);
+        return Object.assign([mockRect], { item: (i) => i === 0 ? mockRect : null });
+      }
+      return list;
+    };
+
+    // prevent-addEventListener Hook: Drop anti-adblock honeypot listeners
+    const origAddEventListener = EventTarget.prototype.addEventListener;
+    EventTarget.prototype.addEventListener = function(type, listener, options) {
+      if (typeof listener === 'function' && (type === 'DOMContentLoaded' || type === 'load' || type === 'resize')) {
+        try {
+          const fnStr = Function.prototype.toString.call(listener).toLowerCase();
+          if (/fuckadblock|blockadblock|adblockdetected|canrunads|isadblockactive|yavli|ad-shield/i.test(fnStr)) {
+            return;
+          }
+        } catch (_) {}
+      }
+      return origAddEventListener.call(this, type, listener, options);
+    };
+
+    // abort-on-property-read Scriptlet Helper
+    window.abortOnPropertyRead = function(prop) {
+      try {
+        Object.defineProperty(window, prop, {
+          get() { throw new ReferenceError(`${prop} is not defined`); },
+          set() {},
+          configurable: true
+        });
+      } catch (_) {}
+    };
   } catch (_) {}
 })();
 

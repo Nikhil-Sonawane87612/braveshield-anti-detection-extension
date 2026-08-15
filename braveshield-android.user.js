@@ -10,6 +10,8 @@
 // @grant        GM.xmlHttpRequest
 // @grant        unsafeWindow
 // @noframes     false
+// @updateURL    https://raw.githubusercontent.com/Nikhil-Sonawane87612/braveshield-anti-detection-extension/main/braveshield-android.user.js
+// @downloadURL  https://raw.githubusercontent.com/Nikhil-Sonawane87612/braveshield-anti-detection-extension/main/braveshield-android.user.js
 // ==/UserScript==
 
 (function() {

@@ -58,9 +58,73 @@ chrome.runtime.onInstalled.addListener(() => {
     bypassedSites: [],
     whitelist: [],
     blacklist: [],
-    version: '5.1.0'
+    version: '5.1.0',
+    lastSyncTime: Date.now(),
+    remoteSyncStatus: 'synced',
+    remoteVersion: '5.1.0'
   });
+
+  // Setup periodic 6-hour background remote updater alarm
+  try {
+    chrome.alarms.create('BRAVESHIELD_AUTO_SYNC', { periodInMinutes: 360 });
+  } catch (_) {}
+
+  // Run initial background sync
+  syncRemoteRulesFromGitHub();
 });
+
+// Alarm Listener for Periodic Remote Sync
+try {
+  chrome.alarms.onAlarm.addListener((alarm) => {
+    if (alarm.name === 'BRAVESHIELD_AUTO_SYNC') {
+      syncRemoteRulesFromGitHub();
+    }
+  });
+} catch (_) {}
+
+const GITHUB_RULES_URL = 'https://raw.githubusercontent.com/Nikhil-Sonawane87612/braveshield-anti-detection-extension/main/rules.json';
+const GITHUB_MANIFEST_URL = 'https://raw.githubusercontent.com/Nikhil-Sonawane87612/braveshield-anti-detection-extension/main/manifest.json';
+
+async function syncRemoteRulesFromGitHub() {
+  try {
+    const [rulesRes, manifestRes] = await Promise.all([
+      fetch(GITHUB_RULES_URL, { cache: 'no-cache' }),
+      fetch(GITHUB_MANIFEST_URL, { cache: 'no-cache' })
+    ]);
+
+    if (!rulesRes.ok) throw new Error(`Rules HTTP ${rulesRes.status}`);
+    const rules = await rulesRes.json();
+    let remoteVer = '5.1.0';
+    if (manifestRes.ok) {
+      const manifest = await manifestRes.json();
+      if (manifest && manifest.version) remoteVer = manifest.version;
+    }
+
+    if (Array.isArray(rules) && rules.length > 0) {
+      const ruleIds = rules.map(r => r.id);
+      await chrome.declarativeNetRequest.updateDynamicRules({
+        removeRuleIds: ruleIds,
+        addRules: rules
+      });
+
+      await chrome.storage.local.set({
+        lastSyncTime: Date.now(),
+        remoteSyncStatus: 'synced',
+        remoteVersion: remoteVer,
+        cachedDynamicRuleCount: rules.length
+      });
+      console.log(`[BraveShield Auto-Sync] Updated ${rules.length} remote rules (v${remoteVer}).`);
+      return { success: true, count: rules.length, version: remoteVer };
+    }
+  } catch (err) {
+    console.warn('[BraveShield Auto-Sync] Background sync failed (offline or rate limit):', err);
+    await chrome.storage.local.set({
+      remoteSyncStatus: 'offline_fallback',
+      lastSyncError: err.message
+    });
+    return { success: false, error: err.message };
+  }
+}
 
 const RANDOM_PROFILES = [
   {
@@ -314,6 +378,16 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       const count = (res.blockedCounter || 0) + 1;
       chrome.storage.local.set({ blockedCounter: count });
       sendResponse({ count });
+    });
+    return true;
+  } else if (message.type === 'CHECK_REMOTE_UPDATE') {
+    syncRemoteRulesFromGitHub().then((result) => {
+      sendResponse(result);
+    });
+    return true;
+  } else if (message.type === 'GET_SYNC_STATUS') {
+    chrome.storage.local.get(['lastSyncTime', 'remoteSyncStatus', 'remoteVersion', 'cachedDynamicRuleCount'], (res) => {
+      sendResponse(res);
     });
     return true;
   } else if (message.type === 'GET_SITE_STATUS') {

@@ -346,4 +346,31 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
   }
+
+  // GitHub Auto-Sync Button Handler
+  const btnSync = document.getElementById('btn-sync-rules');
+  const syncIcon = document.getElementById('sync-icon');
+  const syncText = document.getElementById('sync-text');
+
+  if (btnSync) {
+    chrome.runtime.sendMessage({ type: 'GET_SYNC_STATUS' }, (res) => {
+      if (res && res.remoteVersion) {
+        syncText.textContent = `Synced v${res.remoteVersion}`;
+      }
+    });
+
+    btnSync.addEventListener('click', () => {
+      syncText.textContent = 'Syncing...';
+      chrome.runtime.sendMessage({ type: 'CHECK_REMOTE_UPDATE' }, (res) => {
+        if (res && res.success) {
+          syncText.textContent = `Updated v${res.version || '5.1.0'}`;
+        } else {
+          syncText.textContent = 'Up to date';
+        }
+        setTimeout(() => {
+          syncText.textContent = 'Auto-Sync';
+        }, 3000);
+      });
+    });
+  }
 });

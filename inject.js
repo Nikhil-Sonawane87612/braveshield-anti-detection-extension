@@ -2194,31 +2194,46 @@ window.__bs_audit = {
   // 3. Intelligent Link Shortener Completion & Safe Auto-Clicker
   function turboPassCountdownsAndLinks() {
     try {
+      // STRICT EXCLUSION: Never click pagination, blog navigation, or site internal search links
+      function isPaginationOrNavigation(el) {
+        if (!el) return true;
+        const href = (el.getAttribute('href') || '').toLowerCase();
+        const id = (el.id || '').toLowerCase();
+        const cls = (el.className || '').toLowerCase();
+
+        if (/reverse-paginate|updated-max|max-results|blog-pager|pagination|page-numbers|older-posts|newer-posts|nav-links|comment-editor|category|tag\//i.test(href)) {
+          return true;
+        }
+        if (/blog-pager|pagination|pager|page-nav|nav-links|page-numbers|older-link|newer-link/i.test(id + ' ' + cls)) {
+          return true;
+        }
+        return false;
+      }
+
       const buttonSelectors = [
         '#btn-main', '#get-link', '#getlink', '#download-btn', '#btn-download',
         '.get-link', '.download-btn', '.btn-download', '.getlink', '#link-button',
         '#continue-btn', '#btn-continue', '.continue-btn', '#go-link', '.go-link',
-        'button[id*="download"]', 'a[id*="download"]', 'button[id*="link"]', 'a[id*="link"]',
-        'input[value*="Get Link"]', 'input[value*="Continue"]', 'input[value*="Download"]',
-        'a[href*="get-link"]', 'a[href*="download"]', '.btn-success', '.btn-primary'
+        '#final-download', '.direct-download', '#downloadBtn', '#btnDownload',
+        'a[href*="get-link"]', 'a[href*="download-file"]'
       ];
 
       for (const sel of buttonSelectors) {
         const btns = document.querySelectorAll(sel);
         for (const btn of btns) {
-          if (btn) {
+          if (btn && !isPaginationOrNavigation(btn)) {
             const txt = (btn.innerText || btn.value || '').trim();
 
-            // CRITICAL: NEVER click when button is still in loading/generating/getting link state!
+            // CRITICAL: NEVER click when button is in loading state
             if (/getting\s+link|please\s+wait|loading|generating|processing|wait\s+\d+|countdown/i.test(txt)) {
               continue;
             }
 
-            // Check if button is ready (has valid link or definitive action text)
-            const isReadyText = /^(get\s+link|download|download\s+now|direct\s+download|continue|click\s+here\s+to\s+continue|skip\s+ad|proceed|next)$/i.test(txt);
-            const hasValidHref = btn.href && !btn.href.endsWith('#') && !btn.href.startsWith('javascript:');
+            // Strictly match real download actions (NOT bare 'next' or generic blog buttons)
+            const isReadyText = /^(get\s+link|download|download\s+now|direct\s+download|download\s+apk|click\s+here\s+to\s+download)$/i.test(txt);
+            const hasValidExternalHref = btn.href && (btn.href.includes('drive.google') || btn.href.includes('mega.nz') || btn.href.includes('mediafire') || btn.href.includes('pixeldrain') || btn.href.includes('gofile') || btn.href.includes('1fichier') || btn.href.includes('dupload') || btn.href.includes('apkadmin') || btn.href.includes('uploadrar'));
 
-            if (isReadyText || hasValidHref) {
+            if (isReadyText || hasValidExternalHref) {
               btn.removeAttribute('disabled');
               btn.removeAttribute('aria-disabled');
               if (btn.classList.contains('disabled')) btn.classList.remove('disabled');
@@ -2231,11 +2246,35 @@ window.__bs_audit = {
                 btn._bsClicked = true;
                 setTimeout(() => {
                   try { btn.click(); } catch (_) {}
-                }, 300);
+                }, 400);
               }
             }
           }
         }
+      }
+
+      // Unveil APK download boxes (e.g. SpotiDuck, Blogger APK blogs)
+      const hiddenApkLinks = document.querySelectorAll(
+        '.download-box a, .post-body a[href*="download"], .entry-content a[href*="download"], a[href*="drive.google"], a[href*="mediafire"], a[href*="mega.nz"], a[href*="pixeldrain"], a[href*="gofile"], a[href*="dupload"], a[href*="apkadmin"], a[href*="uploadrar"]'
+      );
+      for (const apk of hiddenApkLinks) {
+        if (apk && !isPaginationOrNavigation(apk)) {
+          apk.style.setProperty('display', 'inline-block', 'important');
+          apk.style.setProperty('visibility', 'visible', 'important');
+          apk.style.setProperty('opacity', '1', 'important');
+          apk.style.setProperty('pointer-events', 'auto', 'important');
+          if (apk.parentElement) {
+            apk.parentElement.style.setProperty('display', 'block', 'important');
+            apk.parentElement.style.setProperty('visibility', 'visible', 'important');
+          }
+        }
+      }
+
+      // Hide lingering loading spinners on download boxes once content is ready
+      if (hiddenApkLinks.length > 0) {
+        document.querySelectorAll('.spinner, .loading, svg.spin, .fa-spin').forEach(sp => {
+          try { sp.style.display = 'none'; } catch (_) {}
+        });
       }
 
       // Bypass window.open traps — only block known rogue ad popunder domains
@@ -2297,7 +2336,7 @@ window.__bs_audit = {
 
           // B. Unhide hidden download buttons
           const hiddenTargets = document.querySelectorAll(
-            '#download-link, #download-btn, #downloadBtn, #direct-download, #final-download, #server-links, #link-box, .download-link, .download-btn, .server-download, [id*="download"], [class*="download"], a[href*="drive.google"], a[href*="mega."], a[href*="mediafire"], a[href*="pixeldrain"], a[href*="gofile"], a[href*="1fichier"], a[href*="workers.dev"], a[href*="t.me"], a[href*="dupload.net"]'
+            '#download-link, #download-btn, #downloadBtn, #direct-download, #final-download, #server-links, #link-box, .download-link, .download-btn, .server-download, [id*="download"], [class*="download"], a[href*="drive.google"], a[href*="mega."], a[href*="mediafire"], a[href*="pixeldrain"], a[href*="gofile"], a[href*="1fichier"], a[href*="workers.dev"], a[href*="t.me"], a[href*="dupload.net"], a[href*="apkadmin"], a[href*="uploadrar"]'
           );
 
           for (const target of hiddenTargets) {
@@ -2329,19 +2368,20 @@ window.__bs_audit = {
     } catch (_) {}
   }
 
-  // 5. Force Navigation on Safelink / Download Links
+  // 5. Force Navigation on Safelink / Download Links (excluding pagination)
   document.addEventListener('click', (e) => {
     const anchor = e.target.closest('a');
     if (!anchor) return;
-    const href = anchor.getAttribute('href');
+    const href = anchor.getAttribute('href') || '';
     if (href && (href.startsWith('http') || href.startsWith('//')) && !href.startsWith('javascript:')) {
-      // If page script cancelled default navigation, force navigation
-      setTimeout(() => {
-        if (e.defaultPrevented) {
-          console.log('[Bypass] Safelink navigation unblocked:', href);
-          window.open(href, anchor.target || '_blank');
-        }
-      }, 50);
+      if (!/reverse-paginate|updated-max|max-results|blog-pager|pagination/i.test(href)) {
+        setTimeout(() => {
+          if (e.defaultPrevented) {
+            console.log('[Bypass] Safelink navigation unblocked:', href);
+            window.open(href, anchor.target || '_blank');
+          }
+        }, 50);
+      }
     }
   }, true);
 

@@ -190,7 +190,17 @@
   // ─────────────────────────────────────────────────────────────────────────────
   (() => {
     try {
-      const AD_PROBE_REGEX = /pagead2\.googlesyndication\.com|adservice\.google\.com|securepubads\.g\.doubleclick\.net|adnxs\.com|prebid\.js|\/ads?\.js|\/adframe\.js|\/adbanner\.js|\/adsbygoogle\.js|adblockdetector/i;
+      function isAdProbeUrl(url) {
+        if (!url || typeof url !== 'string') return false;
+        try {
+          const curHost = (window.location && window.location.hostname) ? window.location.hostname.toLowerCase() : '';
+          if (!url.startsWith('http://') && !url.startsWith('https://')) return false; // Relative URLs belong to the site itself!
+          const parsed = new URL(url);
+          const parsedHost = parsed.hostname.toLowerCase();
+          if (parsedHost === curHost || parsedHost.endsWith('.' + curHost)) return false; // Never intercept same-origin site requests!
+        } catch (_) {}
+        return /pagead2\.googlesyndication\.com|adservice\.google\.com|securepubads\.g\.doubleclick\.net|adnxs\.com|prebid\.js|fuckadblock|blockadblock|adblockdetector/i.test(url);
+      }
 
       // Transparent Fetch Proxy
       if (typeof window.fetch === 'function') {
@@ -202,7 +212,7 @@
               if (/^brave:\/\//i.test(url)) {
                 return Promise.resolve(new Response('', { status: 404, statusText: 'Not Found' }));
               }
-              if (AD_PROBE_REGEX.test(url)) {
+              if (isAdProbeUrl(url)) {
                 return Promise.resolve(new Response('window.canRunAds=true;window.isAdBlockActive=false;window.adblock=false;', {
                   status: 200,
                   statusText: 'OK',
@@ -221,7 +231,7 @@
         if (typeof url === 'string') {
           if (/^brave:\/\//i.test(url)) {
             this._isBraveProbe = true;
-          } else if (AD_PROBE_REGEX.test(url)) {
+          } else if (isAdProbeUrl(url)) {
             this._isAdProbe = true;
           }
         }

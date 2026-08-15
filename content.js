@@ -77,6 +77,7 @@
 
   function annihilateAntiAdblockModals() {
     try {
+      let destroyed = false;
       const candidates = document.querySelectorAll('div, section, dialog, [role="dialog"], [role="alertdialog"], .modal, .swal2-container, .sweet-alert, .overlay, .popup, [class*="modal"], [class*="overlay"], [class*="popup"], [id*="modal"], [id*="overlay"], [id*="adblock"]');
       
       for (const el of candidates) {
@@ -112,72 +113,50 @@
           } catch (_) {
             target.style.setProperty('display', 'none', 'important');
             target.style.setProperty('visibility', 'hidden', 'important');
-            target.style.setProperty('opacity', '0', 'important');
-            target.style.setProperty('pointer-events', 'none', 'important');
           }
+          destroyed = true;
         }
       }
 
-      // Sweep dark backdrops
-      const backdropSelectors = [
-        '.modal-backdrop', '.swal2-backdrop', '.swal2-container', '.overlay-backdrop',
-        '[class*="backdrop"]', '[class*="overlay"]', '#overlay', '.overlay',
-        '.popup-overlay', '#popup-overlay', '.fade.show', '.sk-overlay', '#sk-overlay',
-        '[class*="adb-overlay"]', '#adb-overlay'
-      ];
-      for (const sel of backdropSelectors) {
-        document.querySelectorAll(sel).forEach(b => {
-          if (b && !isProtectedCaptchaOrAuth(b) && !b.querySelector('h1, h2, form, video, article, #stat-modules, .video-list, [class*="video"]')) {
-            try { b.remove(); } catch (_) { b.style.display = 'none'; }
-          }
-        });
-      }
-
-      // Restore Page Scrolling
-      if (document.body) {
-        document.body.style.setProperty('overflow', 'auto', 'important');
-        document.body.style.setProperty('position', 'static', 'important');
-        document.body.style.setProperty('filter', 'none', 'important');
-        document.body.style.setProperty('opacity', '1', 'important');
-        document.body.style.setProperty('pointer-events', 'auto', 'important');
-      }
-      if (document.documentElement) {
-        document.documentElement.style.setProperty('overflow', 'auto', 'important');
-        document.documentElement.style.setProperty('filter', 'none', 'important');
-        document.documentElement.style.setProperty('opacity', '1', 'important');
-        document.documentElement.style.setProperty('pointer-events', 'auto', 'important');
-      }
-
-      // Remove blur, dimming, and display:none from main content
-      document.querySelectorAll('main, #main, .container, .card, body > div, [class*="content"], [id*="content"]').forEach(node => {
-        if (node && node.style) {
-          if (node.style.filter && (node.style.filter.includes('blur') || node.style.filter.includes('brightness'))) node.style.setProperty('filter', 'none', 'important');
-          if (node.style.backdropFilter) node.style.setProperty('backdrop-filter', 'none', 'important');
-          if (node.style.opacity && parseFloat(node.style.opacity) < 0.9 && !node.id.includes('stat-')) node.style.setProperty('opacity', '1', 'important');
-          if (node.style.pointerEvents === 'none') node.style.setProperty('pointer-events', 'auto', 'important');
-          if (node.style.display === 'none' && !node.classList.contains('modal') && !node.classList.contains('overlay') && !node.id.includes('stat-')) node.style.setProperty('display', 'block', 'important');
+      // Sweep dark backdrops ONLY when a modal was destroyed
+      if (destroyed) {
+        const backdropSelectors = [
+          '.modal-backdrop', '.swal2-backdrop', '.swal2-container', '.overlay-backdrop',
+          '[class*="backdrop"]', '[class*="overlay"]', '#overlay', '.overlay',
+          '.popup-overlay', '#popup-overlay', '.fade.show', '.sk-overlay', '#sk-overlay',
+          '[class*="adb-overlay"]', '#adb-overlay'
+        ];
+        for (const sel of backdropSelectors) {
+          document.querySelectorAll(sel).forEach(b => {
+            if (b && !isProtectedCaptchaOrAuth(b) && !b.querySelector('h1, h2, form, video, article, .video-list')) {
+              try { b.remove(); } catch (_) { b.style.display = 'none'; }
+            }
+          });
         }
-      });
+
+        // Restore Page Scrolling
+        if (document.body) {
+          document.body.style.setProperty('overflow', 'auto', 'important');
+          document.body.style.setProperty('filter', 'none', 'important');
+          document.body.style.setProperty('opacity', '1', 'important');
+          document.body.style.setProperty('pointer-events', 'auto', 'important');
+        }
+        if (document.documentElement) {
+          document.documentElement.style.setProperty('overflow', 'auto', 'important');
+          document.documentElement.style.setProperty('filter', 'none', 'important');
+          document.documentElement.style.setProperty('opacity', '1', 'important');
+        }
+      }
     } catch (_) {}
   }
 
-  // 4. Shortener DOM Timer Zeroer & Button Unlocker
-  function fastPassDOMTimersAndButtons() {
+  // 4. Shortener Button Unlocker (Arm buttons without auto-clicking)
+  function fastPassButtons() {
     try {
       function isPagination(el) {
         if (!el) return true;
         const href = (el.getAttribute('href') || '').toLowerCase();
         return /reverse-paginate|updated-max|max-results|blog-pager|pagination/i.test(href);
-      }
-
-      // Zero out countdown timers
-      const timerEls = document.querySelectorAll('.timer, #timer, .countdown, #countdown, #wpsafe-time, #time, #seconds, [data-timer], [data-countdown], .wait-time');
-      for (const tEl of timerEls) {
-        if (tEl && tEl.innerText && /\d+\s*s?/i.test(tEl.innerText)) {
-          tEl.innerText = '0';
-          tEl.textContent = '0';
-          try { tEl.dispatchEvent(new Event('change', { bubbles: true })); } catch (_) {}
-        }
       }
 
       // Arm buttons (remove disabled, show button, set pointer-events: auto)
@@ -197,19 +176,23 @@
     } catch (_) {}
   }
 
+  let cScanTimer = null;
+  function debouncedContentScan() {
+    if (cScanTimer) return;
+    cScanTimer = setTimeout(() => {
+      annihilateAntiAdblockModals();
+      fastPassButtons();
+      cScanTimer = null;
+    }, 500);
+  }
+
   // Run immediately and monitor DOM
   annihilateAntiAdblockModals();
-  fastPassDOMTimersAndButtons();
-  const trapInterval = setInterval(() => {
-    annihilateAntiAdblockModals();
-    fastPassDOMTimersAndButtons();
-  }, 250);
+  fastPassButtons();
+  const trapInterval = setInterval(debouncedContentScan, 1000);
   setTimeout(() => clearInterval(trapInterval), 15000);
 
-  const trapObserver = new MutationObserver(() => {
-    annihilateAntiAdblockModals();
-    fastPassDOMTimersAndButtons();
-  });
+  const trapObserver = new MutationObserver(debouncedContentScan);
   if (document.documentElement) {
     trapObserver.observe(document.documentElement, { childList: true, subtree: true });
   }

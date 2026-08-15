@@ -548,6 +548,7 @@
 
     function annihilateAntiAdblockModals() {
       try {
+        let destroyed = false;
         autoBypassAgeAndConsent();
 
         const candidates = document.querySelectorAll('div, section, dialog, [role="dialog"], [role="alertdialog"], .modal, .swal2-container, .sweet-alert, .overlay, .popup, [class*="modal"], [class*="overlay"], [class*="popup"], [id*="modal"], [id*="overlay"], [id*="adblock"]');
@@ -579,55 +580,51 @@
             } catch (_) {
               target.style.setProperty('display', 'none', 'important');
               target.style.setProperty('visibility', 'hidden', 'important');
-              target.style.setProperty('opacity', '0', 'important');
-              target.style.setProperty('pointer-events', 'none', 'important');
             }
+            destroyed = true;
           }
         }
 
-        // Clean dark backdrop overlays
-        const backdropSelectors = ['.modal-backdrop', '.swal2-backdrop', '.swal2-container', '.overlay-backdrop', '[class*="backdrop"]', '[class*="overlay"]', '#overlay', '.overlay', '.popup-overlay', '#popup-overlay', '.fade.show', '.sk-overlay', '#sk-overlay', '[class*="adb-overlay"]', '#adb-overlay'];
-        for (const sel of backdropSelectors) {
-          document.querySelectorAll(sel).forEach(b => {
-            if (b && !isProtectedCaptchaOrAuth(b) && !b.querySelector('h1, h2, form, video, article, #stat-modules, .video-list, [class*="video"]')) {
-              try { b.remove(); } catch (_) { b.style.display = 'none'; }
-            }
-          });
-        }
-
-        // Restore Page Scrolling
-        if (document.body) {
-          document.body.style.setProperty('overflow', 'auto', 'important');
-          document.body.style.setProperty('position', 'static', 'important');
-          document.body.style.setProperty('filter', 'none', 'important');
-          document.body.style.setProperty('opacity', '1', 'important');
-          document.body.style.setProperty('pointer-events', 'auto', 'important');
-        }
-        if (document.documentElement) {
-          document.documentElement.style.setProperty('overflow', 'auto', 'important');
-          document.documentElement.style.setProperty('filter', 'none', 'important');
-          document.documentElement.style.setProperty('opacity', '1', 'important');
-          document.documentElement.style.setProperty('pointer-events', 'auto', 'important');
-        }
-
-        // Unhide and unblur main content
-        document.querySelectorAll('main, #main, .container, .card, body > div, [class*="content"], [id*="content"]').forEach(node => {
-          if (node && node.style) {
-            if (node.style.filter && (node.style.filter.includes('blur') || node.style.filter.includes('brightness'))) node.style.setProperty('filter', 'none', 'important');
-            if (node.style.backdropFilter) node.style.setProperty('backdrop-filter', 'none', 'important');
-            if (node.style.opacity && parseFloat(node.style.opacity) < 0.9 && !node.id.includes('stat-')) node.style.setProperty('opacity', '1', 'important');
-            if (node.style.pointerEvents === 'none') node.style.setProperty('pointer-events', 'auto', 'important');
-            if (node.style.display === 'none' && !node.classList.contains('modal') && !node.classList.contains('overlay') && !node.id.includes('stat-')) node.style.setProperty('display', 'block', 'important');
+        // Clean dark backdrop overlays & restore scrolling ONLY when a modal was destroyed
+        if (destroyed) {
+          const backdropSelectors = ['.modal-backdrop', '.swal2-backdrop', '.swal2-container', '.overlay-backdrop', '[class*="backdrop"]', '[class*="overlay"]', '#overlay', '.overlay', '.popup-overlay', '#popup-overlay', '.fade.show', '.sk-overlay', '#sk-overlay', '[class*="adb-overlay"]', '#adb-overlay'];
+          for (const sel of backdropSelectors) {
+            document.querySelectorAll(sel).forEach(b => {
+              if (b && !isProtectedCaptchaOrAuth(b) && !b.querySelector('h1, h2, form, video, article, .video-list')) {
+                try { b.remove(); } catch (_) { b.style.display = 'none'; }
+              }
+            });
           }
-        });
+
+          if (document.body) {
+            document.body.style.setProperty('overflow', 'auto', 'important');
+            document.body.style.setProperty('filter', 'none', 'important');
+            document.body.style.setProperty('opacity', '1', 'important');
+            document.body.style.setProperty('pointer-events', 'auto', 'important');
+          }
+          if (document.documentElement) {
+            document.documentElement.style.setProperty('overflow', 'auto', 'important');
+            document.documentElement.style.setProperty('filter', 'none', 'important');
+            document.documentElement.style.setProperty('opacity', '1', 'important');
+          }
+        }
       } catch (_) {}
     }
 
+    let scanTimer = null;
+    function debouncedScan() {
+      if (scanTimer) return;
+      scanTimer = setTimeout(() => {
+        annihilateAntiAdblockModals();
+        scanTimer = null;
+      }, 500);
+    }
+
     annihilateAntiAdblockModals();
-    const trapInterval = setInterval(annihilateAntiAdblockModals, 250);
+    const trapInterval = setInterval(debouncedScan, 1000);
     setTimeout(() => clearInterval(trapInterval), 15000);
 
-    const trapObserver = new MutationObserver(annihilateAntiAdblockModals);
+    const trapObserver = new MutationObserver(debouncedScan);
     if (document.documentElement) {
       trapObserver.observe(document.documentElement, { childList: true, subtree: true });
     }
@@ -724,22 +721,11 @@
             gBtn.style.setProperty('visibility', 'visible', 'important');
           }
         }
-
-        // Zero out on-screen countdown timers
-        const timers = document.querySelectorAll('.timer, #timer, .countdown, #countdown, span[id*="timer"], span[id*="time"], div[id*="time"], [data-timer], [data-countdown], .wait-time');
-        for (const t of timers) {
-          if (t && /\d+/.test(t.innerText)) {
-            t.innerText = '0';
-            t.textContent = '0';
-            try { t.dispatchEvent(new Event('change', { bubbles: true })); } catch (_) {}
-            try { t.dispatchEvent(new Event('input', { bubbles: true })); } catch (_) {}
-          }
-        }
       } catch (_) {}
     }
 
     turboPassCountdownsAndLinks();
-    const tInt = setInterval(turboPassCountdownsAndLinks, 250);
+    const tInt = setInterval(turboPassCountdownsAndLinks, 1000);
     setTimeout(() => clearInterval(tInt), 15000);
   })();
 

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         BraveShield Android Super Suite — Ultimate Stealth, AdBlock & Media Engine
 // @namespace    https://github.com/Nikhil-Sonawane87612/braveshield-anti-detection-extension
-// @version      5.2.1
+// @version      5.3.0
 // @description  55+ Features: 42-Module Stealth Engine, Turbo Timer Fast-Forward, Anti-Adblock Annihilator, Spotify Ad-Free with Synced Lyrics & Unlimited Skips, YouTube Turbo with SponsorBlock & Return Dislike, Audio Booster 150%, Video Stream Sniffer, Back-Button Trap Neutralizer, Paywall Bypass, and Safe APK Fast-Pass for Android & Mobile Web.
 // @author       Nikhil Sonawane
 // @match        *://*/*

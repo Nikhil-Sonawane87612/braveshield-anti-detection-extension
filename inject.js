@@ -3,7 +3,7 @@
  * Version: 5.3.0
  * Execution World: MAIN (True document_start)
  * Purpose: Complete Google Chrome parity, deep Brave cloaking, anti-adblock defusal,
- *          safe turbo timers, 100% Captcha protection & visibility, YouTube/Spotify acceleration.
+ *          100% Captcha passing (Turnstile/reCAPTCHA), safe turbo timers, YouTube/Spotify acceleration.
  */
 
 (() => {
@@ -42,7 +42,7 @@
     try {
       if (typeof navigator === 'undefined') return;
 
-      // 1. Completely neutralize navigator.brave and Navigator.prototype.brave
+      // 1. Completely neutralize navigator.brave on Prototype & Instance
       try {
         Object.defineProperty(Navigator.prototype, 'brave', {
           get: () => undefined,
@@ -93,50 +93,29 @@
         } catch (_) {}
       }
 
-      // 3. Exact Google Chrome User-Agent & Platform Cloak
-      const CHROME_VERSION = '131.0.6778.86';
-      const CHROME_UA = `Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/${CHROME_VERSION} Safari/537.36`;
+      // 3. Prototype-level webdriver & chrome parity (Safe for Cloudflare Turnstile)
+      try {
+        Object.defineProperty(Navigator.prototype, 'webdriver', {
+          get: () => false,
+          configurable: true,
+          enumerable: true
+        });
+      } catch (_) {}
 
-      try { Object.defineProperty(navigator, 'userAgent', { get: () => CHROME_UA, configurable: true }); } catch (_) {}
-      try { Object.defineProperty(navigator, 'appVersion', { get: () => `5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/${CHROME_VERSION} Safari/537.36`, configurable: true }); } catch (_) {}
-      try { Object.defineProperty(navigator, 'vendor', { get: () => 'Google Inc.', configurable: true }); } catch (_) {}
-      try { Object.defineProperty(navigator, 'productSub', { get: () => '20030107', configurable: true }); } catch (_) {}
-      try { Object.defineProperty(navigator, 'platform', { get: () => 'Win32', configurable: true }); } catch (_) {}
-      try { Object.defineProperty(navigator, 'webdriver', { get: () => false, configurable: true }); } catch (_) {}
-
-      // 4. Authentic Google Chrome Client Hints (navigator.userAgentData)
-      if (navigator.userAgentData) {
-        const chromeBrands = [
-          { brand: 'Google Chrome', version: '131' },
-          { brand: 'Chromium', version: '131' },
-          { brand: 'Not_A Brand', version: '24' }
-        ];
-
+      // 4. Sanitize Client Hints on NavigatorUAData Prototype
+      if (typeof NavigatorUAData !== 'undefined' && NavigatorUAData.prototype) {
         try {
-          Object.defineProperty(navigator, 'userAgentData', {
-            get: () => ({
-              brands: chromeBrands,
-              mobile: false,
-              platform: 'Windows',
-              getHighEntropyValues: () => Promise.resolve({
-                brands: chromeBrands,
-                mobile: false,
-                platform: 'Windows',
-                platformVersion: '15.0.0',
-                architecture: 'x86',
-                bitness: '64',
-                model: '',
-                uaFullVersion: CHROME_VERSION,
-                fullVersionList: [
-                  { brand: 'Google Chrome', version: CHROME_VERSION },
-                  { brand: 'Chromium', version: CHROME_VERSION },
-                  { brand: 'Not_A Brand', version: '24.0.0.0' }
-                ]
-              }),
-              toJSON: () => ({ brands: chromeBrands, mobile: false, platform: 'Windows' })
-            }),
-            configurable: true
-          });
+          const origBrands = Object.getOwnPropertyDescriptor(NavigatorUAData.prototype, 'brands');
+          if (origBrands && origBrands.get) {
+            Object.defineProperty(NavigatorUAData.prototype, 'brands', {
+              get: function() {
+                const brands = origBrands.get.call(this) || [];
+                return brands.map(b => (b.brand === 'Brave' ? { brand: 'Google Chrome', version: b.version } : b));
+              },
+              configurable: true,
+              enumerable: true
+            });
+          }
         } catch (_) {}
       }
 
@@ -502,6 +481,15 @@
   // Module 5: Safe Turbo Timer Fast-Forward & Shortener Fast-Pass (Manual Click Armed)
   // ─────────────────────────────────────────────────────────────────────────────
   (() => {
+    function isCaptchaPresentOnPage() {
+      if (isCaptchaFrame) return true;
+      return !!document.querySelector(
+        '.cf-turnstile, .g-recaptcha, .h-captcha, ' +
+        'iframe[src*="cloudflare"], iframe[src*="recaptcha"], iframe[src*="hcaptcha"], iframe[src*="turnstile"], ' +
+        '#challenge-stage, #cf-wrapper, [data-sitekey]'
+      );
+    }
+
     // High-speed setTimeout & setInterval timer compression with window bound receiver
     // Captcha frames and challenges MUST run at 100% normal native speed for proof-of-work validation!
     const origSetTimeout = window.setTimeout;
@@ -509,7 +497,7 @@
 
     window.setTimeout = function(handler, delay, ...args) {
       let numDelay = typeof delay === 'number' ? delay : (parseInt(delay, 10) || 0);
-      if (!isCaptchaFrame && !isMediaPlatform && numDelay >= 800 && numDelay <= 180000) {
+      if (!isCaptchaFrame && !isMediaPlatform && !isCaptchaPresentOnPage() && numDelay >= 800 && numDelay <= 180000) {
         numDelay = Math.max(20, Math.floor(numDelay / 25)); // 25x-50x fast compression
       }
       return origSetTimeout.apply(window, [handler, numDelay, ...args]);
@@ -517,7 +505,7 @@
 
     window.setInterval = function(handler, delay, ...args) {
       let numDelay = typeof delay === 'number' ? delay : (parseInt(delay, 10) || 0);
-      if (!isCaptchaFrame && !isMediaPlatform) {
+      if (!isCaptchaFrame && !isMediaPlatform && !isCaptchaPresentOnPage()) {
         if (numDelay >= 800 && numDelay <= 2000) {
           numDelay = 35; // 1s countdown tick compressed to 35ms
         }
@@ -687,35 +675,6 @@
     }
 
     setInterval(speedupYouTubeAds, 500);
-  })();
-
-  // ─────────────────────────────────────────────────────────────────────────────
-  // Module 8: WebGL Vendor & Client Integrity Guard (Safe for Captchas)
-  // ─────────────────────────────────────────────────────────────────────────────
-  (() => {
-    try {
-      if (isCaptchaFrame) return; // Do not touch WebGL on Captcha validation frames
-
-      const origGetParameter = WebGLRenderingContext.prototype.getParameter;
-      WebGLRenderingContext.prototype.getParameter = function(param) {
-        if (param === 0x1F00) return 'Google Inc. (NVIDIA)';
-        if (param === 0x1F01) return 'ANGLE (NVIDIA, NVIDIA GeForce RTX 3060 Direct3D11 vs_5_0 ps_5_0, D3D11)';
-        if (param === 0x9245) return 'Google Inc. (NVIDIA)';
-        if (param === 0x9246) return 'ANGLE (NVIDIA, NVIDIA GeForce RTX 3060 Direct3D11 vs_5_0 ps_5_0, D3D11)';
-        return origGetParameter.apply(this, arguments);
-      };
-
-      if (typeof WebGL2RenderingContext !== 'undefined') {
-        const origGetParam2 = WebGL2RenderingContext.prototype.getParameter;
-        WebGL2RenderingContext.prototype.getParameter = function(param) {
-          if (param === 0x1F00) return 'Google Inc. (NVIDIA)';
-          if (param === 0x1F01) return 'ANGLE (NVIDIA, NVIDIA GeForce RTX 3060 Direct3D11 vs_5_0 ps_5_0, D3D11)';
-          if (param === 0x9245) return 'Google Inc. (NVIDIA)';
-          if (param === 0x9246) return 'ANGLE (NVIDIA, NVIDIA GeForce RTX 3060 Direct3D11 vs_5_0 ps_5_0, D3D11)';
-          return origGetParam2.apply(this, arguments);
-        };
-      }
-    } catch (_) {}
   })();
 
   console.log('[BraveShield Bypass Pro] v5.3.0 Engine Armed & Synchronized.');

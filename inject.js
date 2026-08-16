@@ -287,6 +287,107 @@
           connectionInfo: 'h2'
         };
       };
+
+      // 7. Battery & Network Information Cloaking
+      if (sessionStorage.getItem('bs_battery_disabled') !== 'true') {
+        try {
+          if (navigator.getBattery) {
+            const mockBattery = {
+              charging: true,
+              chargingTime: 0,
+              dischargingTime: Infinity,
+              level: 1.0,
+              addEventListener: () => {},
+              removeEventListener: () => {},
+              dispatchEvent: () => true
+            };
+            navigator.getBattery = makeNative(() => Promise.resolve(mockBattery), 'getBattery');
+          }
+
+          if (navigator.connection || navigator.mozConnection || navigator.webkitConnection) {
+            const mockConnection = {
+              downlink: 10,
+              effectiveType: '4g',
+              rtt: 50,
+              saveData: false,
+              addEventListener: () => {},
+              removeEventListener: () => {},
+              dispatchEvent: () => true
+            };
+            try { Object.defineProperty(Navigator.prototype, 'connection', { get: () => mockConnection, configurable: true }); } catch (_) {}
+            try { Object.defineProperty(navigator, 'connection', { get: () => mockConnection, configurable: true }); } catch (_) {}
+          }
+        } catch (_) {}
+      }
+
+      // 8. AudioContext Sub-Pixel Noise Cloaker (Neutralizes Audio Fingerprinting)
+      if (sessionStorage.getItem('bs_audio_disabled') !== 'true') {
+        try {
+          if (typeof AudioBuffer !== 'undefined' && AudioBuffer.prototype.getChannelData) {
+            const origGetChannelData = AudioBuffer.prototype.getChannelData;
+            AudioBuffer.prototype.getChannelData = makeNative(function(channel) {
+              const data = origGetChannelData.apply(this, arguments);
+              if (!isCaptchaHost && data && data.length > 30) {
+                // Apply imperceptible float jitter to sample points
+                for (let i = 0; i < Math.min(data.length, 64); i += 8) {
+                  data[i] += (Math.random() * 0.0000002 - 0.0000001);
+                }
+              }
+              return data;
+            }, 'getChannelData');
+          }
+
+          if (typeof AnalyserNode !== 'undefined' && AnalyserNode.prototype.getFloatFrequencyData) {
+            const origGetFloatFreq = AnalyserNode.prototype.getFloatFrequencyData;
+            AnalyserNode.prototype.getFloatFrequencyData = makeNative(function(array) {
+              origGetFloatFreq.apply(this, arguments);
+              if (!isCaptchaHost && array && array.length > 0) {
+                array[0] += (Math.random() * 0.0001 - 0.00005);
+              }
+            }, 'getFloatFrequencyData');
+          }
+        } catch (_) {}
+      }
+
+      // 9. Canvas Sub-Dither Noise Cloaker (Neutralizes Canvas Fingerprinting)
+      if (sessionStorage.getItem('bs_canvas_disabled') !== 'true') {
+        try {
+          if (typeof CanvasRenderingContext2D !== 'undefined' && CanvasRenderingContext2D.prototype.getImageData) {
+            const origGetImageData = CanvasRenderingContext2D.prototype.getImageData;
+            CanvasRenderingContext2D.prototype.getImageData = makeNative(function(sx, sy, sw, sh) {
+              const imgData = origGetImageData.apply(this, arguments);
+              if (!isCaptchaHost && imgData && imgData.data && imgData.data.length >= 4) {
+                // Sub-dither a single byte imperceptibly on small/probe canvases (< 300x300)
+                if (sw <= 320 && sh <= 320) {
+                  const idx = (Math.floor(Math.random() * 10) * 4);
+                  if (idx < imgData.data.length) {
+                    imgData.data[idx] = Math.min(255, Math.max(0, imgData.data[idx] + (Math.random() > 0.5 ? 1 : -1)));
+                  }
+                }
+              }
+              return imgData;
+            }, 'getImageData');
+          }
+        } catch (_) {}
+      }
+
+      // 10. WebRTC Local IP Leak Protection
+      if (sessionStorage.getItem('bs_webrtc_disabled') !== 'true') {
+        try {
+          if (typeof RTCPeerConnection !== 'undefined') {
+            const origCreateOffer = RTCPeerConnection.prototype.createOffer;
+            RTCPeerConnection.prototype.createOffer = makeNative(function(options) {
+              return origCreateOffer.apply(this, arguments).then(offer => {
+                if (offer && offer.sdp) {
+                  // Filter LAN IP addresses from SDP candidates
+                  offer.sdp = offer.sdp.replace(/(\r\n|\n)?a=candidate:.*?(192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+|172\.(1[6-9]|2\d|3[0-1])\.\d+\.\d+|\.local).*/gi, '');
+                }
+                return offer;
+              });
+            }, 'createOffer');
+          }
+        } catch (_) {}
+      }
     } catch (_) {}
   })();
 
@@ -944,5 +1045,198 @@
     setInterval(sweepTwitchAds, 1000);
   })();
 
-  console.log('[BraveShield Bypass Pro] v5.4.0 Titanium Engine Armed & Synchronized.');
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Module 9: Universal Right-Click & Copy-Paste Enabler
+  // ─────────────────────────────────────────────────────────────────────────────
+  (() => {
+    try {
+      if (sessionStorage.getItem('bs_master_disabled') === 'true') return;
+      if (sessionStorage.getItem('bs_rightclick_disabled') === 'true') return;
+
+      const allowEvent = (e) => {
+        if (!isCaptchaHost && e) {
+          e.stopPropagation();
+          return true;
+        }
+      };
+
+      const events = ['contextmenu', 'selectstart', 'copy', 'cut', 'paste', 'dragstart'];
+      events.forEach(evtName => {
+        window.addEventListener(evtName, allowEvent, true);
+        document.addEventListener(evtName, allowEvent, true);
+      });
+
+      // Enable CSS user-select on body & html
+      const enableSelectionStyle = () => {
+        try {
+          if (document.body) {
+            document.body.style.setProperty('user-select', 'auto', 'important');
+            document.body.style.setProperty('-webkit-user-select', 'auto', 'important');
+          }
+        } catch (_) {}
+      };
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', enableSelectionStyle);
+      } else {
+        enableSelectionStyle();
+      }
+    } catch (_) {}
+  })();
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Module 10: Clean URL & Tracking Query Stripper
+  // ─────────────────────────────────────────────────────────────────────────────
+  (() => {
+    try {
+      if (sessionStorage.getItem('bs_master_disabled') === 'true') return;
+      if (sessionStorage.getItem('bs_cleanurl_disabled') === 'true') return;
+
+      const TRACKING_PARAMS = [
+        'utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content', 'utm_id',
+        'fbclid', 'gclid', 'gclsrc', 'dclid', 'wbraid', 'gbraid',
+        'mc_eid', 'si', 'igshid', 'ref', 'ref_src', 'yclid', 'msclkid'
+      ];
+
+      function cleanUrlString(rawUrl) {
+        try {
+          if (!rawUrl || typeof rawUrl !== 'string' || !rawUrl.includes('?')) return rawUrl;
+          const u = new URL(rawUrl, window.location.href);
+          let modified = false;
+          for (const p of TRACKING_PARAMS) {
+            if (u.searchParams.has(p)) {
+              u.searchParams.delete(p);
+              modified = true;
+            }
+          }
+          return modified ? u.toString() : rawUrl;
+        } catch (_) {
+          return rawUrl;
+        }
+      }
+
+      // Strip address bar tracking params silently
+      try {
+        const cleanedCurrent = cleanUrlString(window.location.href);
+        if (cleanedCurrent !== window.location.href && window.history && window.history.replaceState) {
+          window.history.replaceState(null, '', cleanedCurrent);
+        }
+      } catch (_) {}
+
+      // Intercept link clicks to strip tracking before navigation
+      document.addEventListener('click', (e) => {
+        try {
+          const a = e.target && e.target.closest ? e.target.closest('a') : null;
+          if (a && a.href && a.href.includes('?')) {
+            const clean = cleanUrlString(a.href);
+            if (clean !== a.href) a.href = clean;
+          }
+        } catch (_) {}
+      }, true);
+    } catch (_) {}
+  })();
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Module 11: Universal HTML5 Video Speed Controller ([ / ] hotkeys)
+  // ─────────────────────────────────────────────────────────────────────────────
+  (() => {
+    try {
+      if (sessionStorage.getItem('bs_master_disabled') === 'true') return;
+      if (sessionStorage.getItem('bs_videospeed_disabled') === 'true') return;
+
+      let speedHud = null;
+      let hudFadeTimer = null;
+
+      function showSpeedPill(speed) {
+        try {
+          if (!speedHud) {
+            speedHud = document.createElement('div');
+            speedHud.id = 'bs-speed-pill';
+            speedHud.style.cssText = `
+              position: fixed !important;
+              top: 24px !important;
+              left: 50% !important;
+              transform: translateX(-50%) !important;
+              background: rgba(10, 15, 25, 0.92) !important;
+              color: #00ffcc !important;
+              border: 1px solid rgba(0, 255, 204, 0.5) !important;
+              box-shadow: 0 0 20px rgba(0, 255, 204, 0.3) !important;
+              padding: 8px 18px !important;
+              border-radius: 20px !important;
+              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, monospace !important;
+              font-size: 14px !important;
+              font-weight: 800 !important;
+              letter-spacing: 0.5px !important;
+              z-index: 2147483647 !important;
+              pointer-events: none !important;
+              transition: opacity 0.2s ease !important;
+            `;
+            (document.body || document.documentElement).appendChild(speedHud);
+          }
+          speedHud.textContent = `⚡ Video Speed: ${speed.toFixed(2)}x`;
+          speedHud.style.opacity = '1';
+          clearTimeout(hudFadeTimer);
+          hudFadeTimer = setTimeout(() => {
+            if (speedHud) speedHud.style.opacity = '0';
+          }, 1200);
+        } catch (_) {}
+      }
+
+      window.addEventListener('keydown', (e) => {
+        try {
+          if (e.target && /input|textarea|select/i.test(e.target.tagName)) return;
+          if (e.target && e.target.isContentEditable) return;
+
+          const videos = document.querySelectorAll('video');
+          if (!videos || videos.length === 0) return;
+
+          if (e.key === '[' || e.key === ']' || e.key === '\\') {
+            e.preventDefault();
+            for (const v of videos) {
+              let cur = v.playbackRate || 1.0;
+              if (e.key === ']') cur = Math.min(16.0, cur + 0.25);
+              if (e.key === '[') cur = Math.max(0.25, cur - 0.25);
+              if (e.key === '\\') cur = 1.0;
+              v.playbackRate = cur;
+              showSpeedPill(cur);
+            }
+          }
+        } catch (_) {}
+      }, true);
+    } catch (_) {}
+  })();
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Module 12: Auto-Skip Video Intros & Next Episode
+  // ─────────────────────────────────────────────────────────────────────────────
+  (() => {
+    try {
+      if (sessionStorage.getItem('bs_master_disabled') === 'true') return;
+      if (sessionStorage.getItem('bs_autoskip_disabled') === 'true') return;
+
+      const SKIP_SELECTORS = [
+        '.watch-video--skip-content-button', '.skip-credits', '[data-uia="player-skip-intro"]',
+        '.atvwebplayersdk-skipelement-button', '.fq92fcf', '.skip-button',
+        '.vjs-overlay-skip-intro', '.skip-intro-button', '.skip-recap',
+        '.next-episode-button', '[data-uia="next-episode-seamless-button"]'
+      ];
+
+      function autoSkipIntros() {
+        try {
+          for (const sel of SKIP_SELECTORS) {
+            const btn = document.querySelector(sel);
+            if (btn && !btn._bsAutoSkipped && typeof btn.click === 'function') {
+              btn._bsAutoSkipped = true;
+              btn.click();
+              reportTelemetry('trapsNeutralized', 1);
+            }
+          }
+        } catch (_) {}
+      }
+
+      setInterval(autoSkipIntros, 1000);
+    } catch (_) {}
+  })();
+
+  console.log('[BraveShield Bypass Pro] v5.5.0 Titanium Engine Armed & Synchronized.');
 })();

@@ -18,7 +18,7 @@
         </div>
         <div class="brand-titles">
           <h1>BraveShield Control Studio</h1>
-          <span>Universal Anti-Detection, 50x Turbo &amp; Stealth Suite • v5.4.0</span>
+          <span>Universal Anti-Detection, 50x Turbo &amp; Stealth Suite • v5.5.0</span>
         </div>
       </div>
       <div class="master-dock">
@@ -217,14 +217,96 @@
         <div class="setting-row">
           <div class="setting-info">
             <div class="setting-title">AdBlock Modal Annihilator</div>
-            <div class="setting-desc">Destroys anti-adblock popups, blocked browser alerts, and backdrops</div>
+            <div class="setting-desc">Hides anti-adblock popups and blocked browser alerts safely</div>
           </div>
           <label class="toggle-sw"><input type="checkbox" id="opt-adblock" checked><span class="toggle-sl"></span></label>
         </div>
       </div>
     </div>
 
-    <!-- Card 3: Media & Streaming Suite -->
+    <!-- Card 3: Advanced Anti-Fingerprinting Suite -->
+    <div class="card">
+      <div class="card-header">
+        <span class="card-icon">🎵</span>
+        <h2>Advanced Anti-Fingerprinting Suite</h2>
+      </div>
+      <div class="card-body">
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-title">AudioContext Sub-Pixel Noise</div>
+            <div class="setting-desc">Injects imperceptible float jitter into AudioBuffer to defeat audio hashing</div>
+          </div>
+          <label class="toggle-sw"><input type="checkbox" id="opt-audio" checked><span class="toggle-sl"></span></label>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-title">Canvas Sub-Dither Noise Cloaker</div>
+            <div class="setting-desc">Applies single-pixel RGB sub-dithering to prevent canvas fingerprinting</div>
+          </div>
+          <label class="toggle-sw"><input type="checkbox" id="opt-canvas" checked><span class="toggle-sl"></span></label>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-title">WebRTC Local IP Leak Protection</div>
+            <div class="setting-desc">Filters private LAN IP addresses (192.168.x.x) in WebRTC SDP offers</div>
+          </div>
+          <label class="toggle-sw"><input type="checkbox" id="opt-webrtc" checked><span class="toggle-sl"></span></label>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-title">Battery &amp; Network Info Cloak</div>
+            <div class="setting-desc">Mocks Battery API (100% charging) and Network Information (4G 10Mbps)</div>
+          </div>
+          <label class="toggle-sw"><input type="checkbox" id="opt-battery" checked><span class="toggle-sl"></span></label>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card 4: Web Automation & Usability Suite -->
+    <div class="card">
+      <div class="card-header">
+        <span class="card-icon">🔓</span>
+        <h2>Web Automation &amp; Usability Suite</h2>
+      </div>
+      <div class="card-body">
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-title">Clean URL Tracker Stripper</div>
+            <div class="setting-desc">Auto-strips utm_*, fbclid, gclid, and analytics queries on navigation</div>
+          </div>
+          <label class="toggle-sw"><input type="checkbox" id="opt-cleanurl" checked><span class="toggle-sl"></span></label>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-title">Universal Right-Click &amp; Copy Enabler</div>
+            <div class="setting-desc">Defuses contextmenu and text selection blockers on restricted websites</div>
+          </div>
+          <label class="toggle-sw"><input type="checkbox" id="opt-rightclick" checked><span class="toggle-sl"></span></label>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-title">Universal Video Speed Controller</div>
+            <div class="setting-desc">Keyboard hotkeys [ (slow) / ] (fast) / \ (reset 1.0x) on any HTML5 video</div>
+          </div>
+          <label class="toggle-sw"><input type="checkbox" id="opt-videospeed" checked><span class="toggle-sl"></span></label>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-title">Auto-Skip Video Intros &amp; Recaps</div>
+            <div class="setting-desc">Auto-clicks Skip Intro / Skip Recap buttons on Netflix, Prime &amp; Anime portals</div>
+          </div>
+          <label class="toggle-sw"><input type="checkbox" id="opt-autoskip" checked><span class="toggle-sl"></span></label>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card 5: Media & Streaming Suite -->
     <div class="card">
       <div class="card-header">
         <span class="card-icon">🎬</span>
@@ -257,11 +339,11 @@
       </div>
     </div>
 
-    <!-- Card 4: Whitelist & Rule Sync Engine -->
+    <!-- Card 6: Whitelist, Backup & Rule Sync Engine -->
     <div class="card">
       <div class="card-header">
         <span class="card-icon">🔄</span>
-        <h2>Rule Auto-Sync &amp; Whitelist</h2>
+        <h2>Rule Sync, Whitelist &amp; JSON Backup</h2>
       </div>
       <div class="card-body">
         <div class="sync-banner">
@@ -283,8 +365,14 @@
           </div>
         </div>
 
-        <div style="margin-top:14px; text-align:right;">
-          <button class="btn-action" id="btn-reset-telemetry" style="background:#2d1b2e; border-color:#e53e3e; color:#fc8181;">Reset Telemetry Counters</button>
+        <!-- JSON Backup Studio -->
+        <div style="margin-top:16px; padding-top:14px; border-top:1px solid rgba(255,255,255,0.08); display:flex; gap:10px; flex-wrap:wrap; justify-content:space-between; align-items:center;">
+          <div style="display:flex; gap:8px;">
+            <button class="btn-action" id="btn-export-backup" style="background:#132a24; border-color:#00f076; color:#00f076;">💾 Export Backup (JSON)</button>
+            <button class="btn-action" id="btn-import-backup-trigger" style="background:#132238; border-color:#00e5ff; color:#00e5ff;">📂 Restore Backup</button>
+            <input type="file" id="file-import-backup" accept=".json" style="display:none;">
+          </div>
+          <button class="btn-action" id="btn-reset-telemetry" style="background:#2d1b2e; border-color:#e53e3e; color:#fc8181;">Reset Telemetry</button>
         </div>
       </div>
     </div>

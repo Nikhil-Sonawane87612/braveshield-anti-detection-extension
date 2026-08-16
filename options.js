@@ -1,6 +1,6 @@
 /**
  * BraveShield Bypass Pro — Control Studio Controller
- * Version: 5.4.0
+ * Version: 5.5.0
  */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -29,6 +29,15 @@ document.addEventListener('DOMContentLoaded', () => {
   const optSpotify = document.getElementById('opt-spotify');
   const optTwitch = document.getElementById('opt-twitch');
 
+  const optAudio = document.getElementById('opt-audio');
+  const optCanvas = document.getElementById('opt-canvas');
+  const optWebrtc = document.getElementById('opt-webrtc');
+  const optBattery = document.getElementById('opt-battery');
+  const optCleanurl = document.getElementById('opt-cleanurl');
+  const optRightclick = document.getElementById('opt-rightclick');
+  const optVideospeed = document.getElementById('opt-videospeed');
+  const optAutoskip = document.getElementById('opt-autoskip');
+
   const statTimeSaved = document.getElementById('stat-time-saved');
   const statTrapsDefused = document.getElementById('stat-traps-defused');
   const statLinksUnlocked = document.getElementById('stat-links-unlocked');
@@ -39,6 +48,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const whitelistInput = document.getElementById('whitelist-input');
   const btnAddWhitelist = document.getElementById('btn-add-whitelist');
   const whitelistTags = document.getElementById('whitelist-tags');
+
+  const btnExportBackup = document.getElementById('btn-export-backup');
+  const btnImportTrigger = document.getElementById('btn-import-backup-trigger');
+  const fileImportBackup = document.getElementById('file-import-backup');
 
   let selectedProfileId = 'win-rtx4090';
 
@@ -116,6 +129,8 @@ document.addEventListener('DOMContentLoaded', () => {
     'masterEnabled', 'deviceProfile', 'customHardwareProfile', 'maskBraveApi', 'maskClientHints',
     'unshortenerEnabled', 'autoBypassTimers', 'paywallDefuserEnabled',
     'bypassAdblockDetection', 'spotifyUnlocked', 'youtubeAds', 'twitchShieldEnabled',
+    'audioNoiseEnabled', 'canvasNoiseEnabled', 'webrtcShieldEnabled', 'batteryMaskEnabled',
+    'cleanUrlEnabled', 'rightClickEnabled', 'videoSpeedEnabled', 'autoSkipIntrosEnabled',
     'timeSavedSeconds', 'trapsNeutralized', 'directLinksUnlocked',
     'whitelist', 'lastSyncTime'
   ], (res) => {
@@ -150,6 +165,15 @@ document.addEventListener('DOMContentLoaded', () => {
     optSpotify.checked = res.spotifyUnlocked !== false;
     optTwitch.checked = res.twitchShieldEnabled !== false;
 
+    if (optAudio) optAudio.checked = res.audioNoiseEnabled !== false;
+    if (optCanvas) optCanvas.checked = res.canvasNoiseEnabled !== false;
+    if (optWebrtc) optWebrtc.checked = res.webrtcShieldEnabled !== false;
+    if (optBattery) optBattery.checked = res.batteryMaskEnabled !== false;
+    if (optCleanurl) optCleanurl.checked = res.cleanUrlEnabled !== false;
+    if (optRightclick) optRightclick.checked = res.rightClickEnabled !== false;
+    if (optVideospeed) optVideospeed.checked = res.videoSpeedEnabled !== false;
+    if (optAutoskip) optAutoskip.checked = res.autoSkipIntrosEnabled !== false;
+
     if (statTimeSaved) statTimeSaved.textContent = formatSeconds(res.timeSavedSeconds || 0);
     if (statTrapsDefused) statTrapsDefused.textContent = (res.trapsNeutralized || 0).toString();
     if (statLinksUnlocked) statLinksUnlocked.textContent = (res.directLinksUnlocked || 0).toString();
@@ -161,7 +185,7 @@ document.addEventListener('DOMContentLoaded', () => {
     renderWhitelist(res.whitelist || []);
   });
 
-  // 3. Storage Change Listener (Bidirectional Live Sync with Popup)
+  // 3. Storage Change Listener (Bidirectional Live Sync)
   chrome.storage.onChanged.addListener((changes, area) => {
     if (area === 'local') {
       if (changes.masterEnabled !== undefined) {
@@ -177,6 +201,16 @@ document.addEventListener('DOMContentLoaded', () => {
       if (changes.youtubeAds !== undefined) optYoutube.checked = changes.youtubeAds.newValue !== false;
       if (changes.spotifyUnlocked !== undefined) optSpotify.checked = changes.spotifyUnlocked.newValue !== false;
       if (changes.twitchShieldEnabled !== undefined) optTwitch.checked = changes.twitchShieldEnabled.newValue !== false;
+
+      if (changes.audioNoiseEnabled !== undefined && optAudio) optAudio.checked = changes.audioNoiseEnabled.newValue !== false;
+      if (changes.canvasNoiseEnabled !== undefined && optCanvas) optCanvas.checked = changes.canvasNoiseEnabled.newValue !== false;
+      if (changes.webrtcShieldEnabled !== undefined && optWebrtc) optWebrtc.checked = changes.webrtcShieldEnabled.newValue !== false;
+      if (changes.batteryMaskEnabled !== undefined && optBattery) optBattery.checked = changes.batteryMaskEnabled.newValue !== false;
+      if (changes.cleanUrlEnabled !== undefined && optCleanurl) optCleanurl.checked = changes.cleanUrlEnabled.newValue !== false;
+      if (changes.rightClickEnabled !== undefined && optRightclick) optRightclick.checked = changes.rightClickEnabled.newValue !== false;
+      if (changes.videoSpeedEnabled !== undefined && optVideospeed) optVideospeed.checked = changes.videoSpeedEnabled.newValue !== false;
+      if (changes.autoSkipIntrosEnabled !== undefined && optAutoskip) optAutoskip.checked = changes.autoSkipIntrosEnabled.newValue !== false;
+
       if (changes.deviceProfile !== undefined) {
         selectedProfileId = changes.deviceProfile.newValue;
         if (optProfile) optProfile.value = selectedProfileId;
@@ -246,6 +280,61 @@ document.addEventListener('DOMContentLoaded', () => {
   optSpotify.addEventListener('change', () => chrome.storage.local.set({ spotifyUnlocked: optSpotify.checked }));
   optTwitch.addEventListener('change', () => chrome.storage.local.set({ twitchShieldEnabled: optTwitch.checked }));
 
+  if (optAudio) optAudio.addEventListener('change', () => chrome.storage.local.set({ audioNoiseEnabled: optAudio.checked }));
+  if (optCanvas) optCanvas.addEventListener('change', () => chrome.storage.local.set({ canvasNoiseEnabled: optCanvas.checked }));
+  if (optWebrtc) optWebrtc.addEventListener('change', () => chrome.storage.local.set({ webrtcShieldEnabled: optWebrtc.checked }));
+  if (optBattery) optBattery.addEventListener('change', () => chrome.storage.local.set({ batteryMaskEnabled: optBattery.checked }));
+  if (optCleanurl) optCleanurl.addEventListener('change', () => chrome.storage.local.set({ cleanUrlEnabled: optCleanurl.checked }));
+  if (optRightclick) optRightclick.addEventListener('change', () => chrome.storage.local.set({ rightClickEnabled: optRightclick.checked }));
+  if (optVideospeed) optVideospeed.addEventListener('change', () => chrome.storage.local.set({ videoSpeedEnabled: optVideospeed.checked }));
+  if (optAutoskip) optAutoskip.addEventListener('change', () => chrome.storage.local.set({ autoSkipIntrosEnabled: optAutoskip.checked }));
+
+  // 5. JSON Backup Export & Import
+  if (btnExportBackup) {
+    btnExportBackup.addEventListener('click', () => {
+      chrome.storage.local.get(null, (allData) => {
+        const jsonStr = JSON.stringify(allData, null, 2);
+        const blob = new Blob([jsonStr], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `BraveShield-Backup-${new Date().toISOString().slice(0, 10)}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+        btnExportBackup.textContent = '✅ Backup Downloaded!';
+        setTimeout(() => { btnExportBackup.textContent = '💾 Export Backup (JSON)'; }, 2000);
+      });
+    });
+  }
+
+  if (btnImportTrigger && fileImportBackup) {
+    btnImportTrigger.addEventListener('click', () => fileImportBackup.click());
+
+    fileImportBackup.addEventListener('change', (e) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (evt) => {
+        try {
+          const parsed = JSON.parse(evt.target.result);
+          if (parsed && typeof parsed === 'object') {
+            chrome.storage.local.set(parsed, () => {
+              btnImportTrigger.textContent = '✅ Restored Successfully!';
+              setTimeout(() => {
+                btnImportTrigger.textContent = '📂 Restore Backup';
+                window.location.reload();
+              }, 1500);
+            });
+          }
+        } catch (_) {
+          btnImportTrigger.textContent = '❌ Invalid JSON File';
+          setTimeout(() => { btnImportTrigger.textContent = '📂 Restore Backup'; }, 2000);
+        }
+      };
+      reader.readAsText(file);
+    });
+  }
+
   // Reset Telemetry
   if (btnResetTelemetry) {
     btnResetTelemetry.addEventListener('click', () => {
@@ -254,7 +343,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (statTrapsDefused) statTrapsDefused.textContent = '0';
         if (statLinksUnlocked) statLinksUnlocked.textContent = '0';
         btnResetTelemetry.textContent = 'Telemetry Reset!';
-        setTimeout(() => { btnResetTelemetry.textContent = 'Reset Telemetry Counters'; }, 2000);
+        setTimeout(() => { btnResetTelemetry.textContent = 'Reset Telemetry'; }, 2000);
       });
     });
   }

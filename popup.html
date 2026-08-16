@@ -20,11 +20,11 @@
       </div>
       <div class="brand-t">
         <h1>BraveShield</h1>
-        <span class="brand-sub">Bypass Pro • Stealth Suite</span>
+        <span class="brand-sub">Bypass Pro • Titanium Suite</span>
       </div>
     </div>
     <div class="hdr-badges">
-      <span class="ver-pill">v5.4.0</span>
+      <span class="ver-pill">v5.5.0</span>
       <span class="update-pill hidden" id="update-badge">UPDATE</span>
     </div>
   </div>
@@ -49,7 +49,7 @@
         <span class="pulse-icon">⚡</span>
         <span class="master-tag-text">SYSTEM DEFENSE</span>
       </div>
-      <div class="master-state-label" id="master-subtitle">All 28 Stealth Modules Armed</div>
+      <div class="master-state-label" id="master-subtitle">All 32 Stealth Modules Armed</div>
     </div>
     <label class="master-sw" title="Toggle Master Shield">
       <input type="checkbox" id="master-toggle" checked>
@@ -58,7 +58,19 @@
   </div>
 </section>
 
-<!-- Feature C: 110+ Hardware Device Profile Switcher -->
+<!-- Live Stealth Score Matrix -->
+<div class="stealth-score-bar" id="stealth-score-card">
+  <div class="score-left">
+    <span class="score-grade" id="stealth-grade">A+</span>
+    <div class="score-info">
+      <div class="score-title" id="stealth-score-text">100% Titanium Stealth Active</div>
+      <div class="score-desc">Zero Fingerprint Leaks • Full Hardware Cloaking</div>
+    </div>
+  </div>
+  <div class="score-sparkle">🛡️</div>
+</div>
+
+<!-- 110+ Hardware Device Profile Switcher -->
 <section class="profile-card">
   <div class="profile-hdr">
     <span class="profile-icon">🎭</span>
@@ -70,7 +82,7 @@
   </select>
 </section>
 
-<!-- Feature D: Live Telemetry Metrics -->
+<!-- Live Telemetry Metrics -->
 <section class="metrics-strip">
   <div class="mcard">
     <div class="mval" id="metric-timesaved">0s</div>
@@ -86,7 +98,7 @@
   </div>
 </section>
 
-<!-- Core Module Deck -->
+<!-- Core Defense Suite -->
 <section class="module-group">
   <div class="group-title">CORE DEFENSE SUITE</div>
   
@@ -95,7 +107,7 @@
       <span class="mod-icon">⚡</span>
       <div class="mod-text">
         <div class="mod-name">Instant URL Unshortener</div>
-        <div class="mod-desc">Decodes destination &amp; floating jump bar</div>
+        <div class="mod-desc">Decodes destination &amp; 1-click copy HUD</div>
       </div>
     </div>
     <label class="toggle-sw">
@@ -137,7 +149,7 @@
       <span class="mod-icon">🚫</span>
       <div class="mod-text">
         <div class="mod-name">AdBlock Trap Defuser</div>
-        <div class="mod-desc">Destroys adblock &amp; browser blocked modals</div>
+        <div class="mod-desc">Hides adblock &amp; browser blocked modals</div>
       </div>
     </div>
     <label class="toggle-sw">
@@ -161,7 +173,82 @@
   </div>
 </section>
 
-<!-- Dual Whitelist / Blacklist Actions -->
+<!-- Advanced Privacy & Automation Suite -->
+<section class="module-group">
+  <div class="group-title">ADVANCED CLOAKING &amp; AUTOMATION</div>
+
+  <div class="module-item">
+    <div class="mod-info">
+      <span class="mod-icon">🎵</span>
+      <div class="mod-text">
+        <div class="mod-name">Audio &amp; Canvas Noise Shield</div>
+        <div class="mod-desc">Sub-pixel jitter defeats audio/canvas hashes</div>
+      </div>
+    </div>
+    <label class="toggle-sw">
+      <input type="checkbox" id="toggle-audiocanvas" checked>
+      <span class="toggle-sl"></span>
+    </label>
+  </div>
+
+  <div class="module-item">
+    <div class="mod-info">
+      <span class="mod-icon">🌐</span>
+      <div class="mod-text">
+        <div class="mod-name">WebRTC &amp; Battery Cloaker</div>
+        <div class="mod-desc">Blocks LAN IP leak &amp; battery tracker</div>
+      </div>
+    </div>
+    <label class="toggle-sw">
+      <input type="checkbox" id="toggle-webrtcbattery" checked>
+      <span class="toggle-sl"></span>
+    </label>
+  </div>
+
+  <div class="module-item">
+    <div class="mod-info">
+      <span class="mod-icon">🧹</span>
+      <div class="mod-text">
+        <div class="mod-name">Clean URL Tracker Stripper</div>
+        <div class="mod-desc">Auto-removes utm_*, fbclid, gclid from URLs</div>
+      </div>
+    </div>
+    <label class="toggle-sw">
+      <input type="checkbox" id="toggle-cleanurl" checked>
+      <span class="toggle-sl"></span>
+    </label>
+  </div>
+
+  <div class="module-item">
+    <div class="mod-info">
+      <span class="mod-icon">🔓</span>
+      <div class="mod-text">
+        <div class="mod-name">Universal Right-Click &amp; Copy</div>
+        <div class="mod-desc">Restores right-click, text selection &amp; copy</div>
+      </div>
+    </div>
+    <label class="toggle-sw">
+      <input type="checkbox" id="toggle-rightclick" checked>
+      <span class="toggle-sl"></span>
+    </label>
+  </div>
+
+  <div class="module-item">
+    <div class="mod-info">
+      <span class="mod-icon">⏱️</span>
+      <div class="mod-text">
+        <div class="mod-name">Video Speed &amp; Skip Intros</div>
+        <div class="mod-desc">[ / ] hotkeys &amp; auto-skip intro buttons</div>
+      </div>
+    </div>
+    <label class="toggle-sw">
+      <input type="checkbox" id="toggle-videospeed" checked>
+      <span class="toggle-sl"></span>
+    </label>
+  </div>
+</section>
+
+<!-- Dual Whitelist / Control Studio Actions -->
 <footer class="site-actions-footer">
   <button class="site-action-btn btn-whitelist" id="btn-whitelist">
     <span class="site-btn-icon">🛡️</span>
@@ -175,7 +262,7 @@
 
 <!-- Bottom Status Dock -->
 <div class="bottom-dock">
-  <span class="dock-status" id="footer-status">Engine Online</span>
+  <span class="dock-status" id="footer-status">Titanium Engine Active</span>
   <span class="dock-dot">•</span>
   <button id="btn-sync-rules" title="Auto-Sync Rules from GitHub" class="sync-btn">
     <span id="sync-icon">🔄</span>

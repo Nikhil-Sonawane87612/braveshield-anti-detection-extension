@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "BraveShield Bypass Pro — Next-Gen Stealth & Turbo Suite v5.4.0",
-  "version": "5.4.0",
-  "description": "Titanium stealth suite featuring deep Brave cloaking, 50x turbo timers, instant URL unshortener, paywall/blur defusal, device profile switching, and Spotify/YouTube/Twitch shields.",
+  "name": "BraveShield Bypass Pro — Titanium Stealth & Turbo Suite v5.5.0",
+  "version": "5.5.0",
+  "description": "Titanium stealth suite featuring deep Brave cloaking, 110+ hardware profiles, audio/canvas/webrtc noise, 50x turbo timers, instant URL unshortener, paywall defusal, clean URLs, and media shields.",
   "author": "Nikhil Sonawane",
   "icons": {
     "16": "icons/icon16.png",

@@ -75,6 +75,30 @@
       if (res.twitchShieldEnabled === false) sessionStorage.setItem('bs_twitch_disabled', 'true');
       else sessionStorage.removeItem('bs_twitch_disabled');
 
+      if (res.audioNoiseEnabled === false) sessionStorage.setItem('bs_audio_disabled', 'true');
+      else sessionStorage.removeItem('bs_audio_disabled');
+
+      if (res.canvasNoiseEnabled === false) sessionStorage.setItem('bs_canvas_disabled', 'true');
+      else sessionStorage.removeItem('bs_canvas_disabled');
+
+      if (res.webrtcShieldEnabled === false) sessionStorage.setItem('bs_webrtc_disabled', 'true');
+      else sessionStorage.removeItem('bs_webrtc_disabled');
+
+      if (res.batteryMaskEnabled === false) sessionStorage.setItem('bs_battery_disabled', 'true');
+      else sessionStorage.removeItem('bs_battery_disabled');
+
+      if (res.rightClickEnabled === false) sessionStorage.setItem('bs_rightclick_disabled', 'true');
+      else sessionStorage.removeItem('bs_rightclick_disabled');
+
+      if (res.cleanUrlEnabled === false) sessionStorage.setItem('bs_cleanurl_disabled', 'true');
+      else sessionStorage.removeItem('bs_cleanurl_disabled');
+
+      if (res.videoSpeedEnabled === false) sessionStorage.setItem('bs_videospeed_disabled', 'true');
+      else sessionStorage.removeItem('bs_videospeed_disabled');
+
+      if (res.autoSkipIntrosEnabled === false) sessionStorage.setItem('bs_autoskip_disabled', 'true');
+      else sessionStorage.removeItem('bs_autoskip_disabled');
+
       if (res.deviceProfile) sessionStorage.setItem('bs_device_profile', res.deviceProfile);
       if (res.customHardwareProfile) sessionStorage.setItem('bs_custom_hardware', JSON.stringify(res.customHardwareProfile));
       if (res.webglVendor) sessionStorage.setItem('bs_webgl_vendor', res.webglVendor);
@@ -135,9 +159,10 @@
           <div style="display:flex; align-items:center; gap:10px;">
             <span style="font-size:16px;">⚡</span>
             <span style="font-weight:700; color:#00ffcc; letter-spacing:0.5px;">Direct Link Detected:</span>
-            <span style="max-width:280px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:#a0aec0; font-size:12px;">${targetUrl}</span>
+            <span style="max-width:240px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:#a0aec0; font-size:12px;">${targetUrl}</span>
           </div>
           <div style="display:flex; align-items:center; gap:8px;">
+            <button id="bs-copy-hud" style="background:rgba(255,255,255,0.1); color:#00ffcc; border:1px solid rgba(0,255,204,0.3); font-weight:700; font-size:11px; padding:6px 10px; border-radius:6px; cursor:pointer; transition:all 0.2s ease;">📋 Copy</button>
             <a href="${targetUrl}" target="_blank" rel="noopener noreferrer" style="background:linear-gradient(135deg, #00ffcc, #0077ff); color:#000; font-weight:800; font-size:12px; padding:6px 14px; border-radius:6px; text-decoration:none; text-transform:uppercase; letter-spacing:0.5px; box-shadow:0 0 12px rgba(0,255,204,0.4); cursor:pointer;">Jump Directly ↗</a>
             <button id="bs-close-hud" style="background:transparent; border:none; color:#718096; font-size:16px; cursor:pointer; padding:2px 6px;">✕</button>
           </div>
@@ -168,6 +193,18 @@
         document.head ? document.head.appendChild(style) : container.appendChild(style);
 
         container.appendChild(bar);
+
+        document.getElementById('bs-copy-hud')?.addEventListener('click', () => {
+          try {
+            navigator.clipboard.writeText(targetUrl);
+            const btn = document.getElementById('bs-copy-hud');
+            if (btn) {
+              btn.textContent = '✅ Copied!';
+              setTimeout(() => { btn.textContent = '📋 Copy'; }, 2000);
+            }
+          } catch (_) {}
+        });
+
         document.getElementById('bs-close-hud')?.addEventListener('click', () => bar.remove());
       } catch (_) {}
     }

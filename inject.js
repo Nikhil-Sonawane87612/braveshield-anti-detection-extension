@@ -3,11 +3,15 @@
  * Version: 5.3.0
  * Execution World: MAIN (True document_start)
  * Purpose: Complete Google Chrome parity, deep Brave cloaking, anti-adblock defusal,
- *          safe turbo timers, YouTube/Spotify acceleration, and canvas/webgl protection.
+ *          safe turbo timers, 100% Captcha protection & visibility, YouTube/Spotify acceleration.
  */
 
 (() => {
   'use strict';
+
+  const host = (window.location && window.location.hostname) ? window.location.hostname.toLowerCase() : '';
+  const isCaptchaFrame = host.includes('challenges.cloudflare.com') || host.includes('recaptcha.net') || host.includes('google.com') || host.includes('hcaptcha.com') || host.includes('arkoselabs.com') || host.includes('geetest.com');
+  const isMediaPlatform = host.includes('spotify.com') || host.includes('youtube.com') || host.includes('youtu.be') || host.includes('netflix.com') || host.includes('twitch.tv');
 
   // ─────────────────────────────────────────────────────────────────────────────
   // 0. Master Kill Switch & Telemetry Initialization
@@ -198,6 +202,8 @@
           const parsed = new URL(url);
           const parsedHost = parsed.hostname.toLowerCase();
           if (parsedHost === curHost || parsedHost.endsWith('.' + curHost)) return false; // Never intercept same-origin site requests!
+          // NEVER intercept Captcha services!
+          if (/recaptcha|hcaptcha|turnstile|challenges\.cloudflare|arkoselabs|geetest|funcaptcha/i.test(url)) return false;
         } catch (_) {}
         return /pagead2\.googlesyndication\.com|adservice\.google\.com|securepubads\.g\.doubleclick\.net|adnxs\.com|prebid\.js|fuckadblock|blockadblock|adblockdetector/i.test(url);
       }
@@ -321,21 +327,68 @@
   })();
 
   // ─────────────────────────────────────────────────────────────────────────────
-  // Module 4: Universal Anti-Adblock Modal Annihilator & Fullscreen Backdrop Cleaner
+  // Module 4: Universal Anti-Adblock Modal Annihilator & Captcha Protection Shield
   // ─────────────────────────────────────────────────────────────────────────────
   (() => {
     const ADBLOCK_MODAL_TEXT_REGEX = /adblock(?:er)?\s+detected|browser\s+not\s+allowed|brave\s+browser\s+is\s+not\s+allowed|brave\s+browser\s+is\s+not\s+supported|open\s+this\s+page\s+in\s+google\s+chrome|disable\s+(?:your\s+)?ad\s*blocker|disable\s+(?:your\s+)?private\s+dns|ad\s*blocker\/vpn\/proxy|vpn\/proxy\/custom\s+dns|using\s+an\s+ad\s*blocker|custom\s+dns|please\s+consider\s+disabling\s+it|turn\s+off\s+adblock|ad\s*block\s+detected|please\s+whitelist|adblocker\s+is\s+detected|i've\s+disabled\s+adblocker|ad\s*blocker\s+found|ad\s*block\s+shield|block\s+adblock|adblocker\s+notice/i;
 
     function isProtectedCaptchaOrAuth(el) {
       if (!el) return false;
-      const host = (window.location.hostname || '').toLowerCase();
+      if (isCaptchaFrame) return true;
       if (host.includes('accounts.spotify.com') || host.includes('challenge.spotify.com') || host.includes('arkoselabs.com')) return true;
-      const htmlSnippet = (el.outerHTML || '').slice(0, 800).toLowerCase();
-      const textSnippet = (el.innerText || '').toLowerCase();
-      if (htmlSnippet.includes('arkose') || htmlSnippet.includes('funcaptcha') || htmlSnippet.includes('recaptcha') || htmlSnippet.includes('hcaptcha') || htmlSnippet.includes('turnstile') || htmlSnippet.includes('cf-chl') || htmlSnippet.includes('challenge-form')) return true;
-      if (textSnippet.includes("make sure that you're a human") || textSnippet.includes('verify you are human') || textSnippet.includes('security check')) return true;
-      if (el.querySelector && el.querySelector('iframe[src*="arkose"], iframe[src*="recaptcha"], iframe[src*="hcaptcha"], iframe[src*="turnstile"], #challenge-stage')) return true;
+
+      const htmlSnippet = (el.outerHTML || '').slice(0, 1200).toLowerCase();
+      const textSnippet = (el.innerText || el.textContent || '').toLowerCase();
+
+      // Check for all known Captcha & verification systems
+      if (
+        htmlSnippet.includes('arkose') || htmlSnippet.includes('funcaptcha') ||
+        htmlSnippet.includes('recaptcha') || htmlSnippet.includes('hcaptcha') ||
+        htmlSnippet.includes('turnstile') || htmlSnippet.includes('cf-chl') ||
+        htmlSnippet.includes('challenge-form') || htmlSnippet.includes('geetest') ||
+        htmlSnippet.includes('g-recaptcha') || htmlSnippet.includes('h-captcha') ||
+        htmlSnippet.includes('cf-turnstile') || htmlSnippet.includes('challenges.cloudflare')
+      ) return true;
+
+      if (
+        textSnippet.includes("make sure that you're a human") ||
+        textSnippet.includes('verify you are human') ||
+        textSnippet.includes('security check') ||
+        textSnippet.includes('verify you are a human') ||
+        textSnippet.includes('i am not a robot') ||
+        textSnippet.includes('cf-turnstile')
+      ) return true;
+
+      if (el.querySelector && el.querySelector('iframe[src*="arkose"], iframe[src*="recaptcha"], iframe[src*="hcaptcha"], iframe[src*="turnstile"], iframe[src*="cloudflare"], iframe[src*="geetest"], .g-recaptcha, .h-captcha, .cf-turnstile, #challenge-stage, #cf-wrapper, [data-sitekey]')) return true;
+
       return false;
+    }
+
+    // Actively guarantee full visibility for all Captcha widgets
+    function ensureCaptchasVisible() {
+      try {
+        const captchaNodes = document.querySelectorAll(
+          '.g-recaptcha, .h-captcha, .cf-turnstile, [data-sitekey], ' +
+          'iframe[src*="recaptcha"], iframe[src*="hcaptcha"], iframe[src*="turnstile"], iframe[src*="cloudflare"], iframe[src*="arkose"], iframe[src*="geetest"], ' +
+          '#challenge-stage, #cf-wrapper, div[class*="recaptcha"], div[class*="hcaptcha"], div[class*="turnstile"]'
+        );
+        for (const c of captchaNodes) {
+          c.style.setProperty('display', 'inline-block', 'important');
+          c.style.setProperty('visibility', 'visible', 'important');
+          c.style.setProperty('opacity', '1', 'important');
+          c.style.setProperty('pointer-events', 'auto', 'important');
+          let p = c.parentElement;
+          let depth = 0;
+          while (p && p !== document.body && depth < 5) {
+            p.style.setProperty('visibility', 'visible', 'important');
+            if (p.style.display === 'none') p.style.setProperty('display', 'block', 'important');
+            if (p.style.opacity === '0') p.style.setProperty('opacity', '1', 'important');
+            p.style.setProperty('pointer-events', 'auto', 'important');
+            p = p.parentElement;
+            depth++;
+          }
+        }
+      } catch (_) {}
     }
 
     function autoBypassAgeAndConsent() {
@@ -364,6 +417,7 @@
       try {
         let destroyed = false;
         autoBypassAgeAndConsent();
+        ensureCaptchasVisible();
 
         const candidates = document.querySelectorAll('div, section, dialog, [role="dialog"], [role="alertdialog"], .modal, .swal2-container, .sweet-alert, .overlay, .popup, [class*="modal"], [class*="overlay"], [class*="popup"], [id*="modal"], [id*="overlay"], [id*="adblock"]');
         for (const el of candidates) {
@@ -448,16 +502,14 @@
   // Module 5: Safe Turbo Timer Fast-Forward & Shortener Fast-Pass (Manual Click Armed)
   // ─────────────────────────────────────────────────────────────────────────────
   (() => {
-    const host = (window.location && window.location.hostname) ? window.location.hostname.toLowerCase() : '';
-    const isMediaPlatform = host.includes('spotify.com') || host.includes('youtube.com') || host.includes('youtu.be') || host.includes('netflix.com') || host.includes('twitch.tv');
-
     // High-speed setTimeout & setInterval timer compression with window bound receiver
+    // Captcha frames and challenges MUST run at 100% normal native speed for proof-of-work validation!
     const origSetTimeout = window.setTimeout;
     const origSetInterval = window.setInterval;
 
     window.setTimeout = function(handler, delay, ...args) {
       let numDelay = typeof delay === 'number' ? delay : (parseInt(delay, 10) || 0);
-      if (!isMediaPlatform && numDelay >= 800 && numDelay <= 180000) {
+      if (!isCaptchaFrame && !isMediaPlatform && numDelay >= 800 && numDelay <= 180000) {
         numDelay = Math.max(20, Math.floor(numDelay / 25)); // 25x-50x fast compression
       }
       return origSetTimeout.apply(window, [handler, numDelay, ...args]);
@@ -465,7 +517,7 @@
 
     window.setInterval = function(handler, delay, ...args) {
       let numDelay = typeof delay === 'number' ? delay : (parseInt(delay, 10) || 0);
-      if (!isMediaPlatform) {
+      if (!isCaptchaFrame && !isMediaPlatform) {
         if (numDelay >= 800 && numDelay <= 2000) {
           numDelay = 35; // 1s countdown tick compressed to 35ms
         }
@@ -588,7 +640,6 @@
   // Module 6: Spotify Web Player Super Engine (Ad-Free & Synced Lyrics)
   // ─────────────────────────────────────────────────────────────────────────────
   (() => {
-    const host = (window.location && window.location.hostname) ? window.location.hostname.toLowerCase() : '';
     if (!host.includes('spotify.com')) return;
 
     console.log('[BraveShield] Spotify Web Player Engine Armed.');
@@ -615,7 +666,6 @@
   // Module 7: YouTube Turbo & Ad-Skipper Engine
   // ─────────────────────────────────────────────────────────────────────────────
   (() => {
-    const host = (window.location && window.location.hostname) ? window.location.hostname.toLowerCase() : '';
     if (!host.includes('youtube.com') && !host.includes('youtu.be')) return;
 
     function speedupYouTubeAds() {
@@ -640,26 +690,11 @@
   })();
 
   // ─────────────────────────────────────────────────────────────────────────────
-  // Module 8: Canvas & WebGL Privacy Noise Armor
+  // Module 8: WebGL Vendor & Client Integrity Guard (Safe for Captchas)
   // ─────────────────────────────────────────────────────────────────────────────
   (() => {
     try {
-      const origToDataURL = HTMLCanvasElement.prototype.toDataURL;
-      HTMLCanvasElement.prototype.toDataURL = function(type, ...args) {
-        if (this.width > 16 && this.height > 16) {
-          const ctx = this.getContext('2d');
-          if (ctx) {
-            try {
-              const imgData = ctx.getImageData(0, 0, Math.min(this.width, 10), Math.min(this.height, 10));
-              if (imgData && imgData.data && imgData.data.length > 3) {
-                imgData.data[0] = (imgData.data[0] ^ 1);
-                ctx.putImageData(imgData, 0, 0);
-              }
-            } catch (_) {}
-          }
-        }
-        return origToDataURL.apply(this, [type, ...args]);
-      };
+      if (isCaptchaFrame) return; // Do not touch WebGL on Captcha validation frames
 
       const origGetParameter = WebGLRenderingContext.prototype.getParameter;
       WebGLRenderingContext.prototype.getParameter = function(param) {

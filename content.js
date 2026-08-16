@@ -66,18 +66,64 @@
   function isProtectedCaptchaOrAuth(el) {
     if (!el) return false;
     const host = (window.location.hostname || '').toLowerCase();
-    if (host.includes('accounts.spotify.com') || host.includes('challenge.spotify.com') || host.includes('arkoselabs.com')) return true;
-    const htmlSnippet = (el.outerHTML || '').slice(0, 800).toLowerCase();
-    const textSnippet = (el.innerText || '').toLowerCase();
-    if (htmlSnippet.includes('arkose') || htmlSnippet.includes('funcaptcha') || htmlSnippet.includes('recaptcha') || htmlSnippet.includes('hcaptcha') || htmlSnippet.includes('turnstile') || htmlSnippet.includes('cf-chl') || htmlSnippet.includes('challenge-form')) return true;
-    if (textSnippet.includes("make sure that you're a human") || textSnippet.includes('verify you are human') || textSnippet.includes('security check')) return true;
-    if (el.querySelector && el.querySelector('iframe[src*="arkose"], iframe[src*="recaptcha"], iframe[src*="hcaptcha"], iframe[src*="turnstile"], #challenge-stage')) return true;
+    if (host.includes('challenges.cloudflare.com') || host.includes('recaptcha.net') || host.includes('google.com') || host.includes('hcaptcha.com') || host.includes('accounts.spotify.com') || host.includes('challenge.spotify.com') || host.includes('arkoselabs.com') || host.includes('geetest.com')) return true;
+
+    const htmlSnippet = (el.outerHTML || '').slice(0, 1200).toLowerCase();
+    const textSnippet = (el.innerText || el.textContent || '').toLowerCase();
+
+    if (
+      htmlSnippet.includes('arkose') || htmlSnippet.includes('funcaptcha') ||
+      htmlSnippet.includes('recaptcha') || htmlSnippet.includes('hcaptcha') ||
+      htmlSnippet.includes('turnstile') || htmlSnippet.includes('cf-chl') ||
+      htmlSnippet.includes('challenge-form') || htmlSnippet.includes('geetest') ||
+      htmlSnippet.includes('g-recaptcha') || htmlSnippet.includes('h-captcha') ||
+      htmlSnippet.includes('cf-turnstile') || htmlSnippet.includes('challenges.cloudflare')
+    ) return true;
+
+    if (
+      textSnippet.includes("make sure that you're a human") ||
+      textSnippet.includes('verify you are human') ||
+      textSnippet.includes('security check') ||
+      textSnippet.includes('verify you are a human') ||
+      textSnippet.includes('i am not a robot') ||
+      textSnippet.includes('cf-turnstile')
+    ) return true;
+
+    if (el.querySelector && el.querySelector('iframe[src*="arkose"], iframe[src*="recaptcha"], iframe[src*="hcaptcha"], iframe[src*="turnstile"], iframe[src*="cloudflare"], iframe[src*="geetest"], .g-recaptcha, .h-captcha, .cf-turnstile, #challenge-stage, #cf-wrapper, [data-sitekey]')) return true;
+
     return false;
+  }
+
+  function ensureCaptchasVisible() {
+    try {
+      const captchaNodes = document.querySelectorAll(
+        '.g-recaptcha, .h-captcha, .cf-turnstile, [data-sitekey], ' +
+        'iframe[src*="recaptcha"], iframe[src*="hcaptcha"], iframe[src*="turnstile"], iframe[src*="cloudflare"], iframe[src*="arkose"], iframe[src*="geetest"], ' +
+        '#challenge-stage, #cf-wrapper, div[class*="recaptcha"], div[class*="hcaptcha"], div[class*="turnstile"]'
+      );
+      for (const c of captchaNodes) {
+        c.style.setProperty('display', 'inline-block', 'important');
+        c.style.setProperty('visibility', 'visible', 'important');
+        c.style.setProperty('opacity', '1', 'important');
+        c.style.setProperty('pointer-events', 'auto', 'important');
+        let p = c.parentElement;
+        let depth = 0;
+        while (p && p !== document.body && depth < 5) {
+          p.style.setProperty('visibility', 'visible', 'important');
+          if (p.style.display === 'none') p.style.setProperty('display', 'block', 'important');
+          if (p.style.opacity === '0') p.style.setProperty('opacity', '1', 'important');
+          p.style.setProperty('pointer-events', 'auto', 'important');
+          p = p.parentElement;
+          depth++;
+        }
+      }
+    } catch (_) {}
   }
 
   function annihilateAntiAdblockModals() {
     try {
       let destroyed = false;
+      ensureCaptchasVisible();
       const candidates = document.querySelectorAll('div, section, dialog, [role="dialog"], [role="alertdialog"], .modal, .swal2-container, .sweet-alert, .overlay, .popup, [class*="modal"], [class*="overlay"], [class*="popup"], [id*="modal"], [id*="overlay"], [id*="adblock"]');
       
       for (const el of candidates) {

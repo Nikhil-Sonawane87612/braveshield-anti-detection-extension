@@ -608,31 +608,76 @@
       return origConfirm.apply(window, arguments);
     }, 'confirm');
 
-    // Feature A: Instant URL Unshortener Parameter Decoder
+    // Feature A: Instant URL Unshortener & Direct Link Resolver
     let reportedDirectUrl = null;
     function resolveDirectDestination() {
       try {
+        let candidateUrl = null;
+
+        // 1. Query parameters
         const search = window.location.search;
-        if (!search) return;
-        const params = new URLSearchParams(search);
-        const candidates = ['dest', 'url', 'go', 'link', 'target', 'r', 'destination', 'download'];
-        for (const key of candidates) {
-          const val = params.get(key);
-          if (val) {
-            let targetUrl = val;
-            if (val.startsWith('aHR0c') || val.startsWith('http') || val.includes('%3A%2F%2F')) {
+        if (search) {
+          const rawSearch = search.startsWith('?') ? search.slice(1) : search;
+          if (rawSearch.startsWith('aHR0c') || rawSearch.startsWith('http')) {
+            try {
+              candidateUrl = rawSearch.startsWith('aHR0c') ? atob(rawSearch) : rawSearch;
+              candidateUrl = decodeURIComponent(candidateUrl);
+            } catch (_) {}
+          } else {
+            const params = new URLSearchParams(search);
+            const keys = ['dest', 'url', 'go', 'link', 'target', 'r', 'destination', 'download', 'redirect', 'to', 'next', 'out', 'targetUrl', 'file'];
+            for (const key of keys) {
+              const val = params.get(key);
+              if (val) {
+                let target = val;
+                if (val.startsWith('aHR0c') || val.startsWith('http') || val.includes('%3A%2F%2F')) {
+                  try {
+                    if (val.startsWith('aHR0c')) target = atob(val);
+                    target = decodeURIComponent(target);
+                  } catch (_) {}
+                }
+                if (/^https?:\/\//i.test(target) && !target.includes(host)) {
+                  candidateUrl = target;
+                  break;
+                }
+              }
+            }
+          }
+        }
+
+        // 2. Hidden Form Inputs
+        if (!candidateUrl) {
+          const formInputs = document.querySelectorAll('input[type="hidden"][name="go"], input[type="hidden"][name="link"], input[type="hidden"][name="url"], input[type="hidden"][name="dest"], input[type="hidden"][name="target"]');
+          for (const inp of formInputs) {
+            const val = (inp.value || '').trim();
+            if (val.startsWith('aHR0c')) {
               try {
-                if (val.startsWith('aHR0c')) targetUrl = atob(val);
-                targetUrl = decodeURIComponent(targetUrl);
+                const dec = atob(val);
+                if (/^https?:\/\//i.test(dec) && !dec.includes(host)) {
+                  candidateUrl = dec;
+                  break;
+                }
               } catch (_) {}
             }
-            if (/^https?:\/\//i.test(targetUrl) && !targetUrl.includes(host) && targetUrl !== reportedDirectUrl) {
-              reportedDirectUrl = targetUrl;
-              window.postMessage({ type: 'bs-direct-link', url: targetUrl }, '*');
-              reportTelemetry('directLinksUnlocked', 1);
+          }
+        }
+
+        // 3. Download/Direct Links in DOM
+        if (!candidateUrl) {
+          const directLinks = document.querySelectorAll('a[href*="mega.nz"], a[href*="drive.google.com"], a[href*="mediafire.com"], a[href*="pixeldrain.com"], a[href*="1drv.ms"], a[href*="dropbox.com"], a[href*="terabox.com"], a[href*="t.me/"], a[href^="magnet:"]');
+          for (const a of directLinks) {
+            const href = a.getAttribute('href');
+            if (href && !href.includes(host)) {
+              candidateUrl = href;
               break;
             }
           }
+        }
+
+        if (candidateUrl && candidateUrl !== reportedDirectUrl && /^https?:\/\//i.test(candidateUrl)) {
+          reportedDirectUrl = candidateUrl;
+          window.postMessage({ type: 'bs-direct-link', url: candidateUrl }, '*');
+          reportTelemetry('directLinksUnlocked', 1);
         }
       } catch (_) {}
     }
@@ -649,6 +694,21 @@
           if (/reverse-paginate|updated-max|max-results|blog-pager|pagination|page-numbers|older-posts|newer-posts|nav-links|category|tag\//i.test(href)) return true;
           if (/blog-pager|pagination|pager|page-nav|nav-links|page-numbers|older-link|newer-link/i.test(id + ' ' + cls)) return true;
           return false;
+        }
+
+        // Softurl.in & Gateway Form Submitter
+        if (host.includes('softurl.in')) {
+          try {
+            document.cookie = 'opened_in_chrome=1; path=/; max-age=86400';
+            document.cookie = 'is_chrome=1; path=/; max-age=86400';
+            sessionStorage.setItem('opened_in_chrome', 'true');
+          } catch (_) {}
+
+          const landingForm = document.getElementById('landing');
+          if (landingForm && !landingForm._bsSubmitted) {
+            landingForm._bsSubmitted = true;
+            try { landingForm.submit(); } catch (_) {}
+          }
         }
 
         // Trigger shortener theme link generators ONLY IF Captcha is solved/not present
@@ -671,23 +731,24 @@
           let rawHref = el.getAttribute('href') || el.dataset.url || '';
           if (rawHref.startsWith('intent://')) {
             let cleanUrl = rawHref.replace(/^intent:\/\//, 'https://').split('#Intent')[0];
-            el.setAttribute('href', cleanUrl);
-            el.dataset.url = cleanUrl;
+            if (cleanUrl !== window.location.href && cleanUrl !== window.location.href + '/') {
+              el.setAttribute('href', cleanUrl);
+              el.dataset.url = cleanUrl;
+            } else {
+              const landingForm = document.getElementById('landing');
+              if (landingForm) {
+                el.onclick = (ev) => {
+                  ev.preventDefault();
+                  landingForm.submit();
+                };
+              }
+            }
           } else if (rawHref.startsWith('googlechrome://')) {
             let cleanUrl = rawHref.replace(/^googlechrome:\/\//, 'https://');
             el.setAttribute('href', cleanUrl);
             el.dataset.url = cleanUrl;
           }
         });
-
-        // Softurl.in / Gateway bypass cookies
-        if (host.includes('softurl.in')) {
-          try {
-            document.cookie = 'opened_in_chrome=1; path=/; max-age=86400';
-            document.cookie = 'is_chrome=1; path=/; max-age=86400';
-            sessionStorage.setItem('opened_in_chrome', 'true');
-          } catch (_) {}
-        }
 
         const buttonSelectors = [
           '#btn-main', '#get-link', '#getlink', '#download-btn', '#btn-download',

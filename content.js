@@ -65,51 +65,62 @@
   // 3. Feature A: Floating Obsidian-Neon Direct Link HUD
   let hudRendered = false;
   function renderDirectLinkHud(targetUrl) {
-    if (hudRendered || !targetUrl || !document.body) return;
-    hudRendered = true;
+    if (hudRendered || !targetUrl) return;
 
-    try {
-      const bar = document.createElement('div');
-      bar.id = 'bs-direct-link-bar';
-      bar.innerHTML = `
-        <div style="display:flex; align-items:center; gap:10px;">
-          <span style="font-size:16px;">⚡</span>
-          <span style="font-weight:700; color:#00ffcc; letter-spacing:0.5px;">Direct Link Detected:</span>
-          <span style="max-width:280px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:#a0aec0; font-size:12px;">${targetUrl}</span>
-        </div>
-        <div style="display:flex; align-items:center; gap:8px;">
-          <a href="${targetUrl}" target="_blank" rel="noopener noreferrer" style="background:linear-gradient(135deg, #00ffcc, #0077ff); color:#000; font-weight:800; font-size:12px; padding:6px 14px; border-radius:6px; text-decoration:none; text-transform:uppercase; letter-spacing:0.5px; box-shadow:0 0 12px rgba(0,255,204,0.4); cursor:pointer;">Jump Directly ↗</a>
-          <button id="bs-close-hud" style="background:transparent; border:none; color:#718096; font-size:16px; cursor:pointer; padding:2px 6px;">✕</button>
-        </div>
-      `;
-      bar.style.cssText = `
-        position: fixed !important;
-        top: 14px !important;
-        right: 14px !important;
-        z-index: 2147483647 !important;
-        background: rgba(10, 15, 25, 0.94) !important;
-        border: 1px solid rgba(0, 255, 204, 0.4) !important;
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.8), 0 0 15px rgba(0, 255, 204, 0.2) !important;
-        backdrop-filter: blur(12px) !important;
-        border-radius: 10px !important;
-        padding: 10px 16px !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: space-between !important;
-        gap: 16px !important;
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
-        font-size: 13px !important;
-        color: #fff !important;
-        animation: bsSlideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
-      `;
+    function mountHud() {
+      const container = document.body || document.documentElement;
+      if (!container || document.getElementById('bs-direct-link-bar')) return;
+      hudRendered = true;
 
-      const style = document.createElement('style');
-      style.textContent = `@keyframes bsSlideIn { from { transform: translateY(-30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }`;
-      document.head.appendChild(style);
+      try {
+        const bar = document.createElement('div');
+        bar.id = 'bs-direct-link-bar';
+        bar.innerHTML = `
+          <div style="display:flex; align-items:center; gap:10px;">
+            <span style="font-size:16px;">⚡</span>
+            <span style="font-weight:700; color:#00ffcc; letter-spacing:0.5px;">Direct Link Detected:</span>
+            <span style="max-width:280px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:#a0aec0; font-size:12px;">${targetUrl}</span>
+          </div>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <a href="${targetUrl}" target="_blank" rel="noopener noreferrer" style="background:linear-gradient(135deg, #00ffcc, #0077ff); color:#000; font-weight:800; font-size:12px; padding:6px 14px; border-radius:6px; text-decoration:none; text-transform:uppercase; letter-spacing:0.5px; box-shadow:0 0 12px rgba(0,255,204,0.4); cursor:pointer;">Jump Directly ↗</a>
+            <button id="bs-close-hud" style="background:transparent; border:none; color:#718096; font-size:16px; cursor:pointer; padding:2px 6px;">✕</button>
+          </div>
+        `;
+        bar.style.cssText = `
+          position: fixed !important;
+          top: 14px !important;
+          right: 14px !important;
+          z-index: 2147483647 !important;
+          background: rgba(10, 15, 25, 0.94) !important;
+          border: 1px solid rgba(0, 255, 204, 0.4) !important;
+          box-shadow: 0 8px 32px rgba(0, 0, 0, 0.8), 0 0 15px rgba(0, 255, 204, 0.2) !important;
+          backdrop-filter: blur(12px) !important;
+          border-radius: 10px !important;
+          padding: 10px 16px !important;
+          display: flex !important;
+          align-items: center !important;
+          justify-content: space-between !important;
+          gap: 16px !important;
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+          font-size: 13px !important;
+          color: #fff !important;
+          animation: bsSlideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+        `;
 
-      document.body.appendChild(bar);
-      document.getElementById('bs-close-hud')?.addEventListener('click', () => bar.remove());
-    } catch (_) {}
+        const style = document.createElement('style');
+        style.textContent = `@keyframes bsSlideIn { from { transform: translateY(-30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }`;
+        document.head ? document.head.appendChild(style) : container.appendChild(style);
+
+        container.appendChild(bar);
+        document.getElementById('bs-close-hud')?.addEventListener('click', () => bar.remove());
+      } catch (_) {}
+    }
+
+    if (document.body || document.documentElement) {
+      mountHud();
+    } else {
+      document.addEventListener('DOMContentLoaded', mountHud, { once: true });
+    }
   }
 
   // 4. Message Listener from Extension Cockpit

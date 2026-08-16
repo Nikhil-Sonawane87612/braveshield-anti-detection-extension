@@ -6,6 +6,7 @@
 document.addEventListener('DOMContentLoaded', async () => {
   const masterToggle = document.getElementById('master-toggle');
   const masterSubtitle = document.getElementById('master-subtitle');
+  const profileSearch = document.getElementById('profile-search');
   const profileSelect = document.getElementById('device-profile-select');
   const metricTimeSaved = document.getElementById('metric-timesaved');
   const metricTraps = document.getElementById('metric-traps');
@@ -28,8 +29,54 @@ document.addEventListener('DOMContentLoaded', async () => {
   const updateBadge = document.getElementById('update-badge');
 
   let currentHostname = '';
+  let selectedProfileId = 'win-rtx4090';
 
-  // 1. Get Active Tab Domain
+  // 1. Populate 110+ Hardware Profiles into Dropdown
+  function renderProfileOptions(filter = '') {
+    if (!profileSelect) return;
+    const filterLower = filter.trim().toLowerCase();
+    const catalog = (typeof HARDWARE_PROFILES_CATALOG !== 'undefined') ? HARDWARE_PROFILES_CATALOG : [];
+
+    profileSelect.innerHTML = '';
+
+    // Custom profile option
+    const customOpt = document.createElement('option');
+    customOpt.value = 'custom';
+    customOpt.textContent = '🛠️ Custom Hardware Profile (Configure in Studio)';
+    profileSelect.appendChild(customOpt);
+
+    const categories = {};
+    catalog.forEach(p => {
+      if (!filterLower || p.name.toLowerCase().includes(filterLower) || p.category.toLowerCase().includes(filterLower) || p.renderer.toLowerCase().includes(filterLower)) {
+        if (!categories[p.category]) categories[p.category] = [];
+        categories[p.category].push(p);
+      }
+    });
+
+    for (const [catName, profiles] of Object.entries(categories)) {
+      const group = document.createElement('optgroup');
+      group.label = catName;
+      profiles.forEach(p => {
+        const opt = document.createElement('option');
+        opt.value = p.id;
+        opt.textContent = p.name;
+        group.appendChild(opt);
+      });
+      profileSelect.appendChild(group);
+    }
+
+    profileSelect.value = selectedProfileId;
+  }
+
+  renderProfileOptions();
+
+  if (profileSearch) {
+    profileSearch.addEventListener('input', (e) => {
+      renderProfileOptions(e.target.value);
+    });
+  }
+
+  // 2. Get Active Tab Domain
   try {
     const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
     if (tabs && tabs[0] && tabs[0].url) {
@@ -53,7 +100,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     return rem > 0 ? `${mins}m ${rem}s` : `${mins}m`;
   }
 
-  // 2. Load Stored States & Live Telemetry
+  // 3. Load Stored States & Live Telemetry
   chrome.storage.local.get([
     'masterEnabled', 'unshortenerEnabled', 'paywallDefuserEnabled',
     'autoBypassTimers', 'bypassAdblockDetection', 'spotifyUnlocked', 'youtubeAds',
@@ -70,8 +117,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     toggleAdblock.checked = res.bypassAdblockDetection !== false;
     toggleMedia.checked = (res.spotifyUnlocked !== false || res.youtubeAds !== false);
 
-    if (res.deviceProfile && profileSelect) {
-      profileSelect.value = res.deviceProfile;
+    if (res.deviceProfile) {
+      selectedProfileId = res.deviceProfile;
+      if (profileSelect) profileSelect.value = selectedProfileId;
     }
 
     if (metricTimeSaved) metricTimeSaved.textContent = formatSeconds(res.timeSavedSeconds || 0);
@@ -102,7 +150,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
-  // 3. Event Listeners
+  // 4. Event Listeners
   masterToggle.addEventListener('change', () => {
     const val = masterToggle.checked;
     chrome.storage.local.set({ masterEnabled: val, enabled: val });
@@ -117,8 +165,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   if (profileSelect) {
     profileSelect.addEventListener('change', () => {
-      const selected = profileSelect.value;
-      chrome.storage.local.set({ deviceProfile: selected });
+      selectedProfileId = profileSelect.value;
+      chrome.storage.local.set({ deviceProfile: selectedProfileId });
     });
   }
 

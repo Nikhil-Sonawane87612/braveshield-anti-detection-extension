@@ -31,10 +31,11 @@
 
   // 1. Sync Settings & Device Profile into sessionStorage for MAIN world inject.js
   try {
-    chrome.storage.local.get(['webglVendor', 'webglRenderer', 'masterEnabled', 'deviceProfile'], (res) => {
+    chrome.storage.local.get(['webglVendor', 'webglRenderer', 'masterEnabled', 'deviceProfile', 'customHardwareProfile'], (res) => {
       if (res && res.webglVendor) sessionStorage.setItem('bs_webgl_vendor', res.webglVendor);
       if (res && res.webglRenderer) sessionStorage.setItem('bs_webgl_renderer', res.webglRenderer);
       if (res && res.deviceProfile) sessionStorage.setItem('bs_device_profile', res.deviceProfile);
+      if (res && res.customHardwareProfile) sessionStorage.setItem('bs_custom_hardware', JSON.stringify(res.customHardwareProfile));
       if (res && res.masterEnabled === false) {
         sessionStorage.setItem('bs_master_disabled', 'true');
       } else {

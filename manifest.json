@@ -42,7 +42,7 @@
   ],
   "web_accessible_resources": [
     {
-      "resources": ["inject.js", "rules.json"],
+      "resources": ["inject.js", "rules.json", "hardware-profiles.js"],
       "matches": ["<all_urls>"]
     }
   ],

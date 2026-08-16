@@ -58,16 +58,15 @@
   </div>
 </section>
 
-<!-- Feature C: Hardware Device Profile Switcher -->
+<!-- Feature C: 110+ Hardware Device Profile Switcher -->
 <section class="profile-card">
   <div class="profile-hdr">
     <span class="profile-icon">🎭</span>
-    <span class="profile-title">CLOAKED IDENTITY PROFILE</span>
+    <span class="profile-title">CLOAKED HARDWARE PROFILE (110+ PRESETS)</span>
   </div>
+  <input type="text" id="profile-search" placeholder="🔍 Search profiles (e.g. RTX 4090, M3, Pixel)..." class="profile-search-input">
   <select class="profile-select" id="device-profile-select">
-    <option value="win-rtx4080">🖥️ Windows 11 + NVIDIA RTX 4080</option>
-    <option value="mac-m3pro">🍏 macOS Sequoia + Apple M3 Pro</option>
-    <option value="android-pixel9">📱 Android 15 + Google Pixel 9</option>
+    <!-- Populated dynamically with 110+ categorized presets from hardware-profiles.js -->
   </select>
 </section>
 
@@ -184,6 +183,7 @@
   </button>
 </div>
 
+<script src="hardware-profiles.js"></script>
 <script src="settings.js"></script>
 <script src="popup.js"></script>
 </body>

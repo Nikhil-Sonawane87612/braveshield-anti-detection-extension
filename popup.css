@@ -346,6 +346,23 @@ body::-webkit-scrollbar-thumb {
   color: var(--accent-cyan);
 }
 
+.profile-search-input {
+  width: 100%;
+  background: rgba(13, 17, 26, 0.9);
+  border: 1px solid rgba(0, 229, 255, 0.2);
+  color: #fff;
+  border-radius: 6px;
+  padding: 5px 8px;
+  font-size: 10px;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.profile-search-input:focus {
+  border-color: var(--border-glow-cyan);
+  box-shadow: 0 0 8px rgba(0, 229, 255, 0.3);
+}
+
 .profile-select {
   width: 100%;
   background: #0d111a;

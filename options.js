@@ -6,7 +6,19 @@
 document.addEventListener('DOMContentLoaded', () => {
   const masterToggle = document.getElementById('studio-master-toggle');
   const masterLabel = document.getElementById('studio-master-status');
+  const profileSearch = document.getElementById('studio-profile-search');
   const optProfile = document.getElementById('opt-profile');
+  const customHwPanel = document.getElementById('custom-hw-panel');
+
+  const custPlatform = document.getElementById('cust-platform');
+  const custConcurrency = document.getElementById('cust-concurrency');
+  const custMemory = document.getElementById('cust-memory');
+  const custVendor = document.getElementById('cust-vendor');
+  const custRenderer = document.getElementById('cust-renderer');
+  const custScreen = document.getElementById('cust-screen');
+  const custDpr = document.getElementById('cust-dpr');
+  const btnSaveCustomHw = document.getElementById('btn-save-custom-hw');
+
   const optBrave = document.getElementById('opt-brave');
   const optHints = document.getElementById('opt-hints');
   const optUnshortener = document.getElementById('opt-unshortener');
@@ -28,6 +40,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnAddWhitelist = document.getElementById('btn-add-whitelist');
   const whitelistTags = document.getElementById('whitelist-tags');
 
+  let selectedProfileId = 'win-rtx4090';
+
   function formatSeconds(secs) {
     if (!secs || secs < 0) return '0s';
     if (secs < 60) return `${secs}s`;
@@ -36,9 +50,61 @@ document.addEventListener('DOMContentLoaded', () => {
     return rem > 0 ? `${mins}m ${rem}s` : `${mins}m`;
   }
 
-  // Load Saved Options
+  // 1. Populate 110+ Profiles into Dropdown
+  function renderProfileOptions(filter = '') {
+    if (!optProfile) return;
+    const filterLower = filter.trim().toLowerCase();
+    const catalog = (typeof HARDWARE_PROFILES_CATALOG !== 'undefined') ? HARDWARE_PROFILES_CATALOG : [];
+
+    optProfile.innerHTML = '';
+
+    // Custom profile option
+    const customOpt = document.createElement('option');
+    customOpt.value = 'custom';
+    customOpt.textContent = '🛠️ Custom Hardware Profile (Configure Below)';
+    optProfile.appendChild(customOpt);
+
+    const categories = {};
+    catalog.forEach(p => {
+      if (!filterLower || p.name.toLowerCase().includes(filterLower) || p.category.toLowerCase().includes(filterLower) || p.renderer.toLowerCase().includes(filterLower)) {
+        if (!categories[p.category]) categories[p.category] = [];
+        categories[p.category].push(p);
+      }
+    });
+
+    for (const [catName, profiles] of Object.entries(categories)) {
+      const group = document.createElement('optgroup');
+      group.label = catName;
+      profiles.forEach(p => {
+        const opt = document.createElement('option');
+        opt.value = p.id;
+        opt.textContent = p.name;
+        group.appendChild(opt);
+      });
+      optProfile.appendChild(group);
+    }
+
+    optProfile.value = selectedProfileId;
+    toggleCustomPanel(selectedProfileId === 'custom');
+  }
+
+  function toggleCustomPanel(show) {
+    if (customHwPanel) {
+      customHwPanel.style.display = show ? 'block' : 'none';
+    }
+  }
+
+  renderProfileOptions();
+
+  if (profileSearch) {
+    profileSearch.addEventListener('input', (e) => {
+      renderProfileOptions(e.target.value);
+    });
+  }
+
+  // 2. Load Saved Options
   chrome.storage.local.get([
-    'masterEnabled', 'deviceProfile', 'maskBraveApi', 'maskClientHints',
+    'masterEnabled', 'deviceProfile', 'customHardwareProfile', 'maskBraveApi', 'maskClientHints',
     'unshortenerEnabled', 'autoBypassTimers', 'paywallDefuserEnabled',
     'bypassAdblockDetection', 'spotifyUnlocked', 'youtubeAds', 'twitchShieldEnabled',
     'timeSavedSeconds', 'trapsNeutralized', 'directLinksUnlocked',
@@ -48,7 +114,23 @@ document.addEventListener('DOMContentLoaded', () => {
     masterToggle.checked = isMaster;
     updateMasterStatus(isMaster);
 
-    if (optProfile && res.deviceProfile) optProfile.value = res.deviceProfile;
+    if (res.deviceProfile) {
+      selectedProfileId = res.deviceProfile;
+      if (optProfile) optProfile.value = selectedProfileId;
+      toggleCustomPanel(selectedProfileId === 'custom');
+    }
+
+    if (res.customHardwareProfile) {
+      const c = res.customHardwareProfile;
+      if (custPlatform && c.platform) custPlatform.value = c.platform;
+      if (custConcurrency && c.concurrency) custConcurrency.value = c.concurrency.toString();
+      if (custMemory && c.memory) custMemory.value = c.memory.toString();
+      if (custVendor && c.vendor) custVendor.value = c.vendor;
+      if (custRenderer && c.renderer) custRenderer.value = c.renderer;
+      if (custScreen && c.screen) custScreen.value = `${c.screen.width}x${c.screen.height}`;
+      if (custDpr && c.devicePixelRatio) custDpr.value = c.devicePixelRatio.toString();
+    }
+
     optBrave.checked = res.maskBraveApi !== false;
     optHints.checked = res.maskClientHints !== false;
     optUnshortener.checked = res.unshortenerEnabled !== false;
@@ -87,10 +169,36 @@ document.addEventListener('DOMContentLoaded', () => {
     updateMasterStatus(val);
   });
 
-  // Device Profile Switcher
+  // Profile Selector Change
   if (optProfile) {
     optProfile.addEventListener('change', () => {
-      chrome.storage.local.set({ deviceProfile: optProfile.value });
+      selectedProfileId = optProfile.value;
+      chrome.storage.local.set({ deviceProfile: selectedProfileId });
+      toggleCustomPanel(selectedProfileId === 'custom');
+    });
+  }
+
+  // Save Custom Hardware Profile
+  if (btnSaveCustomHw) {
+    btnSaveCustomHw.addEventListener('click', () => {
+      const [w, h] = (custScreen?.value || '2560x1440').split('x').map(Number);
+      const customProfile = {
+        platform: custPlatform?.value || 'Win32',
+        concurrency: parseInt(custConcurrency?.value || '16', 10),
+        memory: parseInt(custMemory?.value || '32', 10),
+        vendor: custVendor?.value || 'Google Inc. (NVIDIA)',
+        renderer: custRenderer?.value || 'ANGLE (NVIDIA, NVIDIA GeForce RTX 4090 Direct3D11 vs_5_0 ps_5_0, D3D11)',
+        screen: { width: w, height: h, colorDepth: 24 },
+        devicePixelRatio: parseFloat(custDpr?.value || '1')
+      };
+
+      chrome.storage.local.set({
+        deviceProfile: 'custom',
+        customHardwareProfile: customProfile
+      }, () => {
+        btnSaveCustomHw.textContent = '✅ Custom Profile Saved & Applied!';
+        setTimeout(() => { btnSaveCustomHw.textContent = '💾 Save & Apply Custom Hardware Profile'; }, 2000);
+      });
     });
   }
 

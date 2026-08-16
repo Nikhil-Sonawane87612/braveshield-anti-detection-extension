@@ -100,15 +100,104 @@
         });
       } catch (_) {}
 
-      // 4. Device Profile Spoofer (Windows 11 RTX 4080, macOS M3 Pro, Android Pixel 9)
-      const selectedProfile = sessionStorage.getItem('bs_device_profile') || 'win-rtx4080';
-      if (selectedProfile === 'mac-m3pro') {
-        try { Object.defineProperty(Navigator.prototype, 'platform', { get: () => 'MacIntel', configurable: true }); } catch (_) {}
-      } else if (selectedProfile === 'android-pixel9') {
-        try { Object.defineProperty(Navigator.prototype, 'platform', { get: () => 'Linux armv81', configurable: true }); } catch (_) {}
-      } else {
-        try { Object.defineProperty(Navigator.prototype, 'platform', { get: () => 'Win32', configurable: true }); } catch (_) {}
-      }
+      // 4. Comprehensive Hardware Profile & Custom Hardware Engine (100+ Presets)
+      let activeHw = {
+        platform: 'Win32',
+        vendor: 'Google Inc. (NVIDIA)',
+        renderer: 'ANGLE (NVIDIA, NVIDIA GeForce RTX 4090 (0x00002684) Direct3D11 vs_5_0 ps_5_0, D3D11)',
+        concurrency: 32,
+        memory: 64,
+        devicePixelRatio: 1,
+        screen: { width: 3840, height: 2160, colorDepth: 24 }
+      };
+
+      try {
+        const customJson = sessionStorage.getItem('bs_custom_hardware');
+        const selectedId = sessionStorage.getItem('bs_device_profile') || 'win-rtx4090';
+
+        if (selectedId === 'custom' && customJson) {
+          const custom = JSON.parse(customJson);
+          activeHw = {
+            platform: custom.platform || 'Win32',
+            vendor: custom.vendor || 'Google Inc. (NVIDIA)',
+            renderer: custom.renderer || 'ANGLE (NVIDIA, NVIDIA GeForce RTX 4090 Direct3D11 vs_5_0 ps_5_0, D3D11)',
+            concurrency: parseInt(custom.concurrency, 10) || 16,
+            memory: parseInt(custom.memory, 10) || 32,
+            devicePixelRatio: parseFloat(custom.devicePixelRatio) || 1,
+            screen: custom.screen || { width: 2560, height: 1440, colorDepth: 24 }
+          };
+        } else if (typeof HARDWARE_PROFILES_CATALOG !== 'undefined') {
+          const matched = HARDWARE_PROFILES_CATALOG.find(p => p.id === selectedId);
+          if (matched) activeHw = matched;
+        } else if (selectedId.startsWith('mac-')) {
+          activeHw = {
+            platform: 'MacIntel',
+            vendor: 'Apple Inc.',
+            renderer: 'Apple M3 Max',
+            concurrency: 16,
+            memory: 64,
+            devicePixelRatio: 2,
+            screen: { width: 3456, height: 2234, colorDepth: 30 }
+          };
+        } else if (selectedId.startsWith('android-')) {
+          activeHw = {
+            platform: 'Linux armv81',
+            vendor: 'Qualcomm',
+            renderer: 'Adreno (TM) 750',
+            concurrency: 8,
+            memory: 16,
+            devicePixelRatio: 3,
+            screen: { width: 412, height: 915, colorDepth: 24 }
+          };
+        } else if (selectedId.startsWith('ios-')) {
+          activeHw = {
+            platform: 'iPhone',
+            vendor: 'Apple Inc.',
+            renderer: 'Apple GPU',
+            concurrency: 6,
+            memory: 8,
+            devicePixelRatio: 3,
+            screen: { width: 440, height: 956, colorDepth: 32 }
+          };
+        } else if (selectedId.startsWith('linux-')) {
+          activeHw = {
+            platform: 'Linux x86_64',
+            vendor: 'Google Inc. (NVIDIA Corporation)',
+            renderer: 'NVIDIA GeForce RTX 4090/PCIe/SSE2',
+            concurrency: 32,
+            memory: 64,
+            devicePixelRatio: 1,
+            screen: { width: 2560, height: 1440, colorDepth: 24 }
+          };
+        }
+      } catch (_) {}
+
+      // Apply Platform Spoofing
+      try { Object.defineProperty(Navigator.prototype, 'platform', { get: () => activeHw.platform, configurable: true }); } catch (_) {}
+      try { Object.defineProperty(navigator, 'platform', { get: () => activeHw.platform, configurable: true }); } catch (_) {}
+
+      // Apply CPU Hardware Concurrency
+      try { Object.defineProperty(Navigator.prototype, 'hardwareConcurrency', { get: () => activeHw.concurrency || 16, configurable: true }); } catch (_) {}
+      try { Object.defineProperty(navigator, 'hardwareConcurrency', { get: () => activeHw.concurrency || 16, configurable: true }); } catch (_) {}
+
+      // Apply Device Memory (RAM)
+      try { Object.defineProperty(Navigator.prototype, 'deviceMemory', { get: () => activeHw.memory || 32, configurable: true }); } catch (_) {}
+      try { Object.defineProperty(navigator, 'deviceMemory', { get: () => activeHw.memory || 32, configurable: true }); } catch (_) {}
+
+      // Apply WebGL Hardware Vendor & GPU Renderer Spoofing
+      const hookWebGL = (proto) => {
+        if (!proto || !proto.getParameter) return;
+        const origGetParameter = proto.getParameter;
+        proto.getParameter = makeNative(function(pname) {
+          if (!isCaptchaHost) {
+            if (pname === 0x9245) return activeHw.vendor; // UNMASKED_VENDOR_WEBGL
+            if (pname === 0x9246) return activeHw.renderer; // UNMASKED_RENDERER_WEBGL
+          }
+          return origGetParameter.apply(this, arguments);
+        }, 'getParameter');
+      };
+      if (typeof WebGLRenderingContext !== 'undefined') hookWebGL(WebGLRenderingContext.prototype);
+      if (typeof WebGL2RenderingContext !== 'undefined') hookWebGL(WebGL2RenderingContext.prototype);
 
       // 5. Sanitize Client Hints on NavigatorUAData Prototype
       if (typeof NavigatorUAData !== 'undefined' && NavigatorUAData.prototype) {
@@ -124,6 +213,10 @@
               enumerable: true
             });
           }
+          Object.defineProperty(NavigatorUAData.prototype, 'platform', {
+            get: () => (activeHw.platform.includes('Win') ? 'Windows' : (activeHw.platform.includes('Mac') ? 'macOS' : (activeHw.platform.includes('Android') || activeHw.platform.includes('arm') ? 'Android' : 'Linux'))),
+            configurable: true
+          });
         } catch (_) {}
       }
 

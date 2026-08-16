@@ -1,42 +1,56 @@
 /**
  * BraveShield Bypass Pro — Service Worker & Auto-Sync Engine
- * Version: 5.3.0
+ * Version: 5.4.0
  * Purpose: Dynamic rule synchronization from GitHub, auto-update checker, and DeclarativeNetRequest routing.
  */
 
 const GITHUB_RULES_URL = 'https://raw.githubusercontent.com/Nikhil-Sonawane87612/braveshield-anti-detection-extension/main/rules.json';
 const GITHUB_MANIFEST_URL = 'https://raw.githubusercontent.com/Nikhil-Sonawane87612/braveshield-anti-detection-extension/main/manifest.json';
-const CURRENT_VERSION = '5.3.0';
+
+function getLocalVersion() {
+  try {
+    return chrome.runtime.getManifest().version || '5.4.0';
+  } catch (_) {
+    return '5.4.0';
+  }
+}
 
 chrome.runtime.onInstalled.addListener(() => {
-  console.log(`[BraveShield] Service Worker initialized. Version: ${CURRENT_VERSION}`);
+  const currentVer = getLocalVersion();
+  console.log(`[BraveShield] Service Worker initialized. Version: ${currentVer}`);
   
   chrome.storage.local.set({
     enabled: true,
     masterEnabled: true,
     autoBypassLinks: true,
+    unshortenerEnabled: true,
     autoBypassTimers: true,
+    paywallDefuserEnabled: true,
     bypassAdblockDetection: true,
     maskBraveApi: true,
     maskClientHints: true,
     normalizeWebgl: true,
-    normalizeCanvas: true,
+    normalizeCanvas: false,
     normalizeAudio: true,
     hideWebdriver: true,
-    preventWebRTC: true,
-    autoDenyPermissions: true,
-    clampTimers: true,
+    preventWebRTC: false,
+    autoDenyPermissions: false,
+    clampTimers: false,
     youtubeAds: true,
     spotifyUnlocked: true,
+    twitchShieldEnabled: true,
     videoTurboAdSpeed: true,
-    blockedCounter: 0,
+    deviceProfile: 'win-rtx4080',
+    timeSavedSeconds: 0,
+    trapsNeutralized: 0,
+    directLinksUnlocked: 0,
     whitelist: [],
     blacklist: [],
-    version: CURRENT_VERSION,
+    version: currentVer,
     lastSyncTime: Date.now(),
     remoteSyncStatus: 'synced',
     updateAvailable: false,
-    remoteVersion: CURRENT_VERSION
+    remoteVersion: currentVer
   });
 
   // Setup periodic 6-hour auto-sync alarm
@@ -68,22 +82,29 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 // Auto-Sync and Auto-Update Function
 async function syncRemoteRulesAndCheckUpdates() {
   try {
+    const currentVer = getLocalVersion();
     const [rulesRes, manifestRes] = await Promise.all([
       fetch(GITHUB_RULES_URL, { cache: 'no-cache' }).catch(() => null),
       fetch(GITHUB_MANIFEST_URL, { cache: 'no-cache' }).catch(() => null)
     ]);
 
     let updateFound = false;
-    let remoteVer = CURRENT_VERSION;
+    let remoteVer = currentVer;
 
     if (manifestRes && manifestRes.ok) {
       const manifest = await manifestRes.json();
       if (manifest.version) {
         remoteVer = manifest.version;
-        if (isNewerVersion(remoteVer, CURRENT_VERSION)) {
+        if (isNewerVersion(remoteVer, currentVer)) {
           updateFound = true;
-          chrome.action.setBadgeText({ text: 'NEW' });
-          chrome.action.setBadgeBackgroundColor({ color: '#00f076' });
+          try {
+            chrome.action.setBadgeText({ text: 'NEW' });
+            chrome.action.setBadgeBackgroundColor({ color: '#00f076' });
+          } catch (_) {}
+        } else {
+          try {
+            chrome.action.setBadgeText({ text: '' });
+          } catch (_) {}
         }
       }
     }
@@ -104,7 +125,8 @@ async function syncRemoteRulesAndCheckUpdates() {
       lastSyncTime: Date.now(),
       remoteSyncStatus: 'synced',
       remoteVersion: remoteVer,
-      updateAvailable: updateFound
+      updateAvailable: updateFound,
+      version: currentVer
     };
     await chrome.storage.local.set(syncData);
     return { success: true, ...syncData };
@@ -116,8 +138,8 @@ async function syncRemoteRulesAndCheckUpdates() {
 }
 
 function isNewerVersion(remote, local) {
-  const rParts = remote.split('.').map(Number);
-  const lParts = local.split('.').map(Number);
+  const rParts = (remote || '').split('.').map(Number);
+  const lParts = (local || '').split('.').map(Number);
   for (let i = 0; i < Math.max(rParts.length, lParts.length); i++) {
     const r = rParts[i] || 0;
     const l = lParts[i] || 0;

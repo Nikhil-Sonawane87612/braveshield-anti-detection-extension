@@ -18,7 +18,7 @@
         </div>
         <div class="brand-titles">
           <h1>BraveShield Control Studio</h1>
-          <span>Universal Anti-Detection, 50x Turbo &amp; Stealth Suite • v5.3.0</span>
+          <span>Universal Anti-Detection, 50x Turbo &amp; Stealth Suite • v5.4.0</span>
         </div>
       </div>
       <div class="master-dock">
@@ -34,16 +34,16 @@
   <!-- Metrics Grid -->
   <section class="stats-row">
     <div class="stat-box">
-      <div class="stat-val" id="stat-active-modules">24</div>
-      <div class="stat-lbl">Active Stealth Modules</div>
+      <div class="stat-val" id="stat-time-saved">0s</div>
+      <div class="stat-lbl">Time Saved</div>
     </div>
     <div class="stat-box">
-      <div class="stat-val" id="stat-traps-defused">100%</div>
-      <div class="stat-lbl">Google Chrome Parity</div>
+      <div class="stat-val" id="stat-traps-defused">0</div>
+      <div class="stat-lbl">Traps Defused</div>
     </div>
     <div class="stat-box">
-      <div class="stat-val" id="stat-timer-speed">50x</div>
-      <div class="stat-lbl">Countdown Turbo Factor</div>
+      <div class="stat-val" id="stat-links-unlocked">0</div>
+      <div class="stat-lbl">Direct Links Unlocked</div>
     </div>
     <div class="stat-box">
       <div class="stat-val" id="stat-sync-status">Synced</div>
@@ -54,13 +54,25 @@
   <!-- Main Settings Grid -->
   <main class="studio-grid">
 
-    <!-- Card 1: Anti-Detection & Brave Cloaking -->
+    <!-- Card 1: Anti-Detection & Hardware Identity Profiles -->
     <div class="card">
       <div class="card-header">
         <span class="card-icon">🛡️</span>
-        <h2>Anti-Detection &amp; Brave Cloaking</h2>
+        <h2>Anti-Detection &amp; Hardware Identity</h2>
       </div>
       <div class="card-body">
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-title">Cloaked Hardware Profile</div>
+            <div class="setting-desc">Select simulated GPU, OS, and Client Hints profile</div>
+          </div>
+          <select id="opt-profile" class="studio-select">
+            <option value="win-rtx4080">🖥️ Windows 11 + NVIDIA RTX 4080</option>
+            <option value="mac-m3pro">🍏 macOS Sequoia + Apple M3 Pro</option>
+            <option value="android-pixel9">📱 Android 15 + Google Pixel 9</option>
+          </select>
+        </div>
+
         <div class="setting-row">
           <div class="setting-info">
             <div class="setting-title">Deep Brave API Cloak</div>
@@ -71,35 +83,43 @@
 
         <div class="setting-row">
           <div class="setting-info">
-            <div class="setting-title">Client Hints &amp; User-Agent Parity</div>
-            <div class="setting-desc">Injects Google Chrome brand headers and navigator properties</div>
+            <div class="setting-title">WebGL &amp; Client Hints Parity</div>
+            <div class="setting-desc">Injects Google Chrome brand headers and GPU renderer strings</div>
           </div>
           <label class="toggle-sw"><input type="checkbox" id="opt-hints" checked><span class="toggle-sl"></span></label>
-        </div>
-
-        <div class="setting-row">
-          <div class="setting-info">
-            <div class="setting-title">WebGL &amp; Canvas Noise Shield</div>
-            <div class="setting-desc">Farbles hardware fingerprints with NVIDIA RTX 3060 profiles</div>
-          </div>
-          <label class="toggle-sw"><input type="checkbox" id="opt-webgl" checked><span class="toggle-sl"></span></label>
         </div>
       </div>
     </div>
 
-    <!-- Card 2: Turbo Timers & Shortener Automation -->
+    <!-- Card 2: Turbo Timers & Link Unshortening -->
     <div class="card">
       <div class="card-header">
         <span class="card-icon">⚡</span>
-        <h2>Turbo Timers &amp; Automation</h2>
+        <h2>Turbo Timers &amp; Link Resolvers</h2>
       </div>
       <div class="card-body">
         <div class="setting-row">
           <div class="setting-info">
+            <div class="setting-title">Instant URL Unshortener &amp; Direct HUD</div>
+            <div class="setting-desc">Decodes destination URLs and renders floating 1-click jump bar</div>
+          </div>
+          <label class="toggle-sw"><input type="checkbox" id="opt-unshortener" checked><span class="toggle-sl"></span></label>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-info">
             <div class="setting-title">50x Countdown Fast-Forward</div>
-            <div class="setting-desc">Accelerates setTimeout/setInterval &amp; zeroes DOM timers</div>
+            <div class="setting-desc">Accelerates setTimeout/setInterval compression safely</div>
           </div>
           <label class="toggle-sw"><input type="checkbox" id="opt-timers" checked><span class="toggle-sl"></span></label>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-title">Universal Paywall &amp; Blur Defuser</div>
+            <div class="setting-desc">Unblurs Quora, Medium, Pinterest, and news paywall overlays</div>
+          </div>
+          <label class="toggle-sw"><input type="checkbox" id="opt-paywall" checked><span class="toggle-sl"></span></label>
         </div>
 
         <div class="setting-row">
@@ -109,24 +129,24 @@
           </div>
           <label class="toggle-sw"><input type="checkbox" id="opt-adblock" checked><span class="toggle-sl"></span></label>
         </div>
-
-        <div class="setting-row">
-          <div class="setting-info">
-            <div class="setting-title">Universal Disclaimer Fast-Pass</div>
-            <div class="setting-desc">Auto-confirms entry terms and unhides main media wrappers</div>
-          </div>
-          <label class="toggle-sw"><input type="checkbox" id="opt-disclaimer" checked><span class="toggle-sl"></span></label>
-        </div>
       </div>
     </div>
 
-    <!-- Card 3: Media Suite -->
+    <!-- Card 3: Media & Streaming Suite -->
     <div class="card">
       <div class="card-header">
-        <span class="card-icon">🎵</span>
-        <h2>Media Super Suite</h2>
+        <span class="card-icon">🎬</span>
+        <h2>Media &amp; Streaming Suite</h2>
       </div>
       <div class="card-body">
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-title">YouTube Turbo 16x Skip</div>
+            <div class="setting-desc">Fast-forwards YouTube video ads and auto-skips sponsor segments</div>
+          </div>
+          <label class="toggle-sw"><input type="checkbox" id="opt-youtube" checked><span class="toggle-sl"></span></label>
+        </div>
+
         <div class="setting-row">
           <div class="setting-info">
             <div class="setting-title">Spotify Unlocked</div>
@@ -137,10 +157,10 @@
 
         <div class="setting-row">
           <div class="setting-info">
-            <div class="setting-title">YouTube Turbo 16x Skip</div>
-            <div class="setting-desc">Fast-forwards YouTube video ads and restores 1080p quality</div>
+            <div class="setting-title">Twitch &amp; Streaming Ad Shield</div>
+            <div class="setting-desc">Auto-mutes live stream mid-rolls and accelerates media buffers</div>
           </div>
-          <label class="toggle-sw"><input type="checkbox" id="opt-youtube" checked><span class="toggle-sl"></span></label>
+          <label class="toggle-sw"><input type="checkbox" id="opt-twitch" checked><span class="toggle-sl"></span></label>
         </div>
       </div>
     </div>
@@ -170,6 +190,10 @@
             <!-- Domain tags injected via JS -->
           </div>
         </div>
+
+        <div style="margin-top:14px; text-align:right;">
+          <button class="btn-action" id="btn-reset-telemetry" style="background:#2d1b2e; border-color:#e53e3e; color:#fc8181;">Reset Telemetry Counters</button>
+        </div>
       </div>
     </div>
 
@@ -177,6 +201,7 @@
 
 </div>
 
+<script src="settings.js"></script>
 <script src="options.js"></script>
 </body>
 </html>

@@ -24,7 +24,7 @@
       </div>
     </div>
     <div class="hdr-badges">
-      <span class="ver-pill">v5.3.0</span>
+      <span class="ver-pill">v5.4.0</span>
       <span class="update-pill hidden" id="update-badge">UPDATE</span>
     </div>
   </div>
@@ -49,7 +49,7 @@
         <span class="pulse-icon">⚡</span>
         <span class="master-tag-text">SYSTEM DEFENSE</span>
       </div>
-      <div class="master-state-label" id="master-subtitle">All 24 Stealth Modules Armed</div>
+      <div class="master-state-label" id="master-subtitle">All 28 Stealth Modules Armed</div>
     </div>
     <label class="master-sw" title="Toggle Master Shield">
       <input type="checkbox" id="master-toggle" checked>
@@ -58,36 +58,63 @@
   </div>
 </section>
 
-<!-- Live Telemetry Metrics -->
+<!-- Feature C: Hardware Device Profile Switcher -->
+<section class="profile-card">
+  <div class="profile-hdr">
+    <span class="profile-icon">🎭</span>
+    <span class="profile-title">CLOAKED IDENTITY PROFILE</span>
+  </div>
+  <select class="profile-select" id="device-profile-select">
+    <option value="win-rtx4080">🖥️ Windows 11 + NVIDIA RTX 4080</option>
+    <option value="mac-m3pro">🍏 macOS Sequoia + Apple M3 Pro</option>
+    <option value="android-pixel9">📱 Android 15 + Google Pixel 9</option>
+  </select>
+</section>
+
+<!-- Feature D: Live Telemetry Metrics -->
 <section class="metrics-strip">
   <div class="mcard">
-    <div class="mval" id="metric-trackers">142</div>
+    <div class="mval" id="metric-timesaved">0s</div>
+    <div class="mlbl">Time Saved</div>
+  </div>
+  <div class="mcard">
+    <div class="mval" id="metric-traps">0</div>
     <div class="mlbl">Traps Defused</div>
   </div>
   <div class="mcard">
-    <div class="mval" id="metric-timers">50x</div>
-    <div class="mlbl">Timer Boost</div>
-  </div>
-  <div class="mcard">
-    <div class="mval" id="metric-stealth">100%</div>
-    <div class="mlbl">Chrome Parity</div>
+    <div class="mval" id="metric-links">0</div>
+    <div class="mlbl">Links Unlocked</div>
   </div>
 </section>
 
 <!-- Core Module Deck -->
 <section class="module-group">
-  <div class="group-title">CORE STEALTH MODULES</div>
+  <div class="group-title">CORE DEFENSE SUITE</div>
   
   <div class="module-item">
     <div class="mod-info">
-      <span class="mod-icon">🛡️</span>
+      <span class="mod-icon">⚡</span>
       <div class="mod-text">
-        <div class="mod-name">Brave Deep Cloaking</div>
-        <div class="mod-desc">Purges navigator.brave &amp; Web3 probes</div>
+        <div class="mod-name">Instant URL Unshortener</div>
+        <div class="mod-desc">Decodes destination &amp; floating jump bar</div>
       </div>
     </div>
     <label class="toggle-sw">
-      <input type="checkbox" id="toggle-brave" checked>
+      <input type="checkbox" id="toggle-unshortener" checked>
+      <span class="toggle-sl"></span>
+    </label>
+  </div>
+
+  <div class="module-item">
+    <div class="mod-info">
+      <span class="mod-icon">📰</span>
+      <div class="mod-text">
+        <div class="mod-name">Paywall &amp; Blur Defuser</div>
+        <div class="mod-desc">Unblurs Quora, Medium, Pinterest &amp; news</div>
+      </div>
+    </div>
+    <label class="toggle-sw">
+      <input type="checkbox" id="toggle-paywall" checked>
       <span class="toggle-sl"></span>
     </label>
   </div>
@@ -122,10 +149,10 @@
 
   <div class="module-item">
     <div class="mod-info">
-      <span class="mod-icon">🎵</span>
+      <span class="mod-icon">🎬</span>
       <div class="mod-text">
-        <div class="mod-name">Media Super Suite</div>
-        <div class="mod-desc">Spotify ad-block/lyrics &amp; YouTube 16x</div>
+        <div class="mod-name">Streaming Media Shield</div>
+        <div class="mod-desc">YouTube 16x, Spotify lyrics &amp; Twitch ad-mute</div>
       </div>
     </div>
     <label class="toggle-sw">
@@ -157,6 +184,7 @@
   </button>
 </div>
 
+<script src="settings.js"></script>
 <script src="popup.js"></script>
 </body>
 </html>

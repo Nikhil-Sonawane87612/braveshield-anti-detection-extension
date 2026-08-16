@@ -249,6 +249,24 @@ body {
   color: var(--text-muted);
 }
 
+.studio-select {
+  background: #0d111a;
+  border: 1px solid var(--border-glass);
+  color: var(--text-primary);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.studio-select:focus {
+  border-color: var(--border-glow-emerald);
+  box-shadow: 0 0 10px rgba(0, 240, 118, 0.2);
+}
+
 /* Toggles */
 .toggle-sw {
   position: relative;

@@ -1,9 +1,11 @@
 /**
  * BraveShield Bypass Pro — Core Stealth & Anti-Detection Engine
- * Version: 5.3.0
+ * Version: 5.4.0
  * Execution World: MAIN (True document_start)
- * Purpose: Complete Google Chrome parity, deep Brave cloaking, anti-adblock defusal,
- *          100% Captcha passing (Turnstile/reCAPTCHA/Cloudflare Interstitials), safe turbo timers, YouTube/Spotify acceleration.
+ * Purpose: Complete Google Chrome & Multi-Device Profile parity, deep Brave cloaking,
+ *          Instant URL Unshortener, Paywall/Blur Defuser, Live Telemetry,
+ *          100% Captcha passing (Turnstile/reCAPTCHA/Cloudflare Interstitials),
+ *          Safe turbo timers, YouTube/Spotify/Twitch acceleration.
  */
 
 (() => {
@@ -32,7 +34,7 @@
   }
 
   // ─────────────────────────────────────────────────────────────────────────────
-  // Module 1: Deep Brave Identity Purge & Pure Google Chrome Parity
+  // Module 1: Deep Brave Identity Purge & Multi-Device Hardware Profiles
   // ─────────────────────────────────────────────────────────────────────────────
   (() => {
     try {
@@ -98,7 +100,17 @@
         });
       } catch (_) {}
 
-      // 4. Sanitize Client Hints on NavigatorUAData Prototype
+      // 4. Device Profile Spoofer (Windows 11 RTX 4080, macOS M3 Pro, Android Pixel 9)
+      const selectedProfile = sessionStorage.getItem('bs_device_profile') || 'win-rtx4080';
+      if (selectedProfile === 'mac-m3pro') {
+        try { Object.defineProperty(Navigator.prototype, 'platform', { get: () => 'MacIntel', configurable: true }); } catch (_) {}
+      } else if (selectedProfile === 'android-pixel9') {
+        try { Object.defineProperty(Navigator.prototype, 'platform', { get: () => 'Linux armv81', configurable: true }); } catch (_) {}
+      } else {
+        try { Object.defineProperty(Navigator.prototype, 'platform', { get: () => 'Win32', configurable: true }); } catch (_) {}
+      }
+
+      // 5. Sanitize Client Hints on NavigatorUAData Prototype
       if (typeof NavigatorUAData !== 'undefined' && NavigatorUAData.prototype) {
         try {
           const origBrands = Object.getOwnPropertyDescriptor(NavigatorUAData.prototype, 'brands');
@@ -115,7 +127,7 @@
         } catch (_) {}
       }
 
-      // 5. Authentic window.chrome API Stubs
+      // 6. Authentic window.chrome API Stubs
       if (!window.chrome) window.chrome = {};
       window.chrome.app = window.chrome.app || {
         isInstalled: false,
@@ -183,6 +195,12 @@
     return fn;
   }
 
+  function reportTelemetry(stat, delta = 1) {
+    try {
+      window.postMessage({ type: 'bs-telemetry-event', stat, delta }, '*');
+    } catch (_) {}
+  }
+
   // ─────────────────────────────────────────────────────────────────────────────
   // 0. Master Kill Switch & Telemetry Initialization
   // ─────────────────────────────────────────────────────────────────────────────
@@ -198,12 +216,6 @@
       return;
     }
   } catch (_) {}
-
-  window.__bs_audit = {
-    blockedTrackers: 0,
-    sanitizedFingerprints: 0,
-    trapsBypassed: 0
-  };
 
   // ─────────────────────────────────────────────────────────────────────────────
   // Module 2: Network Ad-Probe & Trap Interceptor (Fetch / XHR)
@@ -343,7 +355,7 @@
   })();
 
   // ─────────────────────────────────────────────────────────────────────────────
-  // Module 4: Universal Anti-Adblock Modal Annihilator & Captcha Protection Shield
+  // Module 4: Universal Anti-Adblock Modal Annihilator & Paywall/Blur Defuser
   // ─────────────────────────────────────────────────────────────────────────────
   (() => {
     const ADBLOCK_MODAL_TEXT_REGEX = /adblock(?:er)?\s+detected|browser\s+not\s+allowed|brave\s+browser\s+is\s+not\s+allowed|brave\s+browser\s+is\s+not\s+supported|open\s+this\s+page\s+in\s+google\s+chrome|disable\s+(?:your\s+)?ad\s*blocker|disable\s+(?:your\s+)?private\s+dns|ad\s*blocker\/vpn\/proxy|vpn\/proxy\/custom\s+dns|using\s+an\s+ad\s*blocker|custom\s+dns|please\s+consider\s+disabling\s+it|turn\s+off\s+adblock|ad\s*block\s+detected|please\s+whitelist|adblocker\s+is\s+detected|i've\s+disabled\s+adblocker|ad\s*blocker\s+found|ad\s*block\s+shield|block\s+adblock|adblocker\s+notice/i;
@@ -407,6 +419,30 @@
       } catch (_) {}
     }
 
+    // Feature B: Universal Paywall & Blur-Filter Defuser
+    function defusePaywallsAndBlur() {
+      try {
+        // Unblur readable text on Medium, Quora, Pinterest, news portals
+        const blurredElements = document.querySelectorAll('[style*="filter"], [style*="blur"], .blurred, .blur, .paywall-blur, .content-gate, .quora-blur');
+        for (const el of blurredElements) {
+          if (!isProtectedCaptchaOrAuth(el)) {
+            el.style.setProperty('filter', 'none', 'important');
+            el.style.setProperty('-webkit-filter', 'none', 'important');
+            el.style.setProperty('user-select', 'text', 'important');
+            el.style.setProperty('-webkit-user-select', 'text', 'important');
+          }
+        }
+
+        // Defuse signup & registration wall overlays (Quora, Pinterest, Medium)
+        const paywallGates = document.querySelectorAll('.paywall, .content-gate-overlay, #gate-container, .signup_wall, .modal_signup, [class*="paywall-overlay"]');
+        for (const gate of paywallGates) {
+          if (!isProtectedCaptchaOrAuth(gate)) {
+            try { gate.remove(); } catch (_) { gate.style.display = 'none'; }
+          }
+        }
+      } catch (_) {}
+    }
+
     function autoBypassAgeAndConsent() {
       try {
         const AGE_COOKIES = ['age_verified=1', 'disclaimer=1', 'accessAgeDisclaimer=true', 'over18=1', 'age_gate=1', 'age_confirmed=1', 'agree=1', 'terms_agreed=1'];
@@ -434,6 +470,7 @@
         let destroyed = false;
         autoBypassAgeAndConsent();
         ensureCaptchasVisible();
+        defusePaywallsAndBlur();
 
         const candidates = document.querySelectorAll('div, section, dialog, [role="dialog"], [role="alertdialog"], .modal, .swal2-container, .sweet-alert, .overlay, .popup, [class*="modal"], [class*="overlay"], [class*="popup"], [id*="modal"], [id*="overlay"], [id*="adblock"]');
         for (const el of candidates) {
@@ -466,6 +503,7 @@
               target.style.setProperty('visibility', 'hidden', 'important');
             }
             destroyed = true;
+            reportTelemetry('trapsNeutralized', 1);
           }
         }
 
@@ -515,7 +553,7 @@
   })();
 
   // ─────────────────────────────────────────────────────────────────────────────
-  // Module 5: Safe Turbo Timer Fast-Forward & Shortener Fast-Pass (Manual Click Armed)
+  // Module 5: Safe Turbo Timer Fast-Forward & Shortener Fast-Pass + Feature A Unshortener
   // ─────────────────────────────────────────────────────────────────────────────
   (() => {
     function isCaptchaPresentOnPage() {
@@ -541,7 +579,10 @@
     window.setTimeout = makeNative(function(handler, delay, ...args) {
       let numDelay = typeof delay === 'number' ? delay : (parseInt(delay, 10) || 0);
       if (!isMediaPlatform && !isCaptchaPresentOnPage() && numDelay >= 800 && numDelay <= 180000) {
-        numDelay = Math.max(20, Math.floor(numDelay / 25)); // 25x-50x fast compression
+        const compressed = Math.max(20, Math.floor(numDelay / 25)); // 25x-50x fast compression
+        const savedSecs = Math.max(0, Math.round((numDelay - compressed) / 1000));
+        if (savedSecs > 0) reportTelemetry('timeSavedSeconds', savedSecs);
+        numDelay = compressed;
       }
       return origSetTimeout.apply(window, [handler, numDelay, ...args]);
     }, 'setTimeout');
@@ -574,8 +615,39 @@
       return origConfirm.apply(window, arguments);
     }, 'confirm');
 
+    // Feature A: Instant URL Unshortener Parameter Decoder
+    let reportedDirectUrl = null;
+    function resolveDirectDestination() {
+      try {
+        const search = window.location.search;
+        if (!search) return;
+        const params = new URLSearchParams(search);
+        const candidates = ['dest', 'url', 'go', 'link', 'target', 'r', 'destination', 'download'];
+        for (const key of candidates) {
+          const val = params.get(key);
+          if (val) {
+            let targetUrl = val;
+            if (val.startsWith('aHR0c') || val.startsWith('http') || val.includes('%3A%2F%2F')) {
+              try {
+                if (val.startsWith('aHR0c')) targetUrl = atob(val);
+                targetUrl = decodeURIComponent(targetUrl);
+              } catch (_) {}
+            }
+            if (/^https?:\/\//i.test(targetUrl) && !targetUrl.includes(host) && targetUrl !== reportedDirectUrl) {
+              reportedDirectUrl = targetUrl;
+              window.postMessage({ type: 'bs-direct-link', url: targetUrl }, '*');
+              reportTelemetry('directLinksUnlocked', 1);
+              break;
+            }
+          }
+        }
+      } catch (_) {}
+    }
+
     function turboPassCountdownsAndLinks() {
       try {
+        resolveDirectDestination();
+
         function isPaginationOrNavigation(el) {
           if (!el) return true;
           const href = (el.getAttribute('href') || '').toLowerCase();
@@ -690,7 +762,7 @@
           }
         }
 
-        // Unhide direct destination links
+        // Unhide direct destination links & report telemetry
         const destLinks = document.querySelectorAll('a[href*="/links/"], a[href*="/go/"], a[href*="indianshortner.com/"], a[href*="drive.google"], a[href*="mediafire"], a[href*="mega.nz"], a[href*="pixeldrain"], a[href*="gofile"], a[href*="uploadrar"]');
         for (const dLink of destLinks) {
           if (!isPaginationOrNavigation(dLink)) {
@@ -698,6 +770,12 @@
             dLink.style.setProperty('visibility', 'visible', 'important');
             dLink.style.setProperty('opacity', '1', 'important');
             dLink.style.setProperty('pointer-events', 'auto', 'important');
+            const targetHref = dLink.getAttribute('href');
+            if (targetHref && targetHref.startsWith('http') && targetHref !== reportedDirectUrl && !targetHref.includes(host)) {
+              reportedDirectUrl = targetHref;
+              window.postMessage({ type: 'bs-direct-link', url: targetHref }, '*');
+              reportTelemetry('directLinksUnlocked', 1);
+            }
           }
         }
       } catch (_) {}
@@ -716,7 +794,6 @@
 
     console.log('[BraveShield] Spotify Web Player Engine Armed.');
 
-    // Ad Audio Element Speedup & Auto-Mute
     function sweepSpotifyAds() {
       try {
         const audioNodes = document.querySelectorAll('audio, video');
@@ -761,5 +838,25 @@
     setInterval(speedupYouTubeAds, 500);
   })();
 
-  console.log('[BraveShield Bypass Pro] v5.3.0 Engine Armed & Synchronized.');
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Module 8: Feature E — Twitch & Streaming Media Ad Shield
+  // ─────────────────────────────────────────────────────────────────────────────
+  (() => {
+    if (!host.includes('twitch.tv')) return;
+
+    function sweepTwitchAds() {
+      try {
+        const adNotice = document.querySelector('.player-ad-notice, [data-test-selector="ad-banner"], [data-a-target="video-ad-label"]');
+        const video = document.querySelector('video');
+        if (adNotice && video) {
+          video.muted = true;
+          video.playbackRate = 16.0;
+        }
+      } catch (_) {}
+    }
+
+    setInterval(sweepTwitchAds, 1000);
+  })();
+
+  console.log('[BraveShield Bypass Pro] v5.4.0 Titanium Engine Armed & Synchronized.');
 })();

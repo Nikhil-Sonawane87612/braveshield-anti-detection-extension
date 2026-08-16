@@ -1,8 +1,9 @@
 /**
- * BraveShield Bypass Pro — Content Script Bridge
- * Version: 5.3.0
+ * BraveShield Bypass Pro — Content Script Bridge & HUD Controller
+ * Version: 5.4.0
  * Execution World: ISOLATED (document_start)
- * Purpose: Fast DOM modal annihilation, button unlocking, storage synchronization, and popup bridge.
+ * Purpose: Fast DOM modal annihilation, button unlocking, storage synchronization,
+ *          direct-link floating HUD bar, live telemetry tracking, and popup bridge.
  */
 
 (() => {
@@ -28,11 +29,12 @@
     return;
   }
 
-  // 1. Sync Settings into sessionStorage for MAIN world inject.js
+  // 1. Sync Settings & Device Profile into sessionStorage for MAIN world inject.js
   try {
-    chrome.storage.local.get(['webglVendor', 'webglRenderer', 'masterEnabled'], (res) => {
+    chrome.storage.local.get(['webglVendor', 'webglRenderer', 'masterEnabled', 'deviceProfile'], (res) => {
       if (res && res.webglVendor) sessionStorage.setItem('bs_webgl_vendor', res.webglVendor);
       if (res && res.webglRenderer) sessionStorage.setItem('bs_webgl_renderer', res.webglRenderer);
+      if (res && res.deviceProfile) sessionStorage.setItem('bs_device_profile', res.deviceProfile);
       if (res && res.masterEnabled === false) {
         sessionStorage.setItem('bs_master_disabled', 'true');
       } else {
@@ -41,46 +43,83 @@
     });
   } catch (_) {}
 
-  // 2. Message Listener from Extension Cockpit
-  chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-    if (request.type === 'CHECK_STATUS') {
-      sendResponse({
-        status: 'active',
-        domain: window.location.hostname,
-        timestamp: Date.now(),
-        isLinkShortener: detectLinkShortener(),
-        hasCountdown: detectCountdown()
-      });
-    } else if (request.type === 'PING') {
-      sendResponse({ pong: true });
-    } else if (request.type === 'SET_MASTER_STATE') {
-      window.postMessage({ type: 'bs-set-master-state', enabled: request.enabled }, '*');
-      sendResponse({ status: 'ok' });
+  // 2. Feature D: Live Telemetry Event Listener & Incrementor
+  window.addEventListener('message', (e) => {
+    if (e.data && e.data.type === 'bs-telemetry-event') {
+      const { stat, delta } = e.data;
+      if (stat && typeof delta === 'number' && delta > 0) {
+        try {
+          chrome.storage.local.get(['timeSavedSeconds', 'trapsNeutralized', 'directLinksUnlocked'], (res) => {
+            const current = (res && res[stat]) ? res[stat] : 0;
+            const update = {};
+            update[stat] = current + delta;
+            chrome.storage.local.set(update);
+          });
+        } catch (_) {}
+      }
+    } else if (e.data && e.data.type === 'bs-direct-link' && e.data.url) {
+      renderDirectLinkHud(e.data.url);
     }
-    return true;
   });
 
-  function detectLinkShortener() {
-    const HOSTS = [
-      'ouo.io', 'ouo.us', 'bc.vc', 'sh.st', 'adf.ly', 'shorte.st',
-      'linkvertise.com', 'linkvertise.de', 'clk.sh', 'tp.st', 'lr.in',
-      'rekonise.com', 'work.ink', 'lootlinks.co', 'megalink.pro',
-      'linksfire.com', 'cutt.ly', 'bit.ly', 'tinyurl.com', 'exe.io',
-      'droplink.co', 'gplinks.co', 'xpshort.com', 'tnlink.in', 'za.gl',
-      'safelinku.com', 'shrink.to', 'shrink.gg', 'shorturl.at', 'earn4link.in', '10drives.com'
-    ];
-    return HOSTS.some(h => (window.location.hostname || '').includes(h));
+  // 3. Feature A: Floating Obsidian-Neon Direct Link HUD
+  let hudRendered = false;
+  function renderDirectLinkHud(targetUrl) {
+    if (hudRendered || !targetUrl || !document.body) return;
+    hudRendered = true;
+
+    try {
+      const bar = document.createElement('div');
+      bar.id = 'bs-direct-link-bar';
+      bar.innerHTML = `
+        <div style="display:flex; align-items:center; gap:10px;">
+          <span style="font-size:16px;">⚡</span>
+          <span style="font-weight:700; color:#00ffcc; letter-spacing:0.5px;">Direct Link Detected:</span>
+          <span style="max-width:280px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:#a0aec0; font-size:12px;">${targetUrl}</span>
+        </div>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <a href="${targetUrl}" target="_blank" rel="noopener noreferrer" style="background:linear-gradient(135deg, #00ffcc, #0077ff); color:#000; font-weight:800; font-size:12px; padding:6px 14px; border-radius:6px; text-decoration:none; text-transform:uppercase; letter-spacing:0.5px; box-shadow:0 0 12px rgba(0,255,204,0.4); cursor:pointer;">Jump Directly ↗</a>
+          <button id="bs-close-hud" style="background:transparent; border:none; color:#718096; font-size:16px; cursor:pointer; padding:2px 6px;">✕</button>
+        </div>
+      `;
+      bar.style.cssText = `
+        position: fixed !important;
+        top: 14px !important;
+        right: 14px !important;
+        z-index: 2147483647 !important;
+        background: rgba(10, 15, 25, 0.94) !important;
+        border: 1px solid rgba(0, 255, 204, 0.4) !important;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.8), 0 0 15px rgba(0, 255, 204, 0.2) !important;
+        backdrop-filter: blur(12px) !important;
+        border-radius: 10px !important;
+        padding: 10px 16px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        gap: 16px !important;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+        font-size: 13px !important;
+        color: #fff !important;
+        animation: bsSlideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+      `;
+
+      const style = document.createElement('style');
+      style.textContent = `@keyframes bsSlideIn { from { transform: translateY(-30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }`;
+      document.head.appendChild(style);
+
+      document.body.appendChild(bar);
+      document.getElementById('bs-close-hud')?.addEventListener('click', () => bar.remove());
+    } catch (_) {}
   }
 
-  function detectCountdown() {
-    const SELECTORS = ['.countdown', '.timer', '#timer', '[class*="countdown"]', '[class*="timer"]', '[data-countdown]', '[data-timer]', '.wait-time'];
-    for (const sel of SELECTORS) {
-      if (document.querySelector(sel)) return true;
+  // 4. Message Listener from Extension Cockpit
+  chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+    if (request.type === 'get-audit') {
+      sendResponse({ status: 'active', version: '5.4.0' });
     }
-    return false;
-  }
+  });
 
-  // 3. Universal Anti-Adblock Modal Annihilator & Backdrop Cleaner
+  // 5. Universal Anti-Adblock Modal Annihilator & Captcha Protection Shield
   const ADBLOCK_MODAL_TEXT_REGEX = /adblock(?:er)?\s+detected|browser\s+not\s+allowed|brave\s+browser\s+is\s+not\s+allowed|brave\s+browser\s+is\s+not\s+supported|open\s+this\s+page\s+in\s+google\s+chrome|disable\s+(?:your\s+)?ad\s*blocker|disable\s+(?:your\s+)?private\s+dns|ad\s*blocker\/vpn\/proxy|vpn\/proxy\/custom\s+dns|using\s+an\s+ad\s*blocker|custom\s+dns|please\s+consider\s+disabling\s+it|turn\s+off\s+adblock|ad\s*block\s+detected|please\s+whitelist|adblocker\s+is\s+detected|i've\s+disabled\s+adblocker|ad\s*blocker\s+found|ad\s*block\s+shield|block\s+adblock|adblocker\s+notice/i;
 
   function isProtectedCaptchaOrAuth(el) {
@@ -140,10 +179,27 @@
     } catch (_) {}
   }
 
+  // Feature B: Universal Paywall & Blur-Filter Defuser in Content Script
+  function defusePaywallsAndBlur() {
+    try {
+      const blurredElements = document.querySelectorAll('[style*="filter"], [style*="blur"], .blurred, .blur, .paywall-blur, .content-gate, .quora-blur');
+      for (const el of blurredElements) {
+        if (!isProtectedCaptchaOrAuth(el)) {
+          el.style.setProperty('filter', 'none', 'important');
+          el.style.setProperty('-webkit-filter', 'none', 'important');
+          el.style.setProperty('user-select', 'text', 'important');
+          el.style.setProperty('-webkit-user-select', 'text', 'important');
+        }
+      }
+    } catch (_) {}
+  }
+
   function annihilateAntiAdblockModals() {
     try {
       let destroyed = false;
       ensureCaptchasVisible();
+      defusePaywallsAndBlur();
+
       const candidates = document.querySelectorAll('div, section, dialog, [role="dialog"], [role="alertdialog"], .modal, .swal2-container, .sweet-alert, .overlay, .popup, [class*="modal"], [class*="overlay"], [class*="popup"], [id*="modal"], [id*="overlay"], [id*="adblock"]');
       
       for (const el of candidates) {
@@ -216,7 +272,7 @@
     } catch (_) {}
   }
 
-  // 4. Shortener Button Unlocker (Arm buttons without auto-clicking)
+  // 6. Shortener Button Unlocker (Arm buttons without auto-clicking)
   function fastPassButtons() {
     try {
       function isPagination(el) {
@@ -226,7 +282,7 @@
       }
 
       // Arm buttons (remove disabled, show button, set pointer-events: auto, elevate z-index)
-      const btns = document.querySelectorAll('#btn-main, #get-link, #getlink, #download-btn, #btn-download, .get-link, .download-btn, .btn-download, #wpsafe-generate, #continue-btn, #btn-continue, #imnotrobot, #btn6, #btn-captcha, .btn-captcha, a.btn, button.btn, [class*="btn"], button, input[type="button"], input[type="submit"]');
+      const btns = document.querySelectorAll('#btn-main, #get-link, #getlink, #download-btn, #btn-download', '.get-link, .download-btn, .btn-download, #wpsafe-generate, #continue-btn, #btn-continue, #imnotrobot, #btn6, #btn-captcha, .btn-captcha, #openInChrome, .btn-open-chrome, a.btn, button.btn, [class*="btn"], button, input[type="button"], input[type="submit"]');
       for (const btn of btns) {
         if (btn && !isPagination(btn)) {
           const txt = (btn.innerText || btn.value || btn.textContent || '').trim();

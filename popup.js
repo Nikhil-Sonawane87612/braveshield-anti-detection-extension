@@ -1,15 +1,22 @@
 /**
  * BraveShield Bypass Pro — Popup HUD Controller
- * Version: 5.3.0
+ * Version: 5.4.0
  */
 
 document.addEventListener('DOMContentLoaded', async () => {
   const masterToggle = document.getElementById('master-toggle');
   const masterSubtitle = document.getElementById('master-subtitle');
-  const toggleBrave = document.getElementById('toggle-brave');
+  const profileSelect = document.getElementById('device-profile-select');
+  const metricTimeSaved = document.getElementById('metric-timesaved');
+  const metricTraps = document.getElementById('metric-traps');
+  const metricLinks = document.getElementById('metric-links');
+
+  const toggleUnshortener = document.getElementById('toggle-unshortener');
+  const togglePaywall = document.getElementById('toggle-paywall');
   const toggleTimers = document.getElementById('toggle-timers');
   const toggleAdblock = document.getElementById('toggle-adblock');
   const toggleMedia = document.getElementById('toggle-media');
+
   const statusSite = document.getElementById('status-site');
   const statusDot = document.getElementById('status-dot');
   const statusLabel = document.getElementById('status-label');
@@ -38,20 +45,38 @@ document.addEventListener('DOMContentLoaded', async () => {
     statusSite.textContent = 'Active Session';
   }
 
-  // 2. Load Stored States
+  function formatSeconds(secs) {
+    if (!secs || secs < 0) return '0s';
+    if (secs < 60) return `${secs}s`;
+    const mins = Math.floor(secs / 60);
+    const rem = secs % 60;
+    return rem > 0 ? `${mins}m ${rem}s` : `${mins}m`;
+  }
+
+  // 2. Load Stored States & Live Telemetry
   chrome.storage.local.get([
-    'masterEnabled', 'maskBraveApi', 'autoBypassTimers',
-    'bypassAdblockDetection', 'spotifyUnlocked', 'whitelist',
-    'updateAvailable', 'lastSyncTime'
+    'masterEnabled', 'unshortenerEnabled', 'paywallDefuserEnabled',
+    'autoBypassTimers', 'bypassAdblockDetection', 'spotifyUnlocked', 'youtubeAds',
+    'deviceProfile', 'timeSavedSeconds', 'trapsNeutralized', 'directLinksUnlocked',
+    'whitelist', 'updateAvailable'
   ], (res) => {
     const isMaster = res.masterEnabled !== false;
     masterToggle.checked = isMaster;
     updateMasterUI(isMaster);
 
-    toggleBrave.checked = res.maskBraveApi !== false;
+    toggleUnshortener.checked = res.unshortenerEnabled !== false;
+    togglePaywall.checked = res.paywallDefuserEnabled !== false;
     toggleTimers.checked = res.autoBypassTimers !== false;
     toggleAdblock.checked = res.bypassAdblockDetection !== false;
-    toggleMedia.checked = res.spotifyUnlocked !== false;
+    toggleMedia.checked = (res.spotifyUnlocked !== false || res.youtubeAds !== false);
+
+    if (res.deviceProfile && profileSelect) {
+      profileSelect.value = res.deviceProfile;
+    }
+
+    if (metricTimeSaved) metricTimeSaved.textContent = formatSeconds(res.timeSavedSeconds || 0);
+    if (metricTraps) metricTraps.textContent = (res.trapsNeutralized || 0).toString();
+    if (metricLinks) metricLinks.textContent = (res.directLinksUnlocked || 0).toString();
 
     if (res.updateAvailable) {
       updateBadge.classList.remove('hidden');
@@ -67,7 +92,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   function updateMasterUI(enabled) {
     if (enabled) {
-      masterSubtitle.textContent = 'All 24 Stealth Modules Armed';
+      masterSubtitle.textContent = 'All 28 Stealth Modules Armed';
       statusDot.classList.remove('disabled');
       statusLabel.textContent = 'Guarded';
     } else {
@@ -83,7 +108,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     chrome.storage.local.set({ masterEnabled: val, enabled: val });
     updateMasterUI(val);
 
-    // Notify active tab
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
       if (tabs && tabs[0]?.id) {
         chrome.tabs.sendMessage(tabs[0].id, { type: 'SET_MASTER_STATE', enabled: val }).catch(() => {});
@@ -91,8 +115,19 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   });
 
-  toggleBrave.addEventListener('change', () => {
-    chrome.storage.local.set({ maskBraveApi: toggleBrave.checked });
+  if (profileSelect) {
+    profileSelect.addEventListener('change', () => {
+      const selected = profileSelect.value;
+      chrome.storage.local.set({ deviceProfile: selected });
+    });
+  }
+
+  toggleUnshortener.addEventListener('change', () => {
+    chrome.storage.local.set({ unshortenerEnabled: toggleUnshortener.checked });
+  });
+
+  togglePaywall.addEventListener('change', () => {
+    chrome.storage.local.set({ paywallDefuserEnabled: togglePaywall.checked });
   });
 
   toggleTimers.addEventListener('change', () => {
@@ -104,7 +139,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   toggleMedia.addEventListener('change', () => {
-    chrome.storage.local.set({ spotifyUnlocked: toggleMedia.checked, youtubeAds: toggleMedia.checked });
+    const val = toggleMedia.checked;
+    chrome.storage.local.set({ spotifyUnlocked: val, youtubeAds: val, twitchShieldEnabled: val });
   });
 
   // Whitelist Button
@@ -149,28 +185,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         syncText.textContent = 'Error';
       }
     } catch (_) {
-      syncText.textContent = 'Synced';
+      syncText.textContent = 'Synced!';
     }
     setTimeout(() => {
       btnSync.classList.remove('syncing');
       syncText.textContent = 'Auto-Sync';
     }, 2000);
-  });
-
-  // Two-way Live Sync
-  chrome.storage.onChanged.addListener((changes, area) => {
-    if (area !== 'local') return;
-    if (changes.masterEnabled) {
-      masterToggle.checked = changes.masterEnabled.newValue !== false;
-      updateMasterUI(masterToggle.checked);
-    }
-    if (changes.maskBraveApi) toggleBrave.checked = changes.maskBraveApi.newValue !== false;
-    if (changes.autoBypassTimers) toggleTimers.checked = changes.autoBypassTimers.newValue !== false;
-    if (changes.bypassAdblockDetection) toggleAdblock.checked = changes.bypassAdblockDetection.newValue !== false;
-    if (changes.spotifyUnlocked) toggleMedia.checked = changes.spotifyUnlocked.newValue !== false;
-    if (changes.updateAvailable) {
-      if (changes.updateAvailable.newValue) updateBadge.classList.remove('hidden');
-      else updateBadge.classList.add('hidden');
-    }
   });
 });

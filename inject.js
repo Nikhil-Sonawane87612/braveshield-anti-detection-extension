@@ -751,7 +751,11 @@
 
     function turboPassCountdownsAndLinks() {
       try {
+        if (sessionStorage.getItem('bs_master_disabled') === 'true') return;
+
         resolveDirectDestination();
+
+        if (sessionStorage.getItem('bs_timers_disabled') === 'true') return;
 
         function isPaginationOrNavigation(el) {
           if (!el) return true;
@@ -824,10 +828,7 @@
           '#final-download', '.direct-download', '#downloadBtn', '#btnDownload',
           '#wpsafe-generate', '#wpsafe-snp', '#tp-snp2',
           '#imnotrobot', '#btn6', '#btn-captcha', '.btn-captcha', '#captcha-btn',
-          '#openInChrome', '.btn-open-chrome', 'button[id*="open" i]', 'a[id*="open" i]',
-          'button[id*="download"]', 'a[id*="download"]', 'button[id*="link"]', 'a[id*="link"]',
-          'button[id*="robot" i]', 'a[id*="robot" i]', 'input[value*="ROBOT" i]', 'input[value*="Robot" i]',
-          'a[href*="get-link"]', 'a[href*="download"]'
+          '#openInChrome', '.btn-open-chrome'
         ];
 
         for (const sel of buttonSelectors) {
@@ -838,47 +839,7 @@
               btn.removeAttribute('aria-disabled');
               if (btn.classList.contains('disabled')) btn.classList.remove('disabled');
               btn.style.setProperty('pointer-events', 'auto', 'important');
-              btn.style.setProperty('opacity', '1', 'important');
-              btn.style.setProperty('display', 'inline-block', 'important');
-              btn.style.setProperty('visibility', 'visible', 'important');
               btn.style.setProperty('cursor', 'pointer', 'important');
-              btn.style.setProperty('z-index', '2147483647', 'important');
-              btn.style.setProperty('position', 'relative', 'important');
-              if (btn.parentElement) {
-                btn.parentElement.style.setProperty('pointer-events', 'auto', 'important');
-                btn.parentElement.style.setProperty('visibility', 'visible', 'important');
-              }
-              const txt = (btn.innerText || btn.textContent || btn.value || '').trim();
-              if (/getting\s+link|generating/i.test(txt)) {
-                btn.innerText = 'GET LINK';
-                btn.textContent = 'GET LINK';
-              }
-            }
-          }
-        }
-
-        // Generic Button Scanner (e.g. indianshortner.com / earn4link.in / 10drives.com)
-        const genericBtns = document.querySelectorAll('button, a.btn, a[role="button"], .btn, [class*="btn"], input[type="button"], input[type="submit"]');
-        for (const gBtn of genericBtns) {
-          const txt = (gBtn.innerText || gBtn.textContent || gBtn.value || '').trim().toLowerCase();
-          if (/i['’]?m\s+not\s+(?:a\s+)?robot|not\s+robot|verify\s+captcha|human\s+verification|click\s+here\s+to\s+continue|get\s*link|continue|download|generate\s*link|proceed|verify|getting\s+link/i.test(txt) && !isPaginationOrNavigation(gBtn)) {
-            gBtn.removeAttribute('disabled');
-            gBtn.removeAttribute('aria-disabled');
-            if (gBtn.classList.contains('disabled')) gBtn.classList.remove('disabled');
-            gBtn.style.setProperty('pointer-events', 'auto', 'important');
-            gBtn.style.setProperty('opacity', '1', 'important');
-            gBtn.style.setProperty('display', 'inline-block', 'important');
-            gBtn.style.setProperty('visibility', 'visible', 'important');
-            gBtn.style.setProperty('cursor', 'pointer', 'important');
-            gBtn.style.setProperty('z-index', '2147483647', 'important');
-            gBtn.style.setProperty('position', 'relative', 'important');
-            if (gBtn.parentElement) {
-              gBtn.parentElement.style.setProperty('pointer-events', 'auto', 'important');
-              gBtn.parentElement.style.setProperty('visibility', 'visible', 'important');
-            }
-            if (/getting\s+link|generating/i.test(txt)) {
-              gBtn.innerText = 'GET LINK';
-              gBtn.textContent = 'GET LINK';
             }
           }
         }
@@ -887,9 +848,6 @@
         const destLinks = document.querySelectorAll('a[href*="/links/"], a[href*="/go/"], a[href*="indianshortner.com/"], a[href*="drive.google"], a[href*="mediafire"], a[href*="mega.nz"], a[href*="pixeldrain"], a[href*="gofile"], a[href*="uploadrar"]');
         for (const dLink of destLinks) {
           if (!isPaginationOrNavigation(dLink)) {
-            dLink.style.setProperty('display', 'inline-block', 'important');
-            dLink.style.setProperty('visibility', 'visible', 'important');
-            dLink.style.setProperty('opacity', '1', 'important');
             dLink.style.setProperty('pointer-events', 'auto', 'important');
             const targetHref = dLink.getAttribute('href');
             if (targetHref && targetHref.startsWith('http') && targetHref !== reportedDirectUrl && !targetHref.includes(host)) {
@@ -913,10 +871,11 @@
   (() => {
     if (!host.includes('spotify.com')) return;
 
-    console.log('[BraveShield] Spotify Web Player Engine Armed.');
-
     function sweepSpotifyAds() {
       try {
+        if (sessionStorage.getItem('bs_master_disabled') === 'true') return;
+        if (sessionStorage.getItem('bs_spotify_disabled') === 'true') return;
+
         const audioNodes = document.querySelectorAll('audio, video');
         for (const media of audioNodes) {
           const isAd = document.querySelector('[data-testid="ad-display-name"], .advertisement, [aria-label*="Advertisement"]');
@@ -940,6 +899,9 @@
 
     function speedupYouTubeAds() {
       try {
+        if (sessionStorage.getItem('bs_master_disabled') === 'true') return;
+        if (sessionStorage.getItem('bs_youtube_disabled') === 'true') return;
+
         const video = document.querySelector('video');
         const adShowing = document.querySelector('.ad-showing, .ad-interrupting, .ytp-ad-player-overlay');
         if (adShowing && video) {
@@ -967,6 +929,9 @@
 
     function sweepTwitchAds() {
       try {
+        if (sessionStorage.getItem('bs_master_disabled') === 'true') return;
+        if (sessionStorage.getItem('bs_twitch_disabled') === 'true') return;
+
         const adNotice = document.querySelector('.player-ad-notice, [data-test-selector="ad-banner"], [data-a-target="video-ad-label"]');
         const video = document.querySelector('video');
         if (adNotice && video) {

@@ -50,6 +50,22 @@ document.addEventListener('DOMContentLoaded', () => {
     return rem > 0 ? `${mins}m ${rem}s` : `${mins}m`;
   }
 
+  function updateMasterStatus(enabled) {
+    if (enabled) {
+      masterLabel.textContent = 'SYSTEM DEFENSE ARMED';
+      masterLabel.style.color = 'var(--accent-emerald)';
+    } else {
+      masterLabel.textContent = 'SYSTEM DEFENSE OFFLINE';
+      masterLabel.style.color = 'var(--accent-danger)';
+    }
+  }
+
+  function toggleCustomPanel(show) {
+    if (customHwPanel) {
+      customHwPanel.style.display = show ? 'block' : 'none';
+    }
+  }
+
   // 1. Populate 110+ Profiles into Dropdown
   function renderProfileOptions(filter = '') {
     if (!optProfile) return;
@@ -58,7 +74,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     optProfile.innerHTML = '';
 
-    // Custom profile option
     const customOpt = document.createElement('option');
     customOpt.value = 'custom';
     customOpt.textContent = '🛠️ Custom Hardware Profile (Configure Below)';
@@ -86,12 +101,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     optProfile.value = selectedProfileId;
     toggleCustomPanel(selectedProfileId === 'custom');
-  }
-
-  function toggleCustomPanel(show) {
-    if (customHwPanel) {
-      customHwPanel.style.display = show ? 'block' : 'none';
-    }
   }
 
   renderProfileOptions();
@@ -152,17 +161,41 @@ document.addEventListener('DOMContentLoaded', () => {
     renderWhitelist(res.whitelist || []);
   });
 
-  function updateMasterStatus(enabled) {
-    if (enabled) {
-      masterLabel.textContent = 'SYSTEM DEFENSE ARMED';
-      masterLabel.style.color = 'var(--accent-emerald)';
-    } else {
-      masterLabel.textContent = 'SYSTEM DEFENSE OFFLINE';
-      masterLabel.style.color = 'var(--accent-danger)';
+  // 3. Storage Change Listener (Bidirectional Live Sync with Popup)
+  chrome.storage.onChanged.addListener((changes, area) => {
+    if (area === 'local') {
+      if (changes.masterEnabled !== undefined) {
+        masterToggle.checked = changes.masterEnabled.newValue !== false;
+        updateMasterStatus(masterToggle.checked);
+      }
+      if (changes.maskBraveApi !== undefined) optBrave.checked = changes.maskBraveApi.newValue !== false;
+      if (changes.maskClientHints !== undefined) optHints.checked = changes.maskClientHints.newValue !== false;
+      if (changes.unshortenerEnabled !== undefined) optUnshortener.checked = changes.unshortenerEnabled.newValue !== false;
+      if (changes.autoBypassTimers !== undefined) optTimers.checked = changes.autoBypassTimers.newValue !== false;
+      if (changes.paywallDefuserEnabled !== undefined) optPaywall.checked = changes.paywallDefuserEnabled.newValue !== false;
+      if (changes.bypassAdblockDetection !== undefined) optAdblock.checked = changes.bypassAdblockDetection.newValue !== false;
+      if (changes.youtubeAds !== undefined) optYoutube.checked = changes.youtubeAds.newValue !== false;
+      if (changes.spotifyUnlocked !== undefined) optSpotify.checked = changes.spotifyUnlocked.newValue !== false;
+      if (changes.twitchShieldEnabled !== undefined) optTwitch.checked = changes.twitchShieldEnabled.newValue !== false;
+      if (changes.deviceProfile !== undefined) {
+        selectedProfileId = changes.deviceProfile.newValue;
+        if (optProfile) optProfile.value = selectedProfileId;
+        toggleCustomPanel(selectedProfileId === 'custom');
+      }
+      if (changes.whitelist !== undefined) renderWhitelist(changes.whitelist.newValue || []);
+      if (changes.timeSavedSeconds !== undefined && statTimeSaved) {
+        statTimeSaved.textContent = formatSeconds(changes.timeSavedSeconds.newValue || 0);
+      }
+      if (changes.trapsNeutralized !== undefined && statTrapsDefused) {
+        statTrapsDefused.textContent = (changes.trapsNeutralized.newValue || 0).toString();
+      }
+      if (changes.directLinksUnlocked !== undefined && statLinksUnlocked) {
+        statLinksUnlocked.textContent = (changes.directLinksUnlocked.newValue || 0).toString();
+      }
     }
-  }
+  });
 
-  // Master Switch
+  // 4. Master Switch
   masterToggle.addEventListener('change', () => {
     const val = masterToggle.checked;
     chrome.storage.local.set({ masterEnabled: val, enabled: val });

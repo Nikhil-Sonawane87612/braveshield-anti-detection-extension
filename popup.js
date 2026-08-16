@@ -39,7 +39,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     profileSelect.innerHTML = '';
 
-    // Custom profile option
     const customOpt = document.createElement('option');
     customOpt.value = 'custom';
     customOpt.textContent = '🛠️ Custom Hardware Profile (Configure in Studio)';
@@ -100,6 +99,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     return rem > 0 ? `${mins}m ${rem}s` : `${mins}m`;
   }
 
+  function updateMasterUI(enabled) {
+    if (enabled) {
+      masterSubtitle.textContent = 'All 28 Stealth Modules Armed';
+      statusDot.classList.remove('disabled');
+      statusLabel.textContent = 'Guarded';
+    } else {
+      masterSubtitle.textContent = 'System Defense Disabled';
+      statusDot.classList.add('disabled');
+      statusLabel.textContent = 'Disabled';
+    }
+  }
+
   // 3. Load Stored States & Live Telemetry
   chrome.storage.local.get([
     'masterEnabled', 'unshortenerEnabled', 'paywallDefuserEnabled',
@@ -138,19 +149,45 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
-  function updateMasterUI(enabled) {
-    if (enabled) {
-      masterSubtitle.textContent = 'All 28 Stealth Modules Armed';
-      statusDot.classList.remove('disabled');
-      statusLabel.textContent = 'Guarded';
-    } else {
-      masterSubtitle.textContent = 'System Defense Disabled';
-      statusDot.classList.add('disabled');
-      statusLabel.textContent = 'Disabled';
+  // 4. Storage Change Listener (Bidirectional Live Sync with Options Page)
+  chrome.storage.onChanged.addListener((changes, area) => {
+    if (area === 'local') {
+      if (changes.masterEnabled !== undefined) {
+        masterToggle.checked = changes.masterEnabled.newValue !== false;
+        updateMasterUI(masterToggle.checked);
+      }
+      if (changes.unshortenerEnabled !== undefined) {
+        toggleUnshortener.checked = changes.unshortenerEnabled.newValue !== false;
+      }
+      if (changes.paywallDefuserEnabled !== undefined) {
+        togglePaywall.checked = changes.paywallDefuserEnabled.newValue !== false;
+      }
+      if (changes.autoBypassTimers !== undefined) {
+        toggleTimers.checked = changes.autoBypassTimers.newValue !== false;
+      }
+      if (changes.bypassAdblockDetection !== undefined) {
+        toggleAdblock.checked = changes.bypassAdblockDetection.newValue !== false;
+      }
+      if (changes.spotifyUnlocked !== undefined || changes.youtubeAds !== undefined) {
+        toggleMedia.checked = (changes.spotifyUnlocked?.newValue !== false || changes.youtubeAds?.newValue !== false);
+      }
+      if (changes.deviceProfile !== undefined) {
+        selectedProfileId = changes.deviceProfile.newValue;
+        if (profileSelect) profileSelect.value = selectedProfileId;
+      }
+      if (changes.timeSavedSeconds !== undefined && metricTimeSaved) {
+        metricTimeSaved.textContent = formatSeconds(changes.timeSavedSeconds.newValue || 0);
+      }
+      if (changes.trapsNeutralized !== undefined && metricTraps) {
+        metricTraps.textContent = (changes.trapsNeutralized.newValue || 0).toString();
+      }
+      if (changes.directLinksUnlocked !== undefined && metricLinks) {
+        metricLinks.textContent = (changes.directLinksUnlocked.newValue || 0).toString();
+      }
     }
-  }
+  });
 
-  // 4. Event Listeners
+  // 5. Event Listeners for UI Actions
   masterToggle.addEventListener('change', () => {
     const val = masterToggle.checked;
     chrome.storage.local.set({ masterEnabled: val, enabled: val });

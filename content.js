@@ -42,16 +42,59 @@
   }
 
   // 1. Sync Settings & Device Profile into sessionStorage for MAIN world inject.js
+  function syncSettingsToSession(res) {
+    if (!res) return;
+    try {
+      if (res.masterEnabled === false) sessionStorage.setItem('bs_master_disabled', 'true');
+      else sessionStorage.removeItem('bs_master_disabled');
+
+      if (res.unshortenerEnabled === false) sessionStorage.setItem('bs_unshortener_disabled', 'true');
+      else sessionStorage.removeItem('bs_unshortener_disabled');
+
+      if (res.paywallDefuserEnabled === false) sessionStorage.setItem('bs_paywall_disabled', 'true');
+      else sessionStorage.removeItem('bs_paywall_disabled');
+
+      if (res.autoBypassTimers === false) sessionStorage.setItem('bs_timers_disabled', 'true');
+      else sessionStorage.removeItem('bs_timers_disabled');
+
+      if (res.bypassAdblockDetection === false) sessionStorage.setItem('bs_adblock_disabled', 'true');
+      else sessionStorage.removeItem('bs_adblock_disabled');
+
+      if (res.maskBraveApi === false) sessionStorage.setItem('bs_brave_disabled', 'true');
+      else sessionStorage.removeItem('bs_brave_disabled');
+
+      if (res.maskClientHints === false) sessionStorage.setItem('bs_hints_disabled', 'true');
+      else sessionStorage.removeItem('bs_hints_disabled');
+
+      if (res.spotifyUnlocked === false) sessionStorage.setItem('bs_spotify_disabled', 'true');
+      else sessionStorage.removeItem('bs_spotify_disabled');
+
+      if (res.youtubeAds === false) sessionStorage.setItem('bs_youtube_disabled', 'true');
+      else sessionStorage.removeItem('bs_youtube_disabled');
+
+      if (res.twitchShieldEnabled === false) sessionStorage.setItem('bs_twitch_disabled', 'true');
+      else sessionStorage.removeItem('bs_twitch_disabled');
+
+      if (res.deviceProfile) sessionStorage.setItem('bs_device_profile', res.deviceProfile);
+      if (res.customHardwareProfile) sessionStorage.setItem('bs_custom_hardware', JSON.stringify(res.customHardwareProfile));
+      if (res.webglVendor) sessionStorage.setItem('bs_webgl_vendor', res.webglVendor);
+      if (res.webglRenderer) sessionStorage.setItem('bs_webgl_renderer', res.webglRenderer);
+    } catch (_) {}
+  }
+
   try {
-    chrome.storage.local.get(['webglVendor', 'webglRenderer', 'masterEnabled', 'deviceProfile', 'customHardwareProfile'], (res) => {
-      if (res && res.webglVendor) sessionStorage.setItem('bs_webgl_vendor', res.webglVendor);
-      if (res && res.webglRenderer) sessionStorage.setItem('bs_webgl_renderer', res.webglRenderer);
-      if (res && res.deviceProfile) sessionStorage.setItem('bs_device_profile', res.deviceProfile);
-      if (res && res.customHardwareProfile) sessionStorage.setItem('bs_custom_hardware', JSON.stringify(res.customHardwareProfile));
-      if (res && res.masterEnabled === false) {
-        sessionStorage.setItem('bs_master_disabled', 'true');
-      } else {
-        sessionStorage.removeItem('bs_master_disabled');
+    chrome.storage.local.get(null, (all) => {
+      syncSettingsToSession(all);
+    });
+  } catch (_) {}
+
+  // Live storage change listener for instant cross-world sync
+  try {
+    chrome.storage.onChanged.addListener((changes, area) => {
+      if (area === 'local') {
+        chrome.storage.local.get(null, (all) => {
+          syncSettingsToSession(all);
+        });
       }
     });
   } catch (_) {}

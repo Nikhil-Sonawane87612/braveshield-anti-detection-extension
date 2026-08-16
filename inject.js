@@ -562,6 +562,7 @@
     // Feature B: Universal Paywall & Blur-Filter Defuser
     function defusePaywallsAndBlur() {
       try {
+        if (sessionStorage.getItem('bs_paywall_disabled') === 'true') return;
         // Unblur readable text on Medium, Quora, Pinterest, news portals
         const blurredElements = document.querySelectorAll('[style*="filter"], [style*="blur"], .blurred, .blur, .paywall-blur, .content-gate, .quora-blur');
         for (const el of blurredElements) {
@@ -610,6 +611,8 @@
         autoBypassAgeAndConsent();
         ensureCaptchasVisible();
         defusePaywallsAndBlur();
+
+        if (sessionStorage.getItem('bs_adblock_disabled') === 'true') return;
 
         const candidates = document.querySelectorAll('div, section, dialog, [role="dialog"], [role="alertdialog"], .modal, .swal2-container, .sweet-alert, .overlay, .popup, [class*="modal"], [class*="overlay"], [class*="popup"], [id*="modal"], [id*="overlay"], [id*="adblock"]');
         for (const el of candidates) {
@@ -710,7 +713,8 @@
 
     window.setTimeout = makeNative(function(handler, delay, ...args) {
       let numDelay = typeof delay === 'number' ? delay : (parseInt(delay, 10) || 0);
-      if (!isMediaPlatform && !isCaptchaPresentOnPage() && numDelay >= 800 && numDelay <= 180000) {
+      const isTimersActive = (sessionStorage.getItem('bs_timers_disabled') !== 'true');
+      if (isTimersActive && !isMediaPlatform && !isCaptchaPresentOnPage() && numDelay >= 800 && numDelay <= 180000) {
         const compressed = Math.max(20, Math.floor(numDelay / 25)); // 25x-50x fast compression
         const savedSecs = Math.max(0, Math.round((numDelay - compressed) / 1000));
         if (savedSecs > 0) reportTelemetry('timeSavedSeconds', savedSecs);
@@ -721,7 +725,8 @@
 
     window.setInterval = makeNative(function(handler, delay, ...args) {
       let numDelay = typeof delay === 'number' ? delay : (parseInt(delay, 10) || 0);
-      if (!isMediaPlatform && !isCaptchaPresentOnPage()) {
+      const isTimersActive = (sessionStorage.getItem('bs_timers_disabled') !== 'true');
+      if (isTimersActive && !isMediaPlatform && !isCaptchaPresentOnPage()) {
         if (numDelay >= 800 && numDelay <= 2000) {
           numDelay = 35; // 1s countdown tick compressed to 35ms
         }
@@ -751,6 +756,7 @@
     let reportedDirectUrl = null;
     function resolveDirectDestination() {
       try {
+        if (sessionStorage.getItem('bs_unshortener_disabled') === 'true') return;
         let candidateUrl = null;
 
         // 1. Query parameters

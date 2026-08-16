@@ -489,13 +489,6 @@
 
             if (!target || isProtectedCaptchaOrAuth(target)) continue;
 
-            const buttons = target.querySelectorAll('button, a, input[type="button"], input[type="submit"], [role="button"]');
-            for (const btn of buttons) {
-              if (/disabled\s+adblocker|i've\s+disabled|close|ok|dismiss|i\s+understand/i.test(btn.innerText || btn.value || '')) {
-                try { btn.click(); } catch (_) {}
-              }
-            }
-
             try {
               target.remove();
             } catch (_) {

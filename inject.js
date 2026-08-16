@@ -3,7 +3,7 @@
  * Version: 5.3.0
  * Execution World: MAIN (True document_start)
  * Purpose: Complete Google Chrome parity, deep Brave cloaking, anti-adblock defusal,
- *          100% Captcha passing (Turnstile/reCAPTCHA), safe turbo timers, YouTube/Spotify acceleration.
+ *          100% Captcha passing (Turnstile/reCAPTCHA/Cloudflare Interstitials), safe turbo timers, YouTube/Spotify acceleration.
  */
 
 (() => {
@@ -12,57 +12,24 @@
   const host = (window.location && window.location.hostname) ? window.location.hostname.toLowerCase() : '';
 
   // ─────────────────────────────────────────────────────────────────────────────
-  // ZERO-TOUCH PASSTHROUGH FOR CAPTCHA VERIFICATION IFRAMES
+  // ZERO-TOUCH PASSTHROUGH FOR CAPTCHA VERIFICATION IFRAMES & INTERSTITIALS
   // ─────────────────────────────────────────────────────────────────────────────
-  if (
-    host.includes('challenges.cloudflare.com') ||
-    host.includes('recaptcha.net') ||
-    host.includes('hcaptcha.com') ||
-    host.includes('arkoselabs.com') ||
-    host.includes('geetest.com') ||
-    (host.includes('google.com') && window.location.pathname.includes('/recaptcha/')) ||
-    (host.includes('cloudflare.com') && window.location.pathname.includes('/cdn-cgi/challenge-platform/'))
-  ) {
-    // Leave Cloudflare Turnstile / reCAPTCHA internal verification environment 100% pristine and untouched!
-    return;
+  function isCloudflareInterstitial() {
+    if (
+      host.includes('challenges.cloudflare.com') ||
+      host.includes('recaptcha.net') ||
+      host.includes('hcaptcha.com') ||
+      host.includes('arkoselabs.com') ||
+      host.includes('geetest.com') ||
+      (host.includes('google.com') && window.location.pathname.includes('/recaptcha/')) ||
+      (host.includes('cloudflare.com') && window.location.pathname.includes('/cdn-cgi/challenge-platform/'))
+    ) return true;
+
+    if (typeof window._cf_chl_opt !== 'undefined' || typeof window._cf_chl_ctx !== 'undefined') return true;
+    if (document.getElementById('challenge-stage') || document.getElementById('challenge-form') || document.getElementById('challenge-running') || document.getElementById('cf-wrapper')) return true;
+    if (document.title && /just a moment|security verification|attention required|checking your browser/i.test(document.title)) return true;
+    return false;
   }
-
-  const isMediaPlatform = host.includes('spotify.com') || host.includes('youtube.com') || host.includes('youtu.be') || host.includes('netflix.com') || host.includes('twitch.tv');
-
-  // Helper for Native Function toString Disguise
-  function makeNative(fn, name) {
-    try {
-      const nativeStr = `function ${name || fn.name || ''}() { [native code] }`;
-      Object.defineProperty(fn, 'toString', {
-        value: () => nativeStr,
-        configurable: true,
-        writable: true
-      });
-    } catch (_) {}
-    return fn;
-  }
-
-  // ─────────────────────────────────────────────────────────────────────────────
-  // 0. Master Kill Switch & Telemetry Initialization
-  // ─────────────────────────────────────────────────────────────────────────────
-  try {
-    if (sessionStorage.getItem('bs_master_disabled') === 'true') {
-      console.log('[BraveShield] Disabled via Master Kill Switch.');
-      window.addEventListener('message', (e) => {
-        if (e.data?.type === 'bs-set-master-state' && e.data.enabled) {
-          try { sessionStorage.removeItem('bs_master_disabled'); } catch (_) {}
-          window.location.reload();
-        }
-      });
-      return;
-    }
-  } catch (_) {}
-
-  window.__bs_audit = {
-    blockedTrackers: 0,
-    sanitizedFingerprints: 0,
-    trapsBypassed: 0
-  };
 
   // ─────────────────────────────────────────────────────────────────────────────
   // Module 1: Deep Brave Identity Purge & Pure Google Chrome Parity
@@ -197,6 +164,47 @@
     } catch (_) {}
   })();
 
+  // If this is an active Cloudflare interstitial challenge page, exit now to avoid interrupting verification!
+  if (isCloudflareInterstitial()) {
+    return;
+  }
+
+  const isMediaPlatform = host.includes('spotify.com') || host.includes('youtube.com') || host.includes('youtu.be') || host.includes('netflix.com') || host.includes('twitch.tv');
+
+  function makeNative(fn, name) {
+    try {
+      const nativeStr = `function ${name || fn.name || ''}() { [native code] }`;
+      Object.defineProperty(fn, 'toString', {
+        value: () => nativeStr,
+        configurable: true,
+        writable: true
+      });
+    } catch (_) {}
+    return fn;
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // 0. Master Kill Switch & Telemetry Initialization
+  // ─────────────────────────────────────────────────────────────────────────────
+  try {
+    if (sessionStorage.getItem('bs_master_disabled') === 'true') {
+      console.log('[BraveShield] Disabled via Master Kill Switch.');
+      window.addEventListener('message', (e) => {
+        if (e.data?.type === 'bs-set-master-state' && e.data.enabled) {
+          try { sessionStorage.removeItem('bs_master_disabled'); } catch (_) {}
+          window.location.reload();
+        }
+      });
+      return;
+    }
+  } catch (_) {}
+
+  window.__bs_audit = {
+    blockedTrackers: 0,
+    sanitizedFingerprints: 0,
+    trapsBypassed: 0
+  };
+
   // ─────────────────────────────────────────────────────────────────────────────
   // Module 2: Network Ad-Probe & Trap Interceptor (Fetch / XHR)
   // ─────────────────────────────────────────────────────────────────────────────
@@ -210,8 +218,8 @@
           const parsed = new URL(url);
           const parsedHost = parsed.hostname.toLowerCase();
           if (parsedHost === curHost || parsedHost.endsWith('.' + curHost)) return false; // Never intercept same-origin site requests!
-          // NEVER intercept Captcha services!
-          if (/recaptcha|hcaptcha|turnstile|challenges\.cloudflare|arkoselabs|geetest|funcaptcha/i.test(url)) return false;
+          // NEVER intercept Captcha or Cloudflare verification services!
+          if (/recaptcha|hcaptcha|turnstile|cloudflare|cdn-cgi|arkoselabs|geetest|funcaptcha/i.test(url)) return false;
         } catch (_) {}
         return /pagead2\.googlesyndication\.com|adservice\.google\.com|securepubads\.g\.doubleclick\.net|adnxs\.com|prebid\.js|fuckadblock|blockadblock|adblockdetector/i.test(url);
       }
@@ -363,7 +371,8 @@
         textSnippet.includes('security check') ||
         textSnippet.includes('verify you are a human') ||
         textSnippet.includes('i am not a robot') ||
-        textSnippet.includes('cf-turnstile')
+        textSnippet.includes('cf-turnstile') ||
+        textSnippet.includes('security verification')
       ) return true;
 
       if (el.querySelector && el.querySelector('iframe[src*="arkose"], iframe[src*="recaptcha"], iframe[src*="hcaptcha"], iframe[src*="turnstile"], iframe[src*="cloudflare"], iframe[src*="geetest"], .g-recaptcha, .h-captcha, .cf-turnstile, #challenge-stage, #cf-wrapper, [data-sitekey]')) return true;

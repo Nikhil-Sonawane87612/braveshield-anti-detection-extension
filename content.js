@@ -16,7 +16,14 @@
     host.includes('arkoselabs.com') ||
     host.includes('geetest.com') ||
     (host.includes('google.com') && window.location.pathname.includes('/recaptcha/')) ||
-    (host.includes('cloudflare.com') && window.location.pathname.includes('/cdn-cgi/challenge-platform/'))
+    (host.includes('cloudflare.com') && window.location.pathname.includes('/cdn-cgi/challenge-platform/')) ||
+    typeof window._cf_chl_opt !== 'undefined' ||
+    typeof window._cf_chl_ctx !== 'undefined' ||
+    document.getElementById('challenge-stage') ||
+    document.getElementById('challenge-form') ||
+    document.getElementById('challenge-running') ||
+    document.getElementById('cf-wrapper') ||
+    (document.title && /just a moment|security verification|attention required|checking your browser/i.test(document.title))
   ) {
     return;
   }

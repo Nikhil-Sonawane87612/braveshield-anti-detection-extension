@@ -396,7 +396,7 @@
     return;
   }
 
-  const isMediaPlatform = host.includes('spotify.com') || host.includes('youtube.com') || host.includes('youtu.be') || host.includes('netflix.com') || host.includes('twitch.tv');
+  const isMediaPlatform = host.includes('spotify.com') || host.includes('youtube.com') || host.includes('youtu.be') || host.includes('netflix.com') || host.includes('twitch.tv') || host.includes('reddit.com');
 
   function makeNative(fn, name) {
     try {
@@ -1046,30 +1046,24 @@
   })();
 
   // ─────────────────────────────────────────────────────────────────────────────
-  // Module 9: Universal Right-Click & Copy-Paste Enabler
+  // Module 9: Universal Right-Click & Copy-Paste Enabler (Non-Destructive for SPAs)
   // ─────────────────────────────────────────────────────────────────────────────
   (() => {
     try {
       if (sessionStorage.getItem('bs_master_disabled') === 'true') return;
       if (sessionStorage.getItem('bs_rightclick_disabled') === 'true') return;
 
-      const allowEvent = (e) => {
+      // Allow contextmenu without hijacking SPA click / drag delegation
+      window.addEventListener('contextmenu', (e) => {
         if (!isCaptchaHost && e) {
-          e.stopPropagation();
-          return true;
+          e.stopImmediatePropagation ? e.stopImmediatePropagation() : null;
         }
-      };
-
-      const events = ['contextmenu', 'selectstart', 'copy', 'cut', 'paste', 'dragstart'];
-      events.forEach(evtName => {
-        window.addEventListener(evtName, allowEvent, true);
-        document.addEventListener(evtName, allowEvent, true);
-      });
+      }, false);
 
       // Enable CSS user-select on body & html
       const enableSelectionStyle = () => {
         try {
-          if (document.body) {
+          if (document.body && !host.includes('reddit.com')) {
             document.body.style.setProperty('user-select', 'auto', 'important');
             document.body.style.setProperty('-webkit-user-select', 'auto', 'important');
           }
@@ -1085,7 +1079,7 @@
   })();
 
   // ─────────────────────────────────────────────────────────────────────────────
-  // Module 10: Clean URL & Tracking Query Stripper
+  // Module 10: Clean URL & Tracking Query Stripper (SPA Safe)
   // ─────────────────────────────────────────────────────────────────────────────
   (() => {
     try {
@@ -1115,19 +1109,21 @@
         }
       }
 
-      // Strip address bar tracking params silently
+      // Strip address bar tracking params silently on non-SPA page loads
       try {
-        const cleanedCurrent = cleanUrlString(window.location.href);
-        if (cleanedCurrent !== window.location.href && window.history && window.history.replaceState) {
-          window.history.replaceState(null, '', cleanedCurrent);
+        if (!host.includes('reddit.com') && !host.includes('youtube.com') && !host.includes('twitter.com') && !host.includes('x.com')) {
+          const cleanedCurrent = cleanUrlString(window.location.href);
+          if (cleanedCurrent !== window.location.href && window.history && window.history.replaceState) {
+            window.history.replaceState(null, '', cleanedCurrent);
+          }
         }
       } catch (_) {}
 
-      // Intercept link clicks to strip tracking before navigation
-      document.addEventListener('click', (e) => {
+      // Clean cross-origin external links on mousedown without mutating internal SPA router links
+      document.addEventListener('mousedown', (e) => {
         try {
           const a = e.target && e.target.closest ? e.target.closest('a') : null;
-          if (a && a.href && a.href.includes('?')) {
+          if (a && a.href && a.href.includes('?') && a.hostname && a.hostname !== window.location.hostname) {
             const clean = cleanUrlString(a.href);
             if (clean !== a.href) a.href = clean;
           }

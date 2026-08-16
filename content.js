@@ -8,6 +8,19 @@
 (() => {
   'use strict';
 
+  const host = (window.location && window.location.hostname) ? window.location.hostname.toLowerCase() : '';
+  if (
+    host.includes('challenges.cloudflare.com') ||
+    host.includes('recaptcha.net') ||
+    host.includes('hcaptcha.com') ||
+    host.includes('arkoselabs.com') ||
+    host.includes('geetest.com') ||
+    (host.includes('google.com') && window.location.pathname.includes('/recaptcha/')) ||
+    (host.includes('cloudflare.com') && window.location.pathname.includes('/cdn-cgi/challenge-platform/'))
+  ) {
+    return;
+  }
+
   // 1. Sync Settings into sessionStorage for MAIN world inject.js
   try {
     chrome.storage.local.get(['webglVendor', 'webglRenderer', 'masterEnabled'], (res) => {

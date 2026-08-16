@@ -10,8 +10,37 @@
   'use strict';
 
   const host = (window.location && window.location.hostname) ? window.location.hostname.toLowerCase() : '';
-  const isCaptchaFrame = host.includes('challenges.cloudflare.com') || host.includes('recaptcha.net') || host.includes('google.com') || host.includes('hcaptcha.com') || host.includes('arkoselabs.com') || host.includes('geetest.com');
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // ZERO-TOUCH PASSTHROUGH FOR CAPTCHA VERIFICATION IFRAMES
+  // ─────────────────────────────────────────────────────────────────────────────
+  if (
+    host.includes('challenges.cloudflare.com') ||
+    host.includes('recaptcha.net') ||
+    host.includes('hcaptcha.com') ||
+    host.includes('arkoselabs.com') ||
+    host.includes('geetest.com') ||
+    (host.includes('google.com') && window.location.pathname.includes('/recaptcha/')) ||
+    (host.includes('cloudflare.com') && window.location.pathname.includes('/cdn-cgi/challenge-platform/'))
+  ) {
+    // Leave Cloudflare Turnstile / reCAPTCHA internal verification environment 100% pristine and untouched!
+    return;
+  }
+
   const isMediaPlatform = host.includes('spotify.com') || host.includes('youtube.com') || host.includes('youtu.be') || host.includes('netflix.com') || host.includes('twitch.tv');
+
+  // Helper for Native Function toString Disguise
+  function makeNative(fn, name) {
+    try {
+      const nativeStr = `function ${name || fn.name || ''}() { [native code] }`;
+      Object.defineProperty(fn, 'toString', {
+        value: () => nativeStr,
+        configurable: true,
+        writable: true
+      });
+    } catch (_) {}
+    return fn;
+  }
 
   // ─────────────────────────────────────────────────────────────────────────────
   // 0. Master Kill Switch & Telemetry Initialization
@@ -93,7 +122,7 @@
         } catch (_) {}
       }
 
-      // 3. Prototype-level webdriver & chrome parity (Safe for Cloudflare Turnstile)
+      // 3. Prototype-level webdriver (Safe for Cloudflare Turnstile)
       try {
         Object.defineProperty(Navigator.prototype, 'webdriver', {
           get: () => false,
@@ -190,7 +219,7 @@
       // Transparent Fetch Proxy
       if (typeof window.fetch === 'function') {
         const originalFetch = window.fetch;
-        window.fetch = function (input, init) {
+        window.fetch = makeNative(function (input, init) {
           try {
             const url = typeof input === 'string' ? input : (input && input.url ? input.url : '');
             if (url && typeof url === 'string') {
@@ -207,7 +236,7 @@
             }
           } catch (_) {}
           return originalFetch.apply(window, arguments);
-        };
+        }, 'fetch');
       }
 
       // Transparent XMLHttpRequest Proxy
@@ -313,7 +342,6 @@
 
     function isProtectedCaptchaOrAuth(el) {
       if (!el) return false;
-      if (isCaptchaFrame) return true;
       if (host.includes('accounts.spotify.com') || host.includes('challenge.spotify.com') || host.includes('arkoselabs.com')) return true;
 
       const htmlSnippet = (el.outerHTML || '').slice(0, 1200).toLowerCase();
@@ -482,7 +510,6 @@
   // ─────────────────────────────────────────────────────────────────────────────
   (() => {
     function isCaptchaPresentOnPage() {
-      if (isCaptchaFrame) return true;
       return !!document.querySelector(
         '.cf-turnstile, .g-recaptcha, .h-captcha, ' +
         'iframe[src*="cloudflare"], iframe[src*="recaptcha"], iframe[src*="hcaptcha"], iframe[src*="turnstile"], ' +
@@ -491,45 +518,44 @@
     }
 
     // High-speed setTimeout & setInterval timer compression with window bound receiver
-    // Captcha frames and challenges MUST run at 100% normal native speed for proof-of-work validation!
     const origSetTimeout = window.setTimeout;
     const origSetInterval = window.setInterval;
 
-    window.setTimeout = function(handler, delay, ...args) {
+    window.setTimeout = makeNative(function(handler, delay, ...args) {
       let numDelay = typeof delay === 'number' ? delay : (parseInt(delay, 10) || 0);
-      if (!isCaptchaFrame && !isMediaPlatform && !isCaptchaPresentOnPage() && numDelay >= 800 && numDelay <= 180000) {
+      if (!isMediaPlatform && !isCaptchaPresentOnPage() && numDelay >= 800 && numDelay <= 180000) {
         numDelay = Math.max(20, Math.floor(numDelay / 25)); // 25x-50x fast compression
       }
       return origSetTimeout.apply(window, [handler, numDelay, ...args]);
-    };
+    }, 'setTimeout');
 
-    window.setInterval = function(handler, delay, ...args) {
+    window.setInterval = makeNative(function(handler, delay, ...args) {
       let numDelay = typeof delay === 'number' ? delay : (parseInt(delay, 10) || 0);
-      if (!isCaptchaFrame && !isMediaPlatform && !isCaptchaPresentOnPage()) {
+      if (!isMediaPlatform && !isCaptchaPresentOnPage()) {
         if (numDelay >= 800 && numDelay <= 2000) {
           numDelay = 35; // 1s countdown tick compressed to 35ms
         }
       }
       return origSetInterval.apply(window, [handler, numDelay, ...args]);
-    };
+    }, 'setInterval');
 
     // Suppress shortener Bad Request and YuThemeStore credit alerts
     const origAlert = window.alert;
-    window.alert = function(msg) {
+    window.alert = makeNative(function(msg) {
       if (typeof msg === 'string' && /yuthemestore|yuidea|theme\s+is\s+made\s+by|copyright|credit|bad\s+request|adblock|disable\s+ad/i.test(msg)) {
         console.log('[BraveShield] Suppressed annoying alert:', msg);
         return;
       }
       return origAlert.apply(window, arguments);
-    };
+    }, 'alert');
 
     const origConfirm = window.confirm;
-    window.confirm = function(msg) {
+    window.confirm = makeNative(function(msg) {
       if (typeof msg === 'string' && /yuthemestore|yuidea|theme\s+is\s+made\s+by|copyright|credit|bad\s+request|adblock|disable\s+ad/i.test(msg)) {
         return true;
       }
       return origConfirm.apply(window, arguments);
-    };
+    }, 'confirm');
 
     function turboPassCountdownsAndLinks() {
       try {

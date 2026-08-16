@@ -519,7 +519,8 @@
         const captchaNodes = document.querySelectorAll(
           '.g-recaptcha, .h-captcha, .cf-turnstile, .geetest_holder, #aws-waf-captcha, .mtcaptcha, #lemin-cropped-captcha, .smart-captcha, .frc-captcha, [data-sitekey], ' +
           'iframe[src*="recaptcha"], iframe[src*="hcaptcha"], iframe[src*="turnstile"], iframe[src*="cloudflare"], iframe[src*="arkose"], iframe[src*="funcaptcha"], iframe[src*="geetest"], iframe[src*="awswaf"], iframe[src*="mtcaptcha"], iframe[src*="lemin"], iframe[src*="smartcaptcha"], iframe[src*="capy"], iframe[src*="friendlycaptcha"], iframe[src*="captcha-delivery"], ' +
-          '#challenge-stage, #cf-wrapper, div[class*="recaptcha"], div[class*="hcaptcha"], div[class*="turnstile"], div[class*="geetest"]'
+          '#challenge-stage, #cf-wrapper, div[class*="recaptcha"], div[class*="hcaptcha"], div[class*="turnstile"], div[class*="geetest"], ' +
+          '#imnotrobot, #btn6, #btn-captcha, .btn-captcha, #captcha-btn, button[id*="robot" i], input[value*="ROBOT" i], input[value*="Robot" i], [onclick*="robot" i]'
         );
         for (const c of captchaNodes) {
           c.style.setProperty('display', 'inline-block', 'important');
@@ -530,7 +531,7 @@
           c.style.setProperty('position', 'relative', 'important');
           let p = c.parentElement;
           let depth = 0;
-          while (p && p !== document.body && depth < 5) {
+          while (p && p !== document.body && depth < 6) {
             p.style.setProperty('visibility', 'visible', 'important');
             if (p.style.display === 'none') p.style.setProperty('display', 'block', 'important');
             if (p.style.opacity === '0') p.style.setProperty('opacity', '1', 'important');
@@ -538,6 +539,21 @@
             p.style.setProperty('z-index', '2147483647', 'important');
             p = p.parentElement;
             depth++;
+          }
+        }
+
+        // Neutralize click-blocker overlays & ad-hijack backdrops covering the viewport
+        const clickBlockers = document.querySelectorAll(
+          '.modal-backdrop, .swal2-backdrop, .overlay-backdrop, [class*="backdrop"], .sk-overlay, #sk-overlay, [class*="adb-overlay"], #adb-overlay, ' +
+          'div[style*="position: fixed"], div[style*="position: absolute"], ' +
+          '.overlay, #overlay, .popup-overlay, #popup-overlay, .fade.show'
+        );
+        for (const b of clickBlockers) {
+          if (b && !isProtectedCaptchaOrAuth(b) && !b.querySelector('h1, h2, form, video, article, .video-list, [data-sitekey], iframe, #imnotrobot, #btn6, .btn-captcha')) {
+            const rect = b.getBoundingClientRect();
+            if (rect.width >= window.innerWidth * 0.7 && rect.height >= window.innerHeight * 0.7) {
+              try { b.remove(); } catch (_) { b.style.display = 'none'; b.style.pointerEvents = 'none'; }
+            }
           }
         }
       } catch (_) {}
@@ -591,7 +607,6 @@
 
     function annihilateAntiAdblockModals() {
       try {
-        let destroyed = false;
         autoBypassAgeAndConsent();
         ensureCaptchasVisible();
         defusePaywallsAndBlur();
@@ -619,33 +634,30 @@
               target.style.setProperty('display', 'none', 'important');
               target.style.setProperty('visibility', 'hidden', 'important');
             }
-            destroyed = true;
             reportTelemetry('trapsNeutralized', 1);
           }
         }
 
-        // Clean dark backdrop overlays & restore scrolling ONLY when a modal was destroyed
-        if (destroyed) {
-          const backdropSelectors = ['.modal-backdrop', '.swal2-backdrop', '.swal2-container', '.overlay-backdrop', '[class*="backdrop"]', '[class*="overlay"]', '#overlay', '.overlay', '.popup-overlay', '#popup-overlay', '.fade.show', '.sk-overlay', '#sk-overlay', '[class*="adb-overlay"]', '#adb-overlay'];
-          for (const sel of backdropSelectors) {
-            document.querySelectorAll(sel).forEach(b => {
-              if (b && !isProtectedCaptchaOrAuth(b) && !b.querySelector('h1, h2, form, video, article, .video-list')) {
-                try { b.remove(); } catch (_) { b.style.display = 'none'; }
-              }
-            });
-          }
+        // Clean dark/invisible backdrop overlays & restore scrolling
+        const backdropSelectors = ['.modal-backdrop', '.swal2-backdrop', '.swal2-container', '.overlay-backdrop', '[class*="backdrop"]', '[class*="overlay"]', '#overlay', '.overlay', '.popup-overlay', '#popup-overlay', '.fade.show', '.sk-overlay', '#sk-overlay', '[class*="adb-overlay"]', '#adb-overlay'];
+        for (const sel of backdropSelectors) {
+          document.querySelectorAll(sel).forEach(b => {
+            if (b && !isProtectedCaptchaOrAuth(b) && !b.querySelector('h1, h2, form, video, article, .video-list, [data-sitekey], iframe, #imnotrobot, #btn6, .btn-captcha')) {
+              try { b.remove(); } catch (_) { b.style.display = 'none'; b.style.pointerEvents = 'none'; }
+            }
+          });
+        }
 
-          if (document.body) {
-            document.body.style.setProperty('overflow', 'auto', 'important');
-            document.body.style.setProperty('filter', 'none', 'important');
-            document.body.style.setProperty('opacity', '1', 'important');
-            document.body.style.setProperty('pointer-events', 'auto', 'important');
-          }
-          if (document.documentElement) {
-            document.documentElement.style.setProperty('overflow', 'auto', 'important');
-            document.documentElement.style.setProperty('filter', 'none', 'important');
-            document.documentElement.style.setProperty('opacity', '1', 'important');
-          }
+        if (document.body) {
+          document.body.style.setProperty('overflow', 'auto', 'important');
+          document.body.style.setProperty('filter', 'none', 'important');
+          document.body.style.setProperty('opacity', '1', 'important');
+          document.body.style.setProperty('pointer-events', 'auto', 'important');
+        }
+        if (document.documentElement) {
+          document.documentElement.style.setProperty('overflow', 'auto', 'important');
+          document.documentElement.style.setProperty('filter', 'none', 'important');
+          document.documentElement.style.setProperty('opacity', '1', 'important');
         }
       } catch (_) {}
     }

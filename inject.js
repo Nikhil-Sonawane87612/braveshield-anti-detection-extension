@@ -586,16 +586,42 @@
           return false;
         }
 
-        // Trigger shortener theme link generators if present
-        const siteRevealFunctions = [
-          'showDownloadButton', 'showDownloadBtn', 'getDownloadLink', 'getDownloadBtn',
-          'generateLink', 'getLink', 'showLink', 'startTimer', 'clickOnAd', 'verifyAdClick',
-          'directDownload', 'finalDownloadLink', 'unhideLink', 'openDownload', 'createDownloadLink'
-        ];
-        for (const fn of siteRevealFunctions) {
-          if (typeof window[fn] === 'function') {
-            try { window[fn](); } catch (_) {}
+        // Trigger shortener theme link generators ONLY IF Captcha is solved/not present
+        if (!isCaptchaPresentOnPage()) {
+          const siteRevealFunctions = [
+            'showDownloadButton', 'showDownloadBtn', 'getDownloadLink', 'getDownloadBtn',
+            'generateLink', 'getLink', 'showLink', 'startTimer', 'clickOnAd', 'verifyAdClick',
+            'directDownload', 'finalDownloadLink', 'unhideLink', 'openDownload', 'createDownloadLink',
+            'startRedirect', 'doRedirect', 'redirect'
+          ];
+          for (const fn of siteRevealFunctions) {
+            if (typeof window[fn] === 'function') {
+              try { window[fn](); } catch (_) {}
+            }
           }
+        }
+
+        // Fix softurl.in & mobile intent redirects (convert intent:// to clean https://)
+        document.querySelectorAll('a[href^="intent://"], a[href^="googlechrome://"], button[data-url^="intent://"], [onclick*="intent://"]').forEach(el => {
+          let rawHref = el.getAttribute('href') || el.dataset.url || '';
+          if (rawHref.startsWith('intent://')) {
+            let cleanUrl = rawHref.replace(/^intent:\/\//, 'https://').split('#Intent')[0];
+            el.setAttribute('href', cleanUrl);
+            el.dataset.url = cleanUrl;
+          } else if (rawHref.startsWith('googlechrome://')) {
+            let cleanUrl = rawHref.replace(/^googlechrome:\/\//, 'https://');
+            el.setAttribute('href', cleanUrl);
+            el.dataset.url = cleanUrl;
+          }
+        });
+
+        // Softurl.in / Gateway bypass cookies
+        if (host.includes('softurl.in')) {
+          try {
+            document.cookie = 'opened_in_chrome=1; path=/; max-age=86400';
+            document.cookie = 'is_chrome=1; path=/; max-age=86400';
+            sessionStorage.setItem('opened_in_chrome', 'true');
+          } catch (_) {}
         }
 
         const buttonSelectors = [
@@ -605,6 +631,7 @@
           '#final-download', '.direct-download', '#downloadBtn', '#btnDownload',
           '#wpsafe-generate', '#wpsafe-snp', '#tp-snp2',
           '#imnotrobot', '#btn6', '#btn-captcha', '.btn-captcha', '#captcha-btn',
+          '#openInChrome', '.btn-open-chrome', 'button[id*="open" i]', 'a[id*="open" i]',
           'button[id*="download"]', 'a[id*="download"]', 'button[id*="link"]', 'a[id*="link"]',
           'button[id*="robot" i]', 'a[id*="robot" i]', 'input[value*="ROBOT" i]', 'input[value*="Robot" i]',
           'a[href*="get-link"]', 'a[href*="download"]'

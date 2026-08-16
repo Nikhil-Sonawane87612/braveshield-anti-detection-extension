@@ -14,14 +14,26 @@
   const host = (window.location && window.location.hostname) ? window.location.hostname.toLowerCase() : '';
 
   // ─────────────────────────────────────────────────────────────────────────────
-  // ZERO-TOUCH PASSTHROUGH FOR CAPTCHA VERIFICATION IFRAMES & INTERSTITIALS
+  // ZERO-TOUCH PASSTHROUGH FOR ALL INDUSTRY CAPTCHA PROVIDERS & INTERSTITIALS
   // ─────────────────────────────────────────────────────────────────────────────
   const isCaptchaHost = (
     host.includes('challenges.cloudflare.com') ||
     host.includes('recaptcha.net') ||
     host.includes('hcaptcha.com') ||
     host.includes('arkoselabs.com') ||
+    host.includes('funcaptcha.com') ||
     host.includes('geetest.com') ||
+    host.includes('awswaf.com') ||
+    host.includes('mtcaptcha.com') ||
+    host.includes('leminnow.com') ||
+    host.includes('smartcaptcha.yandexcloud.net') ||
+    host.includes('captcha-api.yandex.ru') ||
+    host.includes('capy.me') ||
+    host.includes('friendlycaptcha.com') ||
+    host.includes('friendlycaptcha.eu') ||
+    host.includes('captcha-delivery.com') ||
+    host.includes('perimeterx.net') ||
+    host.includes('kasada.io') ||
     (host.includes('google.com') && window.location.pathname.includes('/recaptcha/')) ||
     (host.includes('cloudflare.com') && window.location.pathname.includes('/cdn-cgi/challenge-platform/')) ||
     typeof window._cf_chl_opt !== 'undefined' ||
@@ -30,14 +42,14 @@
     document.getElementById('challenge-form') ||
     document.getElementById('challenge-running') ||
     document.getElementById('cf-wrapper') ||
-    (document.title && /just a moment|security verification|attention required|checking your browser/i.test(document.title))
+    (document.title && /just a moment|security verification|attention required|checking your browser|cloudflare/i.test(document.title))
   );
 
   function isCloudflareInterstitial() {
     return isCaptchaHost;
   }
 
-  // If inside a Captcha iframe or Cloudflare security challenge page, exit now to avoid interrupting verification!
+  // If inside ANY Captcha iframe or security challenge interstitial, exit immediately with 100% zero-touch!
   if (isCaptchaHost) {
     return;
   }
@@ -469,14 +481,19 @@
       const htmlSnippet = (el.outerHTML || '').slice(0, 1200).toLowerCase();
       const textSnippet = (el.innerText || el.textContent || '').toLowerCase();
 
-      // Check for all known Captcha & verification systems
+      // Check for all 14 known industry Captcha & verification systems
       if (
         htmlSnippet.includes('arkose') || htmlSnippet.includes('funcaptcha') ||
         htmlSnippet.includes('recaptcha') || htmlSnippet.includes('hcaptcha') ||
         htmlSnippet.includes('turnstile') || htmlSnippet.includes('cf-chl') ||
         htmlSnippet.includes('challenge-form') || htmlSnippet.includes('geetest') ||
         htmlSnippet.includes('g-recaptcha') || htmlSnippet.includes('h-captcha') ||
-        htmlSnippet.includes('cf-turnstile') || htmlSnippet.includes('challenges.cloudflare')
+        htmlSnippet.includes('cf-turnstile') || htmlSnippet.includes('challenges.cloudflare') ||
+        htmlSnippet.includes('awswaf') || htmlSnippet.includes('mtcaptcha') ||
+        htmlSnippet.includes('lemin') || htmlSnippet.includes('smartcaptcha') ||
+        htmlSnippet.includes('capy') || htmlSnippet.includes('friendlycaptcha') ||
+        htmlSnippet.includes('captcha-delivery') || htmlSnippet.includes('perimeterx') ||
+        htmlSnippet.includes('kasada')
       ) return true;
 
       if (
@@ -485,22 +502,24 @@
         textSnippet.includes('security check') ||
         textSnippet.includes('verify you are a human') ||
         textSnippet.includes('i am not a robot') ||
+        textSnippet.includes("i'm not a robot") ||
         textSnippet.includes('cf-turnstile') ||
-        textSnippet.includes('security verification')
+        textSnippet.includes('security verification') ||
+        textSnippet.includes('verifying you are human')
       ) return true;
 
-      if (el.querySelector && el.querySelector('iframe[src*="arkose"], iframe[src*="recaptcha"], iframe[src*="hcaptcha"], iframe[src*="turnstile"], iframe[src*="cloudflare"], iframe[src*="geetest"], .g-recaptcha, .h-captcha, .cf-turnstile, #challenge-stage, #cf-wrapper, [data-sitekey]')) return true;
+      if (el.querySelector && el.querySelector('iframe[src*="arkose"], iframe[src*="funcaptcha"], iframe[src*="recaptcha"], iframe[src*="hcaptcha"], iframe[src*="turnstile"], iframe[src*="cloudflare"], iframe[src*="geetest"], iframe[src*="awswaf"], iframe[src*="mtcaptcha"], iframe[src*="lemin"], iframe[src*="smartcaptcha"], iframe[src*="capy"], iframe[src*="friendlycaptcha"], iframe[src*="captcha-delivery"], .g-recaptcha, .h-captcha, .cf-turnstile, .geetest_holder, #aws-waf-captcha, .mtcaptcha, #lemin-cropped-captcha, .smart-captcha, .frc-captcha, #challenge-stage, #cf-wrapper, [data-sitekey]')) return true;
 
       return false;
     }
 
-    // Actively guarantee full visibility for all Captcha widgets
+    // Actively guarantee full visibility and clickability for all Captcha widgets
     function ensureCaptchasVisible() {
       try {
         const captchaNodes = document.querySelectorAll(
-          '.g-recaptcha, .h-captcha, .cf-turnstile, [data-sitekey], ' +
-          'iframe[src*="recaptcha"], iframe[src*="hcaptcha"], iframe[src*="turnstile"], iframe[src*="cloudflare"], iframe[src*="arkose"], iframe[src*="geetest"], ' +
-          '#challenge-stage, #cf-wrapper, div[class*="recaptcha"], div[class*="hcaptcha"], div[class*="turnstile"]'
+          '.g-recaptcha, .h-captcha, .cf-turnstile, .geetest_holder, #aws-waf-captcha, .mtcaptcha, #lemin-cropped-captcha, .smart-captcha, .frc-captcha, [data-sitekey], ' +
+          'iframe[src*="recaptcha"], iframe[src*="hcaptcha"], iframe[src*="turnstile"], iframe[src*="cloudflare"], iframe[src*="arkose"], iframe[src*="funcaptcha"], iframe[src*="geetest"], iframe[src*="awswaf"], iframe[src*="mtcaptcha"], iframe[src*="lemin"], iframe[src*="smartcaptcha"], iframe[src*="capy"], iframe[src*="friendlycaptcha"], iframe[src*="captcha-delivery"], ' +
+          '#challenge-stage, #cf-wrapper, div[class*="recaptcha"], div[class*="hcaptcha"], div[class*="turnstile"], div[class*="geetest"]'
         );
         for (const c of captchaNodes) {
           c.style.setProperty('display', 'inline-block', 'important');
@@ -659,13 +678,16 @@
         (document.getElementById('g-recaptcha-response')?.value?.length > 0) ||
         (document.querySelector('textarea[name="g-recaptcha-response"]')?.value?.length > 0) ||
         (document.querySelector('input[name="cf-turnstile-response"]')?.value?.length > 0) ||
-        (document.querySelector('textarea[name="h-captcha-response"]')?.value?.length > 0)
+        (document.querySelector('textarea[name="h-captcha-response"]')?.value?.length > 0) ||
+        (document.querySelector('input[name="mtcaptcha-verifiedtoken"]')?.value?.length > 0) ||
+        (document.querySelector('input[name="geetest_validate"]')?.value?.length > 0) ||
+        (document.querySelector('input[name="fc-token"]')?.value?.length > 0)
       );
       if (hasToken) return false; // Captcha solved, resume turbo timers!
 
       return !!document.querySelector(
-        '.cf-turnstile, .g-recaptcha, .h-captcha, ' +
-        'iframe[src*="cloudflare"], iframe[src*="recaptcha"], iframe[src*="hcaptcha"], iframe[src*="turnstile"], ' +
+        '.cf-turnstile, .g-recaptcha, .h-captcha, .geetest_holder, #aws-waf-captcha, .mtcaptcha, #lemin-cropped-captcha, .smart-captcha, .frc-captcha, ' +
+        'iframe[src*="cloudflare"], iframe[src*="recaptcha"], iframe[src*="hcaptcha"], iframe[src*="turnstile"], iframe[src*="arkose"], iframe[src*="funcaptcha"], iframe[src*="geetest"], iframe[src*="awswaf"], iframe[src*="mtcaptcha"], iframe[src*="lemin"], iframe[src*="smartcaptcha"], iframe[src*="capy"], iframe[src*="friendlycaptcha"], iframe[src*="captcha-delivery"], ' +
         '#challenge-stage, #cf-wrapper, [data-sitekey]'
       );
     }

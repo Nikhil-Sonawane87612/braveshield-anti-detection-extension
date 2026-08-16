@@ -15,7 +15,19 @@
     host.includes('recaptcha.net') ||
     host.includes('hcaptcha.com') ||
     host.includes('arkoselabs.com') ||
+    host.includes('funcaptcha.com') ||
     host.includes('geetest.com') ||
+    host.includes('awswaf.com') ||
+    host.includes('mtcaptcha.com') ||
+    host.includes('leminnow.com') ||
+    host.includes('smartcaptcha.yandexcloud.net') ||
+    host.includes('captcha-api.yandex.ru') ||
+    host.includes('capy.me') ||
+    host.includes('friendlycaptcha.com') ||
+    host.includes('friendlycaptcha.eu') ||
+    host.includes('captcha-delivery.com') ||
+    host.includes('perimeterx.net') ||
+    host.includes('kasada.io') ||
     (host.includes('google.com') && window.location.pathname.includes('/recaptcha/')) ||
     (host.includes('cloudflare.com') && window.location.pathname.includes('/cdn-cgi/challenge-platform/')) ||
     typeof window._cf_chl_opt !== 'undefined' ||
@@ -24,7 +36,7 @@
     document.getElementById('challenge-form') ||
     document.getElementById('challenge-running') ||
     document.getElementById('cf-wrapper') ||
-    (document.title && /just a moment|security verification|attention required|checking your browser/i.test(document.title))
+    (document.title && /just a moment|security verification|attention required|checking your browser|cloudflare/i.test(document.title))
   ) {
     return;
   }
@@ -137,18 +149,32 @@
   function isProtectedCaptchaOrAuth(el) {
     if (!el) return false;
     const host = (window.location.hostname || '').toLowerCase();
-    if (host.includes('challenges.cloudflare.com') || host.includes('recaptcha.net') || host.includes('google.com') || host.includes('hcaptcha.com') || host.includes('accounts.spotify.com') || host.includes('challenge.spotify.com') || host.includes('arkoselabs.com') || host.includes('geetest.com')) return true;
+    if (
+      host.includes('challenges.cloudflare.com') || host.includes('recaptcha.net') || host.includes('google.com') ||
+      host.includes('hcaptcha.com') || host.includes('accounts.spotify.com') || host.includes('challenge.spotify.com') ||
+      host.includes('arkoselabs.com') || host.includes('funcaptcha.com') || host.includes('geetest.com') ||
+      host.includes('awswaf.com') || host.includes('mtcaptcha.com') || host.includes('leminnow.com') ||
+      host.includes('smartcaptcha.yandexcloud.net') || host.includes('captcha-api.yandex.ru') ||
+      host.includes('capy.me') || host.includes('friendlycaptcha.com') || host.includes('friendlycaptcha.eu') ||
+      host.includes('captcha-delivery.com') || host.includes('perimeterx.net') || host.includes('kasada.io')
+    ) return true;
 
     const htmlSnippet = (el.outerHTML || '').slice(0, 1200).toLowerCase();
     const textSnippet = (el.innerText || el.textContent || '').toLowerCase();
 
+    // Check for all 14 known industry Captcha & verification systems
     if (
       htmlSnippet.includes('arkose') || htmlSnippet.includes('funcaptcha') ||
       htmlSnippet.includes('recaptcha') || htmlSnippet.includes('hcaptcha') ||
       htmlSnippet.includes('turnstile') || htmlSnippet.includes('cf-chl') ||
       htmlSnippet.includes('challenge-form') || htmlSnippet.includes('geetest') ||
       htmlSnippet.includes('g-recaptcha') || htmlSnippet.includes('h-captcha') ||
-      htmlSnippet.includes('cf-turnstile') || htmlSnippet.includes('challenges.cloudflare')
+      htmlSnippet.includes('cf-turnstile') || htmlSnippet.includes('challenges.cloudflare') ||
+      htmlSnippet.includes('awswaf') || htmlSnippet.includes('mtcaptcha') ||
+      htmlSnippet.includes('lemin') || htmlSnippet.includes('smartcaptcha') ||
+      htmlSnippet.includes('capy') || htmlSnippet.includes('friendlycaptcha') ||
+      htmlSnippet.includes('captcha-delivery') || htmlSnippet.includes('perimeterx') ||
+      htmlSnippet.includes('kasada')
     ) return true;
 
     if (
@@ -157,10 +183,13 @@
       textSnippet.includes('security check') ||
       textSnippet.includes('verify you are a human') ||
       textSnippet.includes('i am not a robot') ||
-      textSnippet.includes('cf-turnstile')
+      textSnippet.includes("i'm not a robot") ||
+      textSnippet.includes('cf-turnstile') ||
+      textSnippet.includes('security verification') ||
+      textSnippet.includes('verifying you are human')
     ) return true;
 
-    if (el.querySelector && el.querySelector('iframe[src*="arkose"], iframe[src*="recaptcha"], iframe[src*="hcaptcha"], iframe[src*="turnstile"], iframe[src*="cloudflare"], iframe[src*="geetest"], .g-recaptcha, .h-captcha, .cf-turnstile, #challenge-stage, #cf-wrapper, [data-sitekey]')) return true;
+    if (el.querySelector && el.querySelector('iframe[src*="arkose"], iframe[src*="funcaptcha"], iframe[src*="recaptcha"], iframe[src*="hcaptcha"], iframe[src*="turnstile"], iframe[src*="cloudflare"], iframe[src*="geetest"], iframe[src*="awswaf"], iframe[src*="mtcaptcha"], iframe[src*="lemin"], iframe[src*="smartcaptcha"], iframe[src*="capy"], iframe[src*="friendlycaptcha"], iframe[src*="captcha-delivery"], .g-recaptcha, .h-captcha, .cf-turnstile, .geetest_holder, #aws-waf-captcha, .mtcaptcha, #lemin-cropped-captcha, .smart-captcha, .frc-captcha, #challenge-stage, #cf-wrapper, [data-sitekey]')) return true;
 
     return false;
   }
@@ -168,15 +197,17 @@
   function ensureCaptchasVisible() {
     try {
       const captchaNodes = document.querySelectorAll(
-        '.g-recaptcha, .h-captcha, .cf-turnstile, [data-sitekey], ' +
-        'iframe[src*="recaptcha"], iframe[src*="hcaptcha"], iframe[src*="turnstile"], iframe[src*="cloudflare"], iframe[src*="arkose"], iframe[src*="geetest"], ' +
-        '#challenge-stage, #cf-wrapper, div[class*="recaptcha"], div[class*="hcaptcha"], div[class*="turnstile"]'
+        '.g-recaptcha, .h-captcha, .cf-turnstile, .geetest_holder, #aws-waf-captcha, .mtcaptcha, #lemin-cropped-captcha, .smart-captcha, .frc-captcha, [data-sitekey], ' +
+        'iframe[src*="recaptcha"], iframe[src*="hcaptcha"], iframe[src*="turnstile"], iframe[src*="cloudflare"], iframe[src*="arkose"], iframe[src*="funcaptcha"], iframe[src*="geetest"], iframe[src*="awswaf"], iframe[src*="mtcaptcha"], iframe[src*="lemin"], iframe[src*="smartcaptcha"], iframe[src*="capy"], iframe[src*="friendlycaptcha"], iframe[src*="captcha-delivery"], ' +
+        '#challenge-stage, #cf-wrapper, div[class*="recaptcha"], div[class*="hcaptcha"], div[class*="turnstile"], div[class*="geetest"]'
       );
       for (const c of captchaNodes) {
         c.style.setProperty('display', 'inline-block', 'important');
         c.style.setProperty('visibility', 'visible', 'important');
         c.style.setProperty('opacity', '1', 'important');
         c.style.setProperty('pointer-events', 'auto', 'important');
+        c.style.setProperty('z-index', '2147483647', 'important');
+        c.style.setProperty('position', 'relative', 'important');
         let p = c.parentElement;
         let depth = 0;
         while (p && p !== document.body && depth < 5) {
@@ -184,6 +215,7 @@
           if (p.style.display === 'none') p.style.setProperty('display', 'block', 'important');
           if (p.style.opacity === '0') p.style.setProperty('opacity', '1', 'important');
           p.style.setProperty('pointer-events', 'auto', 'important');
+          p.style.setProperty('z-index', '2147483647', 'important');
           p = p.parentElement;
           depth++;
         }

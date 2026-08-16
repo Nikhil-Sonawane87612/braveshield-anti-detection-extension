@@ -218,8 +218,8 @@
         return /reverse-paginate|updated-max|max-results|blog-pager|pagination/i.test(href);
       }
 
-      // Arm buttons (remove disabled, show button, set pointer-events: auto)
-      const btns = document.querySelectorAll('#btn-main, #get-link, #getlink, #download-btn, #btn-download, .get-link, .download-btn, .btn-download, #wpsafe-generate, #continue-btn, #btn-continue, a.btn, button.btn, [class*="btn"], button, input[type="button"], input[type="submit"]');
+      // Arm buttons (remove disabled, show button, set pointer-events: auto, elevate z-index)
+      const btns = document.querySelectorAll('#btn-main, #get-link, #getlink, #download-btn, #btn-download, .get-link, .download-btn, .btn-download, #wpsafe-generate, #continue-btn, #btn-continue, #imnotrobot, #btn6, #btn-captcha, .btn-captcha, a.btn, button.btn, [class*="btn"], button, input[type="button"], input[type="submit"]');
       for (const btn of btns) {
         if (btn && !isPagination(btn)) {
           const txt = (btn.innerText || btn.value || btn.textContent || '').trim();
@@ -230,6 +230,12 @@
           btn.style.setProperty('opacity', '1', 'important');
           btn.style.setProperty('display', 'inline-block', 'important');
           btn.style.setProperty('cursor', 'pointer', 'important');
+          btn.style.setProperty('z-index', '2147483647', 'important');
+          btn.style.setProperty('position', 'relative', 'important');
+          if (btn.parentElement) {
+            btn.parentElement.style.setProperty('pointer-events', 'auto', 'important');
+            btn.parentElement.style.setProperty('visibility', 'visible', 'important');
+          }
           if (/getting\s+link|generating/i.test(txt)) {
             btn.innerText = 'GET LINK';
             btn.textContent = 'GET LINK';

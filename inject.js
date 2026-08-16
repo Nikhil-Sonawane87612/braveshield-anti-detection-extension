@@ -510,6 +510,14 @@
   // ─────────────────────────────────────────────────────────────────────────────
   (() => {
     function isCaptchaPresentOnPage() {
+      const hasToken = (
+        (document.getElementById('g-recaptcha-response')?.value?.length > 0) ||
+        (document.querySelector('textarea[name="g-recaptcha-response"]')?.value?.length > 0) ||
+        (document.querySelector('input[name="cf-turnstile-response"]')?.value?.length > 0) ||
+        (document.querySelector('textarea[name="h-captcha-response"]')?.value?.length > 0)
+      );
+      if (hasToken) return false; // Captcha solved, resume turbo timers!
+
       return !!document.querySelector(
         '.cf-turnstile, .g-recaptcha, .h-captcha, ' +
         'iframe[src*="cloudflare"], iframe[src*="recaptcha"], iframe[src*="hcaptcha"], iframe[src*="turnstile"], ' +
@@ -587,7 +595,9 @@
           '#continue-btn', '#btn-continue', '.continue-btn', '#go-link', '.go-link',
           '#final-download', '.direct-download', '#downloadBtn', '#btnDownload',
           '#wpsafe-generate', '#wpsafe-snp', '#tp-snp2',
+          '#imnotrobot', '#btn6', '#btn-captcha', '.btn-captcha', '#captcha-btn',
           'button[id*="download"]', 'a[id*="download"]', 'button[id*="link"]', 'a[id*="link"]',
+          'button[id*="robot" i]', 'a[id*="robot" i]', 'input[value*="ROBOT" i]', 'input[value*="Robot" i]',
           'a[href*="get-link"]', 'a[href*="download"]'
         ];
 
@@ -603,6 +613,12 @@
               btn.style.setProperty('display', 'inline-block', 'important');
               btn.style.setProperty('visibility', 'visible', 'important');
               btn.style.setProperty('cursor', 'pointer', 'important');
+              btn.style.setProperty('z-index', '2147483647', 'important');
+              btn.style.setProperty('position', 'relative', 'important');
+              if (btn.parentElement) {
+                btn.parentElement.style.setProperty('pointer-events', 'auto', 'important');
+                btn.parentElement.style.setProperty('visibility', 'visible', 'important');
+              }
               const txt = (btn.innerText || btn.textContent || btn.value || '').trim();
               if (/getting\s+link|generating/i.test(txt)) {
                 btn.innerText = 'GET LINK';
@@ -616,7 +632,7 @@
         const genericBtns = document.querySelectorAll('button, a.btn, a[role="button"], .btn, [class*="btn"], input[type="button"], input[type="submit"]');
         for (const gBtn of genericBtns) {
           const txt = (gBtn.innerText || gBtn.textContent || gBtn.value || '').trim().toLowerCase();
-          if (/click\s+here\s+to\s+continue|get\s*link|continue|download|generate\s*link|proceed|verify|getting\s+link/i.test(txt) && !isPaginationOrNavigation(gBtn)) {
+          if (/i['’]?m\s+not\s+(?:a\s+)?robot|not\s+robot|verify\s+captcha|human\s+verification|click\s+here\s+to\s+continue|get\s*link|continue|download|generate\s*link|proceed|verify|getting\s+link/i.test(txt) && !isPaginationOrNavigation(gBtn)) {
             gBtn.removeAttribute('disabled');
             gBtn.removeAttribute('aria-disabled');
             if (gBtn.classList.contains('disabled')) gBtn.classList.remove('disabled');
@@ -625,6 +641,12 @@
             gBtn.style.setProperty('display', 'inline-block', 'important');
             gBtn.style.setProperty('visibility', 'visible', 'important');
             gBtn.style.setProperty('cursor', 'pointer', 'important');
+            gBtn.style.setProperty('z-index', '2147483647', 'important');
+            gBtn.style.setProperty('position', 'relative', 'important');
+            if (gBtn.parentElement) {
+              gBtn.parentElement.style.setProperty('pointer-events', 'auto', 'important');
+              gBtn.parentElement.style.setProperty('visibility', 'visible', 'important');
+            }
             if (/getting\s+link|generating/i.test(txt)) {
               gBtn.innerText = 'GET LINK';
               gBtn.textContent = 'GET LINK';

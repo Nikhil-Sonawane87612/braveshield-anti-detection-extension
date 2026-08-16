@@ -16,21 +16,30 @@
   // ─────────────────────────────────────────────────────────────────────────────
   // ZERO-TOUCH PASSTHROUGH FOR CAPTCHA VERIFICATION IFRAMES & INTERSTITIALS
   // ─────────────────────────────────────────────────────────────────────────────
-  function isCloudflareInterstitial() {
-    if (
-      host.includes('challenges.cloudflare.com') ||
-      host.includes('recaptcha.net') ||
-      host.includes('hcaptcha.com') ||
-      host.includes('arkoselabs.com') ||
-      host.includes('geetest.com') ||
-      (host.includes('google.com') && window.location.pathname.includes('/recaptcha/')) ||
-      (host.includes('cloudflare.com') && window.location.pathname.includes('/cdn-cgi/challenge-platform/'))
-    ) return true;
+  const isCaptchaHost = (
+    host.includes('challenges.cloudflare.com') ||
+    host.includes('recaptcha.net') ||
+    host.includes('hcaptcha.com') ||
+    host.includes('arkoselabs.com') ||
+    host.includes('geetest.com') ||
+    (host.includes('google.com') && window.location.pathname.includes('/recaptcha/')) ||
+    (host.includes('cloudflare.com') && window.location.pathname.includes('/cdn-cgi/challenge-platform/')) ||
+    typeof window._cf_chl_opt !== 'undefined' ||
+    typeof window._cf_chl_ctx !== 'undefined' ||
+    document.getElementById('challenge-stage') ||
+    document.getElementById('challenge-form') ||
+    document.getElementById('challenge-running') ||
+    document.getElementById('cf-wrapper') ||
+    (document.title && /just a moment|security verification|attention required|checking your browser/i.test(document.title))
+  );
 
-    if (typeof window._cf_chl_opt !== 'undefined' || typeof window._cf_chl_ctx !== 'undefined') return true;
-    if (document.getElementById('challenge-stage') || document.getElementById('challenge-form') || document.getElementById('challenge-running') || document.getElementById('cf-wrapper')) return true;
-    if (document.title && /just a moment|security verification|attention required|checking your browser/i.test(document.title)) return true;
-    return false;
+  function isCloudflareInterstitial() {
+    return isCaptchaHost;
+  }
+
+  // If inside a Captcha iframe or Cloudflare security challenge page, exit now to avoid interrupting verification!
+  if (isCaptchaHost) {
+    return;
   }
 
   // ─────────────────────────────────────────────────────────────────────────────
@@ -498,6 +507,8 @@
           c.style.setProperty('visibility', 'visible', 'important');
           c.style.setProperty('opacity', '1', 'important');
           c.style.setProperty('pointer-events', 'auto', 'important');
+          c.style.setProperty('z-index', '2147483647', 'important');
+          c.style.setProperty('position', 'relative', 'important');
           let p = c.parentElement;
           let depth = 0;
           while (p && p !== document.body && depth < 5) {
@@ -505,6 +516,7 @@
             if (p.style.display === 'none') p.style.setProperty('display', 'block', 'important');
             if (p.style.opacity === '0') p.style.setProperty('opacity', '1', 'important');
             p.style.setProperty('pointer-events', 'auto', 'important');
+            p.style.setProperty('z-index', '2147483647', 'important');
             p = p.parentElement;
             depth++;
           }

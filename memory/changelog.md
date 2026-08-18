@@ -1,5 +1,20 @@
 # 📦 Semantic Version Changelog
 
+## [v6.0.1] - 2026-08-18 (Stitch Cyber-Dark UI & Dual Auto-Updater Release)
+
+### 🎨 Stitch Cyber-Dark Design System & HUD Overhaul
+- **Modern Security Dashboard Aesthetics**: Deep Obsidian Slate (`#0B0F17` / `#111827`) with glass surfaces (`rgba(22, 30, 46, 0.75)` + `backdrop-filter: blur(12px)`).
+- **60 FPS Motion & Haptic Switches**: Smooth CSS transition curves (`cubic-bezier(0.4, 0, 0.2, 1)`) with glowing neon indicator states.
+- **Pulsing Shield Status Matrix**: Real-time visual indicator animating between "100% STEALTH" (Emerald), "BYPASSED" (Amber), and "OFFLINE" (Crimson).
+- **Live 2x2 Telemetry Counter Grid**: Smooth `requestAnimationFrame` animated counters for Canvas, Audio, WebGL, and WebRTC mitigation probes.
+- **Instant Domain Whitelist Pill**: 1-Click bypass toggle with instant active tab domain resolution.
+
+### 🔄 Dual Auto-Updater Engine
+- **Native CRX Auto-Update Protocol**: Implemented `update.xml` compliant with Chrome Extension autoupdate specification (`gupdate protocol 2.0`) and linked via `manifest.json` `update_url`.
+- **Background Release Checker**: Automated periodic GitHub release version checks with popup update alert ribbon.
+
+---
+
 ## [v6.0.0] - 2026-08-18 (CreepJS & BrowserLeaks Evasion Pack)
 
 ### 🛡️ Prototype & Lie Detection Hardening

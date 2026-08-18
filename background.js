@@ -1,6 +1,6 @@
 /**
  * BraveShield Bypass Pro — Service Worker & Auto-Sync Engine
- * Version: 6.0.0
+ * Version: 6.0.1
  * Purpose: Dynamic rule synchronization, auto-update checker, WebRTC privacy policy, and DNR routing.
  */
 
@@ -9,9 +9,9 @@ const GITHUB_MANIFEST_URL = 'https://raw.githubusercontent.com/Nikhil-Sonawane87
 
 function getLocalVersion() {
   try {
-    return chrome.runtime.getManifest().version || '6.0.0';
+    return chrome.runtime.getManifest().version || '6.0.1';
   } catch (_) {
-    return '6.0.0';
+    return '6.0.1';
   }
 }
 

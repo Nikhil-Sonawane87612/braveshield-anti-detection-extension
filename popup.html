@@ -7,352 +7,304 @@
 </head>
 <body>
 
-<!-- Cockpit Header -->
+<!-- Panel 1: Header & Live Stealth Matrix -->
 <header class="hdr">
   <div class="hdr-top">
     <div class="brand">
-      <div class="radar-orb">
-        <div class="radar-ring"></div>
-        <div class="radar-ring r2"></div>
-        <div class="brand-icon">
-          <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      <div class="shield-ring" id="shield-ring">
+        <div class="ring-pulse"></div>
+        <div class="ring-core">
+          <svg viewBox="0 0 24 24" class="shield-svg"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
         </div>
       </div>
-      <div class="brand-t">
-        <h1>BraveShield</h1>
-        <span class="brand-sub">Bypass Pro • Enterprise Suite</span>
+      <div class="brand-text">
+        <div class="brand-title">BRAVESHIELD <span class="pro-tag">PRO</span></div>
+        <div class="brand-sub" id="shield-status-sub">STEALTH DEFENSE ARMED</div>
       </div>
     </div>
     <div class="hdr-badges">
-      <span class="ver-pill">v6.0.0</span>
-      <span class="update-pill hidden" id="update-badge">UPDATE</span>
+      <span class="stealth-grade-pill" id="stealth-grade">100% STEALTH</span>
+      <span class="update-ribbon hidden" id="update-badge" title="New Release Available on GitHub">UPDATE</span>
     </div>
   </div>
 
-  <!-- Active Domain Status Pill -->
-  <div class="domain-pill" id="status-bar">
-    <div class="domain-info">
-      <span class="live-dot" id="status-dot"></span>
-      <span class="domain-name" id="status-site">Detecting active domain...</span>
+  <!-- Live Active Domain Matrix & Instant Whitelist -->
+  <div class="domain-matrix" id="status-bar">
+    <div class="domain-left">
+      <span class="live-beacon" id="status-dot"></span>
+      <span class="domain-host" id="status-site">Detecting active domain...</span>
     </div>
-    <div class="domain-action">
-      <span class="shield-badge" id="status-label">Guarded</span>
-    </div>
+    <button class="whitelist-pill" id="btn-whitelist" title="Instant Domain Bypass Toggle">
+      <span class="wl-dot"></span>
+      <span id="whitelist-text">Guarded</span>
+    </button>
   </div>
 </header>
 
-<!-- Master Defense Switch -->
-<section class="master-cockpit" id="master-card">
-  <div class="master-deck">
-    <div class="master-telemetry">
-      <div class="master-head">
-        <span class="pulse-icon">⚡</span>
-        <span class="master-tag-text">ENTERPRISE SYSTEM DEFENSE</span>
+<!-- Panel 2: Master Control & Threat Mitigation Metrics -->
+<section class="master-panel" id="master-card">
+  <div class="master-header">
+    <div class="master-title-box">
+      <span class="hero-icon">⚡</span>
+      <div>
+        <div class="hero-title">MASTER STEALTH ENGINE</div>
+        <div class="hero-desc" id="master-subtitle">All 32 Anti-Fingerprint Modules Active</div>
       </div>
-      <div class="master-state-label" id="master-subtitle">All 32 Stealth Modules Armed</div>
     </div>
-    <label class="master-sw" title="Toggle Master Shield">
+    <label class="cyber-switch master-sw" title="Toggle All Protections">
       <input type="checkbox" id="master-toggle" checked>
-      <span class="master-sl"></span>
+      <span class="cyber-slider"></span>
     </label>
   </div>
-</section>
 
-<!-- Live Stealth Score Matrix -->
-<div class="stealth-score-bar" id="stealth-score-card">
-  <div class="score-left">
-    <span class="score-grade" id="stealth-grade">A+</span>
-    <div class="score-info">
-      <div class="score-title" id="stealth-score-text">100% Titanium Stealth Active</div>
-      <div class="score-desc">Zero Fingerprint Leaks • Full Hardware Cloaking</div>
+  <!-- Live 2x2 Telemetry Threat Mitigation Matrix -->
+  <div class="threat-grid">
+    <div class="threat-card">
+      <div class="tc-top">
+        <span class="tc-icon">🎨</span>
+        <span class="tc-val" id="metric-canvas">0</span>
+      </div>
+      <div class="tc-label">Canvas Probes Perturbed</div>
+    </div>
+    <div class="threat-card">
+      <div class="tc-top">
+        <span class="tc-icon">🎵</span>
+        <span class="tc-val" id="metric-audio">0</span>
+      </div>
+      <div class="tc-label">Audio Queries Fuzzed</div>
+    </div>
+    <div class="threat-card">
+      <div class="tc-top">
+        <span class="tc-icon">🎮</span>
+        <span class="tc-val" id="metric-webgl">0</span>
+      </div>
+      <div class="tc-label">GPU Inquiries Masked</div>
+    </div>
+    <div class="threat-card">
+      <div class="tc-top">
+        <span class="tc-icon">🔒</span>
+        <span class="tc-val" id="metric-webrtc">0</span>
+      </div>
+      <div class="tc-label">WebRTC Leaks Thwarted</div>
     </div>
   </div>
-  <div class="score-sparkle">🛡️</div>
-</div>
-
-<!-- 110+ Hardware Device Profile Switcher -->
-<section class="profile-card">
-  <div class="profile-hdr">
-    <span class="profile-icon">🎭</span>
-    <span class="profile-title">CLOAKED HARDWARE PROFILE (110+ PRESETS)</span>
-  </div>
-  <input type="text" id="profile-search" placeholder="🔍 Search profiles (e.g. RTX 4090, M3, Pixel)..." class="profile-search-input">
-  <select class="profile-select" id="device-profile-select">
-    <!-- Populated dynamically with 110+ categorized presets from hardware-profiles.js -->
-  </select>
 </section>
 
-<!-- Live Telemetry Metrics -->
-<section class="metrics-strip">
-  <div class="mcard">
-    <div class="mval" id="metric-timesaved">0s</div>
-    <div class="mlbl">Time Saved</div>
-  </div>
-  <div class="mcard">
-    <div class="mval" id="metric-traps">0</div>
-    <div class="mlbl">Traps Defused</div>
-  </div>
-  <div class="mcard">
-    <div class="mval" id="metric-links">0</div>
-    <div class="mlbl">Links Unlocked</div>
-  </div>
-</section>
-
-<!-- Core Anti-Fingerprinting Suite -->
-<section class="module-group">
-  <div class="group-title">ANTI-FINGERPRINTING &amp; HARDWARE CLOAKING</div>
+<!-- Panel 3: Categorized Stealth Modules (Hardware Armor & Side-Channel Shield) -->
+<main class="modules-container">
   
-  <div class="module-item">
-    <div class="mod-info">
-      <span class="mod-icon">🎨</span>
-      <div class="mod-text">
-        <div class="mod-name">Canvas Noise Injection</div>
-        <div class="mod-desc">Non-destructive ±1 RGB bit shift on toDataURL/getImageData</div>
-      </div>
+  <!-- Group A: Hardware & Fingerprint Armor -->
+  <div class="cyber-card">
+    <div class="card-tag">
+      <span class="tag-glow"></span>
+      HARDWARE &amp; FINGERPRINT ARMOR
     </div>
-    <label class="toggle-sw">
-      <input type="checkbox" id="toggle-canvas" checked>
-      <span class="toggle-sl"></span>
-    </label>
+
+    <div class="module-row">
+      <div class="mod-meta">
+        <span class="mod-glyph">🎨</span>
+        <div>
+          <div class="mod-title">Canvas Bit-Shift Noise</div>
+          <div class="mod-sub">±1 RGB sub-pixel bit shift on toDataURL/getImageData</div>
+        </div>
+      </div>
+      <label class="cyber-switch">
+        <input type="checkbox" id="toggle-canvas" checked>
+        <span class="cyber-slider"></span>
+      </label>
+    </div>
+
+    <div class="module-row">
+      <div class="mod-meta">
+        <span class="mod-glyph">🎵</span>
+        <div>
+          <div class="mod-title">Audio Stack Variance</div>
+          <div class="mod-sub">Sub-audible ±1e-7 float jitter on Analyser/Buffer</div>
+        </div>
+      </div>
+      <label class="cyber-switch">
+        <input type="checkbox" id="toggle-audio" checked>
+        <span class="cyber-slider"></span>
+      </label>
+    </div>
+
+    <div class="module-row">
+      <div class="mod-meta">
+        <span class="mod-glyph">🎮</span>
+        <div>
+          <div class="mod-title">WebGL GPU Precision Masking</div>
+          <div class="mod-sub">Masks unmasked vendor, renderer &amp; shader float range</div>
+        </div>
+      </div>
+      <label class="cyber-switch">
+        <input type="checkbox" id="toggle-webgl" checked>
+        <span class="cyber-slider"></span>
+      </label>
+    </div>
+
+    <div class="module-row">
+      <div class="mod-meta">
+        <span class="mod-glyph">🌐</span>
+        <div>
+          <div class="mod-title">Client Hints (UA-CH) Sync</div>
+          <div class="mod-sub">Synchronizes userAgentData &amp; getHighEntropyValues</div>
+        </div>
+      </div>
+      <label class="cyber-switch">
+        <input type="checkbox" id="toggle-hints" checked>
+        <span class="cyber-slider"></span>
+      </label>
+    </div>
   </div>
 
-  <div class="module-item">
-    <div class="mod-info">
-      <span class="mod-icon">🎵</span>
-      <div class="mod-text">
-        <div class="mod-name">Audio Stack Variance</div>
-        <div class="mod-desc">Sub-audible ±1e-7 float jitter on Analyser/AudioBuffer</div>
-      </div>
+  <!-- Group B: Runtime & Side-Channel Shield -->
+  <div class="cyber-card">
+    <div class="card-tag">
+      <span class="tag-glow"></span>
+      RUNTIME &amp; SIDE-CHANNEL SHIELD
     </div>
-    <label class="toggle-sw">
-      <input type="checkbox" id="toggle-audio" checked>
-      <span class="toggle-sl"></span>
-    </label>
+
+    <div class="module-row">
+      <div class="mod-meta">
+        <span class="mod-glyph">⏱️</span>
+        <div>
+          <div class="mod-title">High-Res Timer Coarsening</div>
+          <div class="mod-sub">20ms resolution clamping defeats Spectre CPU cache probes</div>
+        </div>
+      </div>
+      <label class="cyber-switch">
+        <input type="checkbox" id="toggle-timercoarse" checked>
+        <span class="cyber-slider"></span>
+      </label>
+    </div>
+
+    <div class="module-row">
+      <div class="mod-meta">
+        <span class="mod-glyph">📐</span>
+        <div>
+          <div class="mod-title">DOM Micro-Pixel Jitter</div>
+          <div class="mod-sub">±0.001px bounding rect jitter defeats font fingerprinting</div>
+        </div>
+      </div>
+      <label class="cyber-switch">
+        <input type="checkbox" id="toggle-domjitter" checked>
+        <span class="cyber-slider"></span>
+      </label>
+    </div>
+
+    <div class="module-row">
+      <div class="mod-meta">
+        <span class="mod-glyph">🔒</span>
+        <div>
+          <div class="mod-title">Deep WebRTC LAN Isolation</div>
+          <div class="mod-sub">disable_non_proxied_udp &amp; SDP candidate filtering</div>
+        </div>
+      </div>
+      <label class="cyber-switch">
+        <input type="checkbox" id="toggle-webrtc" checked>
+        <span class="cyber-slider"></span>
+      </label>
+    </div>
+
+    <div class="module-row">
+      <div class="mod-meta">
+        <span class="mod-glyph">🛡️</span>
+        <div>
+          <div class="mod-title">Deep Brave API Cloak</div>
+          <div class="mod-sub">Neutralizes navigator.brave &amp; Web3 wallet identifiers</div>
+        </div>
+      </div>
+      <label class="cyber-switch">
+        <input type="checkbox" id="toggle-brave" checked>
+        <span class="cyber-slider"></span>
+      </label>
+    </div>
   </div>
 
-  <div class="module-item">
-    <div class="mod-info">
-      <span class="mod-icon">🎮</span>
-      <div class="mod-text">
-        <div class="mod-name">WebGL &amp; GPU Spoofing</div>
-        <div class="mod-desc">Masks unmasked vendor, renderer &amp; shader precisions</div>
-      </div>
+  <!-- Group C: Web Automation & Usability Fast-Pass -->
+  <div class="cyber-card">
+    <div class="card-tag">
+      <span class="tag-glow"></span>
+      WEB AUTOMATION &amp; ACCELERATION
     </div>
-    <label class="toggle-sw">
-      <input type="checkbox" id="toggle-webgl" checked>
-      <span class="toggle-sl"></span>
-    </label>
+
+    <div class="module-row">
+      <div class="mod-meta">
+        <span class="mod-glyph">⚡</span>
+        <div>
+          <div class="mod-title">Instant URL Unshortener</div>
+          <div class="mod-sub">Auto-resolves redirect chains &amp; direct download links</div>
+        </div>
+      </div>
+      <label class="cyber-switch">
+        <input type="checkbox" id="toggle-unshortener" checked>
+        <span class="cyber-slider"></span>
+      </label>
+    </div>
+
+    <div class="module-row">
+      <div class="mod-meta">
+        <span class="mod-glyph">📰</span>
+        <div>
+          <div class="mod-title">Paywall &amp; Blur Defuser</div>
+          <div class="mod-sub">Unblurs text &amp; strips backdrop modal overlays</div>
+        </div>
+      </div>
+      <label class="cyber-switch">
+        <input type="checkbox" id="toggle-paywall" checked>
+        <span class="cyber-slider"></span>
+      </label>
+    </div>
+
+    <div class="module-row">
+      <div class="mod-meta">
+        <span class="mod-glyph">⏩</span>
+        <div>
+          <div class="mod-title">50x Countdown Turbo</div>
+          <div class="mod-sub">Compresses timer loops &amp; enables download buttons</div>
+        </div>
+      </div>
+      <label class="cyber-switch">
+        <input type="checkbox" id="toggle-timers" checked>
+        <span class="cyber-slider"></span>
+      </label>
+    </div>
+
+    <div class="module-row">
+      <div class="mod-meta">
+        <span class="mod-glyph">🎬</span>
+        <div>
+          <div class="mod-title">Streaming Media Shield</div>
+          <div class="mod-sub">16x YouTube turbo, Spotify lyrics &amp; Twitch mute</div>
+        </div>
+      </div>
+      <label class="cyber-switch">
+        <input type="checkbox" id="toggle-media" checked>
+        <span class="cyber-slider"></span>
+      </label>
+    </div>
+  </div>
+</main>
+
+<!-- Panel 4: Footer & Quick Access Bar -->
+<footer class="footer-cockpit">
+  <div class="profile-strip">
+    <span class="profile-glyph">🎭</span>
+    <select class="profile-dropdown" id="device-profile-select" title="Active Hardware Profile Preset">
+      <!-- Dynamically populated with 110+ categorized presets -->
+    </select>
   </div>
 
-  <div class="module-item">
-    <div class="mod-info">
-      <span class="mod-icon">🌐</span>
-      <div class="mod-text">
-        <div class="mod-name">Client Hints (UA-CH) Parity</div>
-        <div class="mod-desc">Synchronizes userAgentData &amp; getHighEntropyValues</div>
-      </div>
-    </div>
-    <label class="toggle-sw">
-      <input type="checkbox" id="toggle-hints" checked>
-      <span class="toggle-sl"></span>
-    </label>
+  <div class="footer-actions">
+    <button class="icon-action-btn" id="btn-sync-rules" title="Auto-Sync Rules from GitHub">
+      <span class="btn-glyph" id="sync-icon">🔄</span>
+    </button>
+    <button class="icon-action-btn" id="btn-open-options" title="Open Full Control Studio & Hardware Builder">
+      <span class="btn-glyph">⚙️</span>
+    </button>
+    <span class="ver-tag">v6.0.1</span>
   </div>
-
-  <div class="module-item">
-    <div class="mod-info">
-      <span class="mod-icon">🛡️</span>
-      <div class="mod-text">
-        <div class="mod-name">Deep Brave API Cloak</div>
-        <div class="mod-desc">Neutralizes navigator.brave and Web3 wallet tokens</div>
-      </div>
-    </div>
-    <label class="toggle-sw">
-      <input type="checkbox" id="toggle-brave" checked>
-      <span class="toggle-sl"></span>
-    </label>
-  </div>
-
-  <div class="module-item">
-    <div class="mod-info">
-      <span class="mod-icon">🔒</span>
-      <div class="mod-text">
-        <div class="mod-name">WebRTC &amp; Battery Shield</div>
-        <div class="mod-desc">Filters LAN IPs (192.168.x.x) &amp; spoofs battery levels</div>
-      </div>
-    </div>
-    <label class="toggle-sw">
-      <input type="checkbox" id="toggle-webrtc" checked>
-      <span class="toggle-sl"></span>
-    </label>
-  </div>
-
-  <div class="module-item">
-    <div class="mod-info">
-      <span class="mod-icon">📐</span>
-      <div class="mod-text">
-        <div class="mod-name">DOM Rect Micro-Jitter</div>
-        <div class="mod-desc">Micro-pixel bounding rect jitter defeats font fingerprinting</div>
-      </div>
-    </div>
-    <label class="toggle-sw">
-      <input type="checkbox" id="toggle-domjitter" checked>
-      <span class="toggle-sl"></span>
-    </label>
-  </div>
-
-  <div class="module-item">
-    <div class="mod-info">
-      <span class="mod-icon">⏱️</span>
-      <div class="mod-text">
-        <div class="mod-name">Timer Coarsening</div>
-        <div class="mod-desc">20µs resolution clamping defeats Spectre cache-timing</div>
-      </div>
-    </div>
-    <label class="toggle-sw">
-      <input type="checkbox" id="toggle-timercoarse" checked>
-      <span class="toggle-sl"></span>
-    </label>
-  </div>
-</section>
-
-<!-- Web Productivity & Acceleration Suite -->
-<section class="module-group">
-  <div class="group-title">WEB AUTOMATION &amp; ACCELERATION</div>
-
-  <div class="module-item">
-    <div class="mod-info">
-      <span class="mod-icon">⚡</span>
-      <div class="mod-text">
-        <div class="mod-name">Instant URL Unshortener</div>
-        <div class="mod-desc">Decodes destination &amp; 1-click copy HUD</div>
-      </div>
-    </div>
-    <label class="toggle-sw">
-      <input type="checkbox" id="toggle-unshortener" checked>
-      <span class="toggle-sl"></span>
-    </label>
-  </div>
-
-  <div class="module-item">
-    <div class="mod-info">
-      <span class="mod-icon">📰</span>
-      <div class="mod-text">
-        <div class="mod-name">Paywall &amp; Blur Defuser</div>
-        <div class="mod-desc">Unblurs Quora, Medium, Pinterest &amp; news</div>
-      </div>
-    </div>
-    <label class="toggle-sw">
-      <input type="checkbox" id="toggle-paywall" checked>
-      <span class="toggle-sl"></span>
-    </label>
-  </div>
-
-  <div class="module-item">
-    <div class="mod-info">
-      <span class="mod-icon">⏩</span>
-      <div class="mod-text">
-        <div class="mod-name">50x Turbo Timers</div>
-        <div class="mod-desc">Fast-forward countdowns &amp; arm buttons</div>
-      </div>
-    </div>
-    <label class="toggle-sw">
-      <input type="checkbox" id="toggle-timers" checked>
-      <span class="toggle-sl"></span>
-    </label>
-  </div>
-
-  <div class="module-item">
-    <div class="mod-info">
-      <span class="mod-icon">🚫</span>
-      <div class="mod-text">
-        <div class="mod-name">AdBlock Trap Defuser</div>
-        <div class="mod-desc">Hides adblock &amp; browser blocked modals</div>
-      </div>
-    </div>
-    <label class="toggle-sw">
-      <input type="checkbox" id="toggle-adblock" checked>
-      <span class="toggle-sl"></span>
-    </label>
-  </div>
-
-  <div class="module-item">
-    <div class="mod-info">
-      <span class="mod-icon">🎬</span>
-      <div class="mod-text">
-        <div class="mod-name">Streaming Media Shield</div>
-        <div class="mod-desc">YouTube 16x, Spotify lyrics &amp; Twitch ad-mute</div>
-      </div>
-    </div>
-    <label class="toggle-sw">
-      <input type="checkbox" id="toggle-media" checked>
-      <span class="toggle-sl"></span>
-    </label>
-  </div>
-
-  <div class="module-item">
-    <div class="mod-info">
-      <span class="mod-icon">🧹</span>
-      <div class="mod-text">
-        <div class="mod-name">Clean URL Tracker Stripper</div>
-        <div class="mod-desc">Auto-removes utm_*, fbclid, gclid from URLs</div>
-      </div>
-    </div>
-    <label class="toggle-sw">
-      <input type="checkbox" id="toggle-cleanurl" checked>
-      <span class="toggle-sl"></span>
-    </label>
-  </div>
-
-  <div class="module-item">
-    <div class="mod-info">
-      <span class="mod-icon">🔓</span>
-      <div class="mod-text">
-        <div class="mod-name">Universal Right-Click &amp; Copy</div>
-        <div class="mod-desc">Restores right-click, text selection &amp; copy</div>
-      </div>
-    </div>
-    <label class="toggle-sw">
-      <input type="checkbox" id="toggle-rightclick" checked>
-      <span class="toggle-sl"></span>
-    </label>
-  </div>
-
-  <div class="module-item">
-    <div class="mod-info">
-      <span class="mod-icon">⏱️</span>
-      <div class="mod-text">
-        <div class="mod-name">Video Speed &amp; Skip Intros</div>
-        <div class="mod-desc">[ / ] hotkeys &amp; auto-skip intro buttons</div>
-      </div>
-    </div>
-    <label class="toggle-sw">
-      <input type="checkbox" id="toggle-videospeed" checked>
-      <span class="toggle-sl"></span>
-    </label>
-  </div>
-</section>
-
-<!-- Dual Whitelist / Control Studio Actions -->
-<footer class="site-actions-footer">
-  <button class="site-action-btn btn-whitelist" id="btn-whitelist">
-    <span class="site-btn-icon">🛡️</span>
-    <span id="whitelist-text">Whitelist Site</span>
-  </button>
-  <button class="site-action-btn btn-options" id="btn-open-options">
-    <span class="site-btn-icon">⚙️</span>
-    <span>Control Studio</span>
-  </button>
 </footer>
-
-<!-- Bottom Status Dock -->
-<div class="bottom-dock">
-  <span class="dock-status" id="footer-status">Enterprise Titanium Active</span>
-  <span class="dock-dot">•</span>
-  <button id="btn-sync-rules" title="Auto-Sync Rules from GitHub" class="sync-btn">
-    <span id="sync-icon">🔄</span>
-    <span id="sync-text">Auto-Sync</span>
-  </button>
-</div>
 
 <script src="hardware-profiles.js"></script>
 <script src="settings.js"></script>

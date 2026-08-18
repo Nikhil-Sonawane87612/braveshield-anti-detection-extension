@@ -1,9 +1,10 @@
 {
   "manifest_version": 3,
-  "name": "BraveShield Bypass Pro — Enterprise Stealth & Anti-Fingerprinting v6.0.0",
-  "version": "6.0.0",
+  "name": "BraveShield Bypass Pro — Enterprise Stealth & Anti-Fingerprinting v6.0.1",
+  "version": "6.0.1",
   "description": "Enterprise Manifest V3 anti-fingerprinting suite with unforgeable native wrappers, session-seeded canvas/audio noise, WebGL GPU cloaking, UA-CH client hints sync, and WebRTC leak protection.",
   "author": "Nikhil Sonawane",
+  "update_url": "https://raw.githubusercontent.com/Nikhil-Sonawane87612/braveshield-anti-detection-extension/main/update.xml",
   "icons": {
     "16": "icons/icon16.png",
     "48": "icons/icon48.png",

@@ -45,8 +45,14 @@
   function syncSettingsToSession(res) {
     if (!res) return;
     try {
-      if (res.masterEnabled === false) sessionStorage.setItem('bs_master_disabled', 'true');
-      else sessionStorage.removeItem('bs_master_disabled');
+      const whitelist = Array.isArray(res.whitelist) ? res.whitelist : [];
+      const isWhitelisted = whitelist.some(d => d && (host === d.toLowerCase() || host.endsWith('.' + d.toLowerCase())));
+
+      if (res.masterEnabled === false || isWhitelisted) {
+        sessionStorage.setItem('bs_master_disabled', 'true');
+      } else {
+        sessionStorage.removeItem('bs_master_disabled');
+      }
 
       if (res.unshortenerEnabled === false) sessionStorage.setItem('bs_unshortener_disabled', 'true');
       else sessionStorage.removeItem('bs_unshortener_disabled');
@@ -63,8 +69,23 @@
       if (res.maskBraveApi === false) sessionStorage.setItem('bs_brave_disabled', 'true');
       else sessionStorage.removeItem('bs_brave_disabled');
 
-      if (res.maskClientHints === false) sessionStorage.setItem('bs_hints_disabled', 'true');
+      if (res.maskClientHints === false || res.clientHintsEnabled === false) sessionStorage.setItem('bs_hints_disabled', 'true');
       else sessionStorage.removeItem('bs_hints_disabled');
+
+      if (res.webglSpoofingEnabled === false) sessionStorage.setItem('bs_webgl_disabled', 'true');
+      else sessionStorage.removeItem('bs_webgl_disabled');
+
+      if (res.domJitterEnabled === false) sessionStorage.setItem('bs_domjitter_disabled', 'true');
+      else sessionStorage.removeItem('bs_domjitter_disabled');
+
+      if (res.timerCoarseningEnabled === false) sessionStorage.setItem('bs_timercoarse_disabled', 'true');
+      else sessionStorage.removeItem('bs_timercoarse_disabled');
+
+      if (res.mediaDevicesSanitizeEnabled === false) sessionStorage.setItem('bs_mediadevices_disabled', 'true');
+      else sessionStorage.removeItem('bs_mediadevices_disabled');
+
+      if (res.speechVoicesSanitizeEnabled === false) sessionStorage.setItem('bs_speechvoices_disabled', 'true');
+      else sessionStorage.removeItem('bs_speechvoices_disabled');
 
       if (res.spotifyUnlocked === false) sessionStorage.setItem('bs_spotify_disabled', 'true');
       else sessionStorage.removeItem('bs_spotify_disabled');

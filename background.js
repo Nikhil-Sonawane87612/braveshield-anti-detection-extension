@@ -1,7 +1,7 @@
 /**
  * BraveShield Bypass Pro — Service Worker & Auto-Sync Engine
- * Version: 5.4.0
- * Purpose: Dynamic rule synchronization from GitHub, auto-update checker, and DeclarativeNetRequest routing.
+ * Version: 5.6.0
+ * Purpose: Dynamic rule synchronization, auto-update checker, WebRTC privacy policy, and DNR routing.
  */
 
 const GITHUB_RULES_URL = 'https://raw.githubusercontent.com/Nikhil-Sonawane87612/braveshield-anti-detection-extension/main/rules.json';
@@ -9,48 +9,78 @@ const GITHUB_MANIFEST_URL = 'https://raw.githubusercontent.com/Nikhil-Sonawane87
 
 function getLocalVersion() {
   try {
-    return chrome.runtime.getManifest().version || '5.4.0';
+    return chrome.runtime.getManifest().version || '5.6.0';
   } catch (_) {
-    return '5.4.0';
+    return '5.6.0';
   }
+}
+
+// Configure WebRTC IP policy
+function enforceWebRTCPrivacy(enabled) {
+  try {
+    if (chrome.privacy && chrome.privacy.network && chrome.privacy.network.webRTCIPHandlingPolicy) {
+      const policy = enabled ? 'disable_non_proxied_udp' : 'default';
+      chrome.privacy.network.webRTCIPHandlingPolicy.set({ value: policy });
+    }
+  } catch (_) {}
 }
 
 chrome.runtime.onInstalled.addListener(() => {
   const currentVer = getLocalVersion();
   console.log(`[BraveShield] Service Worker initialized. Version: ${currentVer}`);
   
-  chrome.storage.local.set({
-    enabled: true,
-    masterEnabled: true,
-    autoBypassLinks: true,
-    unshortenerEnabled: true,
-    autoBypassTimers: true,
-    paywallDefuserEnabled: true,
-    bypassAdblockDetection: true,
-    maskBraveApi: true,
-    maskClientHints: true,
-    normalizeWebgl: true,
-    normalizeCanvas: false,
-    normalizeAudio: true,
-    hideWebdriver: true,
-    preventWebRTC: false,
-    autoDenyPermissions: false,
-    clampTimers: false,
-    youtubeAds: true,
-    spotifyUnlocked: true,
-    twitchShieldEnabled: true,
-    videoTurboAdSpeed: true,
-    deviceProfile: 'win-rtx4080',
-    timeSavedSeconds: 0,
-    trapsNeutralized: 0,
-    directLinksUnlocked: 0,
-    whitelist: [],
-    blacklist: [],
-    version: currentVer,
-    lastSyncTime: Date.now(),
-    remoteSyncStatus: 'synced',
-    updateAvailable: false,
-    remoteVersion: currentVer
+  chrome.storage.local.get(null, (existing) => {
+    const defaults = {
+      enabled: true,
+      masterEnabled: true,
+      autoBypassLinks: true,
+      unshortenerEnabled: true,
+      autoBypassTimers: true,
+      paywallDefuserEnabled: true,
+      bypassAdblockDetection: true,
+      maskBraveApi: true,
+      maskClientHints: true,
+      normalizeWebgl: true,
+      canvasNoiseEnabled: true,
+      audioNoiseEnabled: true,
+      webglSpoofingEnabled: true,
+      clientHintsEnabled: true,
+      webrtcShieldEnabled: true,
+      domJitterEnabled: true,
+      timerCoarseningEnabled: true,
+      mediaDevicesSanitizeEnabled: true,
+      speechVoicesSanitizeEnabled: true,
+      cleanUrlEnabled: true,
+      rightClickEnabled: true,
+      videoSpeedEnabled: true,
+      autoSkipIntrosEnabled: true,
+      youtubeAds: true,
+      spotifyUnlocked: true,
+      twitchShieldEnabled: true,
+      deviceProfile: 'win-rtx4090',
+      timeSavedSeconds: 0,
+      trapsNeutralized: 0,
+      directLinksUnlocked: 0,
+      whitelist: [],
+      blacklist: [],
+      version: currentVer,
+      lastSyncTime: Date.now(),
+      remoteSyncStatus: 'synced',
+      updateAvailable: false,
+      remoteVersion: currentVer
+    };
+
+    const toSet = {};
+    for (const [k, v] of Object.entries(defaults)) {
+      if (existing[k] === undefined) {
+        toSet[k] = v;
+      }
+    }
+    toSet.version = currentVer;
+
+    chrome.storage.local.set(toSet, () => {
+      enforceWebRTCPrivacy(existing.webrtcShieldEnabled !== false);
+    });
   });
 
   // Setup periodic 6-hour auto-sync alarm
@@ -60,6 +90,13 @@ chrome.runtime.onInstalled.addListener(() => {
 
   // Run initial sync and update check
   syncRemoteRulesAndCheckUpdates();
+});
+
+// Watch storage changes to apply WebRTC policy dynamically
+chrome.storage.onChanged.addListener((changes, area) => {
+  if (area === 'local' && changes.webrtcShieldEnabled !== undefined) {
+    enforceWebRTCPrivacy(changes.webrtcShieldEnabled.newValue !== false);
+  }
 });
 
 // Periodic Alarm Listener

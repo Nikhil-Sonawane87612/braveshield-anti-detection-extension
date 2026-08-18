@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "BraveShield Bypass Pro — Titanium Stealth & Turbo Suite v5.5.0",
-  "version": "5.5.0",
-  "description": "Titanium stealth suite featuring deep Brave cloaking, 110+ hardware profiles, audio/canvas/webrtc noise, 50x turbo timers, instant URL unshortener, paywall defusal, clean URLs, and media shields.",
+  "name": "BraveShield Bypass Pro — Enterprise Stealth & Anti-Fingerprinting v5.6.0",
+  "version": "5.6.0",
+  "description": "Enterprise Manifest V3 anti-fingerprinting suite with unforgeable native wrappers, session-seeded canvas/audio noise, WebGL GPU cloaking, UA-CH client hints sync, and WebRTC leak protection.",
   "author": "Nikhil Sonawane",
   "icons": {
     "16": "icons/icon16.png",
@@ -16,7 +16,8 @@
     "declarativeNetRequest",
     "declarativeNetRequestFeedback",
     "tabs",
-    "alarms"
+    "alarms",
+    "privacy"
   ],
   "host_permissions": [
     "<all_urls>"

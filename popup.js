@@ -1,6 +1,6 @@
 /**
  * BraveShield Bypass Pro — Popup HUD Controller
- * Version: 5.5.0
+ * Version: 5.6.0
  */
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -15,14 +15,22 @@ document.addEventListener('DOMContentLoaded', async () => {
   const metricTraps = document.getElementById('metric-traps');
   const metricLinks = document.getElementById('metric-links');
 
+  // Anti-Fingerprinting Switches
+  const toggleCanvas = document.getElementById('toggle-canvas');
+  const toggleAudio = document.getElementById('toggle-audio');
+  const toggleWebgl = document.getElementById('toggle-webgl');
+  const toggleHints = document.getElementById('toggle-hints');
+  const toggleBrave = document.getElementById('toggle-brave');
+  const toggleWebrtc = document.getElementById('toggle-webrtc');
+  const toggleDomjitter = document.getElementById('toggle-domjitter');
+  const toggleTimercoarse = document.getElementById('toggle-timercoarse');
+
+  // Productivity Switches
   const toggleUnshortener = document.getElementById('toggle-unshortener');
   const togglePaywall = document.getElementById('toggle-paywall');
   const toggleTimers = document.getElementById('toggle-timers');
   const toggleAdblock = document.getElementById('toggle-adblock');
   const toggleMedia = document.getElementById('toggle-media');
-
-  const toggleAudiocanvas = document.getElementById('toggle-audiocanvas');
-  const toggleWebrtcbattery = document.getElementById('toggle-webrtcbattery');
   const toggleCleanurl = document.getElementById('toggle-cleanurl');
   const toggleRightclick = document.getElementById('toggle-rightclick');
   const toggleVideospeed = document.getElementById('toggle-videospeed');
@@ -110,38 +118,35 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   function updateStealthScore() {
     if (!masterToggle.checked) {
-      stealthGrade.textContent = 'OFF';
-      stealthScoreText.textContent = '0% Protection — Defense Offline';
+      if (stealthGrade) stealthGrade.textContent = 'OFF';
+      if (stealthScoreText) stealthScoreText.textContent = '0% Protection — Defense Offline';
       return;
     }
 
     let activeModules = 0;
-    const totalModules = 10;
+    const toggles = [
+      toggleCanvas, toggleAudio, toggleWebgl, toggleHints, toggleBrave, toggleWebrtc,
+      toggleDomjitter, toggleTimercoarse, toggleUnshortener, togglePaywall,
+      toggleTimers, toggleAdblock, toggleMedia, toggleCleanurl, toggleRightclick, toggleVideospeed
+    ];
 
-    if (toggleUnshortener.checked) activeModules++;
-    if (togglePaywall.checked) activeModules++;
-    if (toggleTimers.checked) activeModules++;
-    if (toggleAdblock.checked) activeModules++;
-    if (toggleMedia.checked) activeModules++;
-    if (toggleAudiocanvas?.checked) activeModules++;
-    if (toggleWebrtcbattery?.checked) activeModules++;
-    if (toggleCleanurl?.checked) activeModules++;
-    if (toggleRightclick?.checked) activeModules++;
-    if (toggleVideospeed?.checked) activeModules++;
+    toggles.forEach(t => {
+      if (t && t.checked) activeModules++;
+    });
 
-    const percent = Math.round((activeModules / totalModules) * 100);
+    const percent = Math.round((activeModules / toggles.length) * 100);
     if (percent >= 90) {
-      stealthGrade.textContent = 'A+';
-      stealthScoreText.textContent = `${percent}% Titanium Stealth Active`;
+      if (stealthGrade) stealthGrade.textContent = 'A+';
+      if (stealthScoreText) stealthScoreText.textContent = `${percent}% Titanium Stealth Active`;
     } else if (percent >= 70) {
-      stealthGrade.textContent = 'A';
-      stealthScoreText.textContent = `${percent}% High Stealth Active`;
+      if (stealthGrade) stealthGrade.textContent = 'A';
+      if (stealthScoreText) stealthScoreText.textContent = `${percent}% High Stealth Active`;
     } else if (percent >= 50) {
-      stealthGrade.textContent = 'B';
-      stealthScoreText.textContent = `${percent}% Moderate Protection`;
+      if (stealthGrade) stealthGrade.textContent = 'B';
+      if (stealthScoreText) stealthScoreText.textContent = `${percent}% Moderate Protection`;
     } else {
-      stealthGrade.textContent = 'C';
-      stealthScoreText.textContent = `${percent}% Minimal Shield Active`;
+      if (stealthGrade) stealthGrade.textContent = 'C';
+      if (stealthScoreText) stealthScoreText.textContent = `${percent}% Minimal Shield Active`;
     }
   }
 
@@ -162,7 +167,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   chrome.storage.local.get([
     'masterEnabled', 'unshortenerEnabled', 'paywallDefuserEnabled',
     'autoBypassTimers', 'bypassAdblockDetection', 'spotifyUnlocked', 'youtubeAds',
-    'audioNoiseEnabled', 'canvasNoiseEnabled', 'webrtcShieldEnabled', 'batteryMaskEnabled',
+    'canvasNoiseEnabled', 'audioNoiseEnabled', 'webglSpoofingEnabled', 'clientHintsEnabled',
+    'maskBraveApi', 'webrtcShieldEnabled', 'domJitterEnabled', 'timerCoarseningEnabled',
     'cleanUrlEnabled', 'rightClickEnabled', 'videoSpeedEnabled', 'autoSkipIntrosEnabled',
     'deviceProfile', 'timeSavedSeconds', 'trapsNeutralized', 'directLinksUnlocked',
     'whitelist', 'updateAvailable'
@@ -170,14 +176,20 @@ document.addEventListener('DOMContentLoaded', async () => {
     const isMaster = res.masterEnabled !== false;
     masterToggle.checked = isMaster;
 
-    toggleUnshortener.checked = res.unshortenerEnabled !== false;
-    togglePaywall.checked = res.paywallDefuserEnabled !== false;
-    toggleTimers.checked = res.autoBypassTimers !== false;
-    toggleAdblock.checked = res.bypassAdblockDetection !== false;
-    toggleMedia.checked = (res.spotifyUnlocked !== false || res.youtubeAds !== false);
+    if (toggleCanvas) toggleCanvas.checked = res.canvasNoiseEnabled !== false;
+    if (toggleAudio) toggleAudio.checked = res.audioNoiseEnabled !== false;
+    if (toggleWebgl) toggleWebgl.checked = res.webglSpoofingEnabled !== false;
+    if (toggleHints) toggleHints.checked = res.clientHintsEnabled !== false;
+    if (toggleBrave) toggleBrave.checked = res.maskBraveApi !== false;
+    if (toggleWebrtc) toggleWebrtc.checked = res.webrtcShieldEnabled !== false;
+    if (toggleDomjitter) toggleDomjitter.checked = res.domJitterEnabled !== false;
+    if (toggleTimercoarse) toggleTimercoarse.checked = res.timerCoarseningEnabled !== false;
 
-    if (toggleAudiocanvas) toggleAudiocanvas.checked = (res.audioNoiseEnabled !== false || res.canvasNoiseEnabled !== false);
-    if (toggleWebrtcbattery) toggleWebrtcbattery.checked = (res.webrtcShieldEnabled !== false || res.batteryMaskEnabled !== false);
+    if (toggleUnshortener) toggleUnshortener.checked = res.unshortenerEnabled !== false;
+    if (togglePaywall) togglePaywall.checked = res.paywallDefuserEnabled !== false;
+    if (toggleTimers) toggleTimers.checked = res.autoBypassTimers !== false;
+    if (toggleAdblock) toggleAdblock.checked = res.bypassAdblockDetection !== false;
+    if (toggleMedia) toggleMedia.checked = (res.spotifyUnlocked !== false || res.youtubeAds !== false);
     if (toggleCleanurl) toggleCleanurl.checked = res.cleanUrlEnabled !== false;
     if (toggleRightclick) toggleRightclick.checked = res.rightClickEnabled !== false;
     if (toggleVideospeed) toggleVideospeed.checked = (res.videoSpeedEnabled !== false || res.autoSkipIntrosEnabled !== false);
@@ -198,7 +210,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     const whitelist = Array.isArray(res.whitelist) ? res.whitelist : [];
-    if (currentHostname && whitelist.includes(currentHostname)) {
+    if (currentHostname && (whitelist.includes(currentHostname) || whitelist.some(d => d && currentHostname.endsWith('.' + d)))) {
       whitelistText.textContent = 'Whitelisted';
       statusLabel.textContent = 'Whitelisted';
       statusDot.classList.add('disabled');
@@ -212,18 +224,21 @@ document.addEventListener('DOMContentLoaded', async () => {
         masterToggle.checked = changes.masterEnabled.newValue !== false;
         updateMasterUI(masterToggle.checked);
       }
-      if (changes.unshortenerEnabled !== undefined) toggleUnshortener.checked = changes.unshortenerEnabled.newValue !== false;
-      if (changes.paywallDefuserEnabled !== undefined) togglePaywall.checked = changes.paywallDefuserEnabled.newValue !== false;
-      if (changes.autoBypassTimers !== undefined) toggleTimers.checked = changes.autoBypassTimers.newValue !== false;
-      if (changes.bypassAdblockDetection !== undefined) toggleAdblock.checked = changes.bypassAdblockDetection.newValue !== false;
+      if (changes.canvasNoiseEnabled !== undefined && toggleCanvas) toggleCanvas.checked = changes.canvasNoiseEnabled.newValue !== false;
+      if (changes.audioNoiseEnabled !== undefined && toggleAudio) toggleAudio.checked = changes.audioNoiseEnabled.newValue !== false;
+      if (changes.webglSpoofingEnabled !== undefined && toggleWebgl) toggleWebgl.checked = changes.webglSpoofingEnabled.newValue !== false;
+      if (changes.clientHintsEnabled !== undefined && toggleHints) toggleHints.checked = changes.clientHintsEnabled.newValue !== false;
+      if (changes.maskBraveApi !== undefined && toggleBrave) toggleBrave.checked = changes.maskBraveApi.newValue !== false;
+      if (changes.webrtcShieldEnabled !== undefined && toggleWebrtc) toggleWebrtc.checked = changes.webrtcShieldEnabled.newValue !== false;
+      if (changes.domJitterEnabled !== undefined && toggleDomjitter) toggleDomjitter.checked = changes.domJitterEnabled.newValue !== false;
+      if (changes.timerCoarseningEnabled !== undefined && toggleTimercoarse) toggleTimercoarse.checked = changes.timerCoarseningEnabled.newValue !== false;
+
+      if (changes.unshortenerEnabled !== undefined && toggleUnshortener) toggleUnshortener.checked = changes.unshortenerEnabled.newValue !== false;
+      if (changes.paywallDefuserEnabled !== undefined && togglePaywall) togglePaywall.checked = changes.paywallDefuserEnabled.newValue !== false;
+      if (changes.autoBypassTimers !== undefined && toggleTimers) toggleTimers.checked = changes.autoBypassTimers.newValue !== false;
+      if (changes.bypassAdblockDetection !== undefined && toggleAdblock) toggleAdblock.checked = changes.bypassAdblockDetection.newValue !== false;
       if (changes.spotifyUnlocked !== undefined || changes.youtubeAds !== undefined) {
-        toggleMedia.checked = (changes.spotifyUnlocked?.newValue !== false || changes.youtubeAds?.newValue !== false);
-      }
-      if (changes.audioNoiseEnabled !== undefined || changes.canvasNoiseEnabled !== undefined) {
-        if (toggleAudiocanvas) toggleAudiocanvas.checked = (changes.audioNoiseEnabled?.newValue !== false || changes.canvasNoiseEnabled?.newValue !== false);
-      }
-      if (changes.webrtcShieldEnabled !== undefined || changes.batteryMaskEnabled !== undefined) {
-        if (toggleWebrtcbattery) toggleWebrtcbattery.checked = (changes.webrtcShieldEnabled?.newValue !== false || changes.batteryMaskEnabled?.newValue !== false);
+        if (toggleMedia) toggleMedia.checked = (changes.spotifyUnlocked?.newValue !== false || changes.youtubeAds?.newValue !== false);
       }
       if (changes.cleanUrlEnabled !== undefined && toggleCleanurl) toggleCleanurl.checked = changes.cleanUrlEnabled.newValue !== false;
       if (changes.rightClickEnabled !== undefined && toggleRightclick) toggleRightclick.checked = changes.rightClickEnabled.newValue !== false;
@@ -267,69 +282,33 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
-  toggleUnshortener.addEventListener('change', () => {
-    chrome.storage.local.set({ unshortenerEnabled: toggleUnshortener.checked });
-    updateStealthScore();
-  });
+  // Anti-Fingerprinting Toggles
+  if (toggleCanvas) toggleCanvas.addEventListener('change', () => { chrome.storage.local.set({ canvasNoiseEnabled: toggleCanvas.checked }); updateStealthScore(); });
+  if (toggleAudio) toggleAudio.addEventListener('change', () => { chrome.storage.local.set({ audioNoiseEnabled: toggleAudio.checked }); updateStealthScore(); });
+  if (toggleWebgl) toggleWebgl.addEventListener('change', () => { chrome.storage.local.set({ webglSpoofingEnabled: toggleWebgl.checked, normalizeWebgl: toggleWebgl.checked }); updateStealthScore(); });
+  if (toggleHints) toggleHints.addEventListener('change', () => { chrome.storage.local.set({ clientHintsEnabled: toggleHints.checked, maskClientHints: toggleHints.checked }); updateStealthScore(); });
+  if (toggleBrave) toggleBrave.addEventListener('change', () => { chrome.storage.local.set({ maskBraveApi: toggleBrave.checked }); updateStealthScore(); });
+  if (toggleWebrtc) toggleWebrtc.addEventListener('change', () => { chrome.storage.local.set({ webrtcShieldEnabled: toggleWebrtc.checked, batteryMaskEnabled: toggleWebrtc.checked }); updateStealthScore(); });
+  if (toggleDomjitter) toggleDomjitter.addEventListener('change', () => { chrome.storage.local.set({ domJitterEnabled: toggleDomjitter.checked }); updateStealthScore(); });
+  if (toggleTimercoarse) toggleTimercoarse.addEventListener('change', () => { chrome.storage.local.set({ timerCoarseningEnabled: toggleTimercoarse.checked }); updateStealthScore(); });
 
-  togglePaywall.addEventListener('change', () => {
-    chrome.storage.local.set({ paywallDefuserEnabled: togglePaywall.checked });
-    updateStealthScore();
-  });
-
-  toggleTimers.addEventListener('change', () => {
-    chrome.storage.local.set({ autoBypassTimers: toggleTimers.checked });
-    updateStealthScore();
-  });
-
-  toggleAdblock.addEventListener('change', () => {
-    chrome.storage.local.set({ bypassAdblockDetection: toggleAdblock.checked });
-    updateStealthScore();
-  });
-
-  toggleMedia.addEventListener('change', () => {
+  // Productivity Toggles
+  if (toggleUnshortener) toggleUnshortener.addEventListener('change', () => { chrome.storage.local.set({ unshortenerEnabled: toggleUnshortener.checked }); updateStealthScore(); });
+  if (togglePaywall) togglePaywall.addEventListener('change', () => { chrome.storage.local.set({ paywallDefuserEnabled: togglePaywall.checked }); updateStealthScore(); });
+  if (toggleTimers) toggleTimers.addEventListener('change', () => { chrome.storage.local.set({ autoBypassTimers: toggleTimers.checked }); updateStealthScore(); });
+  if (toggleAdblock) toggleAdblock.addEventListener('change', () => { chrome.storage.local.set({ bypassAdblockDetection: toggleAdblock.checked }); updateStealthScore(); });
+  if (toggleMedia) toggleMedia.addEventListener('change', () => {
     const val = toggleMedia.checked;
     chrome.storage.local.set({ spotifyUnlocked: val, youtubeAds: val, twitchShieldEnabled: val });
     updateStealthScore();
   });
-
-  if (toggleAudiocanvas) {
-    toggleAudiocanvas.addEventListener('change', () => {
-      const val = toggleAudiocanvas.checked;
-      chrome.storage.local.set({ audioNoiseEnabled: val, canvasNoiseEnabled: val });
-      updateStealthScore();
-    });
-  }
-
-  if (toggleWebrtcbattery) {
-    toggleWebrtcbattery.addEventListener('change', () => {
-      const val = toggleWebrtcbattery.checked;
-      chrome.storage.local.set({ webrtcShieldEnabled: val, batteryMaskEnabled: val });
-      updateStealthScore();
-    });
-  }
-
-  if (toggleCleanurl) {
-    toggleCleanurl.addEventListener('change', () => {
-      chrome.storage.local.set({ cleanUrlEnabled: toggleCleanurl.checked });
-      updateStealthScore();
-    });
-  }
-
-  if (toggleRightclick) {
-    toggleRightclick.addEventListener('change', () => {
-      chrome.storage.local.set({ rightClickEnabled: toggleRightclick.checked });
-      updateStealthScore();
-    });
-  }
-
-  if (toggleVideospeed) {
-    toggleVideospeed.addEventListener('change', () => {
-      const val = toggleVideospeed.checked;
-      chrome.storage.local.set({ videoSpeedEnabled: val, autoSkipIntrosEnabled: val });
-      updateStealthScore();
-    });
-  }
+  if (toggleCleanurl) toggleCleanurl.addEventListener('change', () => { chrome.storage.local.set({ cleanUrlEnabled: toggleCleanurl.checked }); updateStealthScore(); });
+  if (toggleRightclick) toggleRightclick.addEventListener('change', () => { chrome.storage.local.set({ rightClickEnabled: toggleRightclick.checked }); updateStealthScore(); });
+  if (toggleVideospeed) toggleVideospeed.addEventListener('change', () => {
+    const val = toggleVideospeed.checked;
+    chrome.storage.local.set({ videoSpeedEnabled: val, autoSkipIntrosEnabled: val });
+    updateStealthScore();
+  });
 
   // Whitelist Button
   btnWhitelist.addEventListener('click', () => {

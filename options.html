@@ -262,6 +262,22 @@
           </div>
           <label class="toggle-sw"><input type="checkbox" id="opt-battery" checked><span class="toggle-sl"></span></label>
         </div>
+
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-title">DOM Rect Micro-Jitter</div>
+            <div class="setting-desc">Injects ±0.001px micro-jitter on getBoundingClientRect to defeat font probing</div>
+          </div>
+          <label class="toggle-sw"><input type="checkbox" id="opt-domjitter" checked><span class="toggle-sl"></span></label>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-title">High-Resolution Timer Coarsening</div>
+            <div class="setting-desc">Clamps performance.now resolution to 20µs to defeat CPU cache timing attacks</div>
+          </div>
+          <label class="toggle-sw"><input type="checkbox" id="opt-timercoarse" checked><span class="toggle-sl"></span></label>
+        </div>
       </div>
     </div>
 

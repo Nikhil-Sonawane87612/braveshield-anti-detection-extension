@@ -33,6 +33,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const optCanvas = document.getElementById('opt-canvas');
   const optWebrtc = document.getElementById('opt-webrtc');
   const optBattery = document.getElementById('opt-battery');
+  const optDomjitter = document.getElementById('opt-domjitter');
+  const optTimercoarse = document.getElementById('opt-timercoarse');
   const optCleanurl = document.getElementById('opt-cleanurl');
   const optRightclick = document.getElementById('opt-rightclick');
   const optVideospeed = document.getElementById('opt-videospeed');
@@ -169,6 +171,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if (optCanvas) optCanvas.checked = res.canvasNoiseEnabled !== false;
     if (optWebrtc) optWebrtc.checked = res.webrtcShieldEnabled !== false;
     if (optBattery) optBattery.checked = res.batteryMaskEnabled !== false;
+    if (optDomjitter) optDomjitter.checked = res.domJitterEnabled !== false;
+    if (optTimercoarse) optTimercoarse.checked = res.timerCoarseningEnabled !== false;
     if (optCleanurl) optCleanurl.checked = res.cleanUrlEnabled !== false;
     if (optRightclick) optRightclick.checked = res.rightClickEnabled !== false;
     if (optVideospeed) optVideospeed.checked = res.videoSpeedEnabled !== false;
@@ -206,6 +210,8 @@ document.addEventListener('DOMContentLoaded', () => {
       if (changes.canvasNoiseEnabled !== undefined && optCanvas) optCanvas.checked = changes.canvasNoiseEnabled.newValue !== false;
       if (changes.webrtcShieldEnabled !== undefined && optWebrtc) optWebrtc.checked = changes.webrtcShieldEnabled.newValue !== false;
       if (changes.batteryMaskEnabled !== undefined && optBattery) optBattery.checked = changes.batteryMaskEnabled.newValue !== false;
+      if (changes.domJitterEnabled !== undefined && optDomjitter) optDomjitter.checked = changes.domJitterEnabled.newValue !== false;
+      if (changes.timerCoarseningEnabled !== undefined && optTimercoarse) optTimercoarse.checked = changes.timerCoarseningEnabled.newValue !== false;
       if (changes.cleanUrlEnabled !== undefined && optCleanurl) optCleanurl.checked = changes.cleanUrlEnabled.newValue !== false;
       if (changes.rightClickEnabled !== undefined && optRightclick) optRightclick.checked = changes.rightClickEnabled.newValue !== false;
       if (changes.videoSpeedEnabled !== undefined && optVideospeed) optVideospeed.checked = changes.videoSpeedEnabled.newValue !== false;
@@ -284,6 +290,8 @@ document.addEventListener('DOMContentLoaded', () => {
   if (optCanvas) optCanvas.addEventListener('change', () => chrome.storage.local.set({ canvasNoiseEnabled: optCanvas.checked }));
   if (optWebrtc) optWebrtc.addEventListener('change', () => chrome.storage.local.set({ webrtcShieldEnabled: optWebrtc.checked }));
   if (optBattery) optBattery.addEventListener('change', () => chrome.storage.local.set({ batteryMaskEnabled: optBattery.checked }));
+  if (optDomjitter) optDomjitter.addEventListener('change', () => chrome.storage.local.set({ domJitterEnabled: optDomjitter.checked }));
+  if (optTimercoarse) optTimercoarse.addEventListener('change', () => chrome.storage.local.set({ timerCoarseningEnabled: optTimercoarse.checked }));
   if (optCleanurl) optCleanurl.addEventListener('change', () => chrome.storage.local.set({ cleanUrlEnabled: optCleanurl.checked }));
   if (optRightclick) optRightclick.addEventListener('change', () => chrome.storage.local.set({ rightClickEnabled: optRightclick.checked }));
   if (optVideospeed) optVideospeed.addEventListener('change', () => chrome.storage.local.set({ videoSpeedEnabled: optVideospeed.checked }));

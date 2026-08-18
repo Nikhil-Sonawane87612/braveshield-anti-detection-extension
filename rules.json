@@ -28,5 +28,26 @@
       "urlFilter": "*",
       "resourceTypes": ["main_frame"]
     }
+  },
+  {
+    "id": 3,
+    "priority": 1,
+    "action": {
+      "type": "redirect",
+      "redirect": {
+        "transform": {
+          "queryTransform": {
+            "removeParams": [
+              "utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content", "utm_id",
+              "fbclid", "gclid", "gclsrc", "dclid", "wbraid", "gbraid", "mc_eid", "igshid", "msclkid", "yclid"
+            ]
+          }
+        }
+      }
+    },
+    "condition": {
+      "urlFilter": "*",
+      "resourceTypes": ["main_frame", "sub_frame"]
+    }
   }
 ]

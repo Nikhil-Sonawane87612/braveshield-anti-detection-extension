@@ -316,6 +316,16 @@
               if (prop === 'opacity') return '1';
               if (prop === 'height') return '250px';
               if (prop === 'width') return '300px';
+              if (prop === 'getPropertyValue') {
+                return function(name) {
+                  if (name === 'display') return 'block';
+                  if (name === 'visibility') return 'visible';
+                  if (name === 'opacity') return '1';
+                  if (name === 'height') return '250px';
+                  if (name === 'width') return '300px';
+                  return target.getPropertyValue(name);
+                };
+              }
               const val = target[prop];
               return typeof val === 'function' ? val.bind(target) : val;
             }
@@ -323,6 +333,44 @@
         }
         return style;
       }, 'getComputedStyle', 1);
+    }
+
+    // Global Error Suppressor for Blocked Ad/Tracker Network Requests (Brave Shields Passthrough)
+    window.addEventListener('error', function(e) {
+      try {
+        const target = e.target;
+        if (target && (target.tagName === 'SCRIPT' || target.tagName === 'IMG' || target.tagName === 'LINK')) {
+          const src = (target.src || target.href || '').toLowerCase();
+          if (/pagead|googlesyndication|doubleclick|adservice|adnxs|prebid|\/ads?\.js|adblock|carbonads|amazon-adsystem|brave/i.test(src)) {
+            e.stopImmediatePropagation();
+            e.preventDefault();
+          }
+        }
+      } catch (_) {}
+    }, true);
+
+    // Script Element Ad-Loader Simulator: Dispatch synthetic load event for ad scripts
+    if (typeof HTMLScriptElement !== 'undefined') {
+      const origScriptSrc = Object.getOwnPropertyDescriptor(HTMLScriptElement.prototype, 'src');
+      if (origScriptSrc) {
+        Object.defineProperty(HTMLScriptElement.prototype, 'src', {
+          set: makeNative(function(val) {
+            if (typeof val === 'string' && /pagead|googlesyndication|doubleclick|adservice|adnxs|prebid|\/ads?\.js|adblockdetector/i.test(val)) {
+              setTimeout(() => {
+                try {
+                  if (typeof this.onload === 'function') this.onload(new Event('load'));
+                  this.dispatchEvent(new Event('load'));
+                } catch (_) {}
+              }, 15);
+            }
+            return origScriptSrc.set.call(this, val);
+          }, 'set src', 1),
+          get: makeNative(function() {
+            return origScriptSrc.get.call(this);
+          }, 'get src', 0),
+          configurable: true
+        });
+      }
     }
 
     if (typeof HTMLElement !== 'undefined') {

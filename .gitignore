@@ -7,6 +7,7 @@ additional featured extension/
 *.tar.gz
 *.crx
 _metadata/
+braveshield-dns-blocklist.txt
 
 # Tooling and editor artifacts
 .opencode/

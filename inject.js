@@ -1,14 +1,14 @@
 /**
  * BraveShield Bypass Pro — Enterprise Stealth & Anti-Fingerprinting Engine
- * Version: 5.6.0
+ * Version: 6.0.0 (CreepJS & BrowserLeaks Hardening Pack)
  * Execution World: MAIN (True document_start)
  * Purpose: Complete Google Chrome & Multi-Device Profile parity, deep Brave cloaking,
- *          Unforgeable native function proxies, Session-seeded mathematical canvas/audio noise,
+ *          Unforgeable native function proxies, Reflect.apply/construct transparency,
+ *          Error stack extension path masking, High-res timer coarsening (Spectre defense),
+ *          Screen geometry normalization, Session-seeded mathematical canvas/audio noise,
  *          WebGL/WebGPU masking, Client Hints (UA-CH) sync, DOM measurement jitter,
- *          High-resolution timer coarsening, Media device & Speech synthesis sanitization,
- *          Instant URL Unshortener, Paywall/Blur Defuser, Live Telemetry,
- *          100% Captcha passing (Turnstile/reCAPTCHA/Cloudflare Interstitials),
- *          Safe turbo timers, YouTube/Spotify/Twitch acceleration.
+ *          Media device & Speech synthesis sanitization, Instant URL Unshortener,
+ *          Paywall/Blur Defuser, Live Telemetry, 100% Captcha passing.
  */
 
 (() => {
@@ -58,10 +58,12 @@
   }
 
   // ─────────────────────────────────────────────────────────────────────────────
-  // UNFORGEABLE NATIVE FUNCTION PROXY ARCHITECTURE (Heuristic Evasion)
+  // 1. UNFORGEABLE NATIVE FUNCTION PROXY ARCHITECTURE (The CreepJS Fix)
   // ─────────────────────────────────────────────────────────────────────────────
   const nativeHookedMap = new WeakMap();
   const originalToString = Function.prototype.toString;
+  const originalReflectApply = Reflect.apply;
+  const originalReflectConstruct = Reflect.construct;
 
   function makeNative(fn, name, length) {
     if (typeof fn !== 'function') return fn;
@@ -98,8 +100,60 @@
     });
   } catch (_) {}
 
+  // Intercept Reflect.apply and Reflect.construct to pass deep Javascript validation checks
+  try {
+    Reflect.apply = makeNative(function(target, thisArg, argsList) {
+      return originalReflectApply.apply(Reflect, arguments);
+    }, 'apply', 3);
+
+    Reflect.construct = makeNative(function(target, argsList, newTarget) {
+      return originalReflectConstruct.apply(Reflect, arguments);
+    }, 'construct', 2);
+  } catch (_) {}
+
   // ─────────────────────────────────────────────────────────────────────────────
-  // DETERMINISTIC SESSION-SEEDED PRNG (Mulberry32)
+  // 2. ERROR STACK EXTENSION PATH MASKING (Defeats Extension Detection)
+  // ─────────────────────────────────────────────────────────────────────────────
+  const cleanStackString = (stack) => {
+    if (typeof stack !== 'string') return stack;
+    return stack.split('\n').filter(line => {
+      return !line.includes('chrome-extension://') &&
+             !line.includes('moz-extension://') &&
+             !line.includes('inject.js') &&
+             !line.includes('content.js') &&
+             !line.includes('braveshield');
+    }).join('\n');
+  };
+
+  try {
+    const origErrorStackDesc = Object.getOwnPropertyDescriptor(Error.prototype, 'stack');
+    if (origErrorStackDesc && origErrorStackDesc.get) {
+      Object.defineProperty(Error.prototype, 'stack', {
+        get: makeNative(function() {
+          const s = origErrorStackDesc.get.call(this);
+          return cleanStackString(s);
+        }, 'get stack', 0),
+        set: origErrorStackDesc.set ? makeNative(function(val) {
+          return origErrorStackDesc.set.call(this, cleanStackString(val));
+        }, 'set stack', 1) : undefined,
+        configurable: true,
+        enumerable: false
+      });
+    }
+
+    if (typeof Error.captureStackTrace === 'function') {
+      const origCapture = Error.captureStackTrace;
+      Error.captureStackTrace = makeNative(function(targetObj, constructorOpt) {
+        origCapture.apply(Error, arguments);
+        if (targetObj && targetObj.stack) {
+          targetObj.stack = cleanStackString(targetObj.stack);
+        }
+      }, 'captureStackTrace', 2);
+    }
+  } catch (_) {}
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // 3. DETERMINISTIC SESSION-SEEDED PRNG (Mulberry32)
   // ─────────────────────────────────────────────────────────────────────────────
   let sessionSeed = 1337;
   try {
@@ -251,6 +305,53 @@
       // Apply Device Memory (RAM)
       try { Object.defineProperty(Navigator.prototype, 'deviceMemory', { get: () => activeHw.memory || 32, configurable: true }); } catch (_) {}
       try { Object.defineProperty(navigator, 'deviceMemory', { get: () => activeHw.memory || 32, configurable: true }); } catch (_) {}
+
+      // Apply Screen & Monitor Geometry Normalization
+      const activeScreen = activeHw.screen || { width: 1920, height: 1080, colorDepth: 24 };
+      const screenProps = {
+        width: activeScreen.width,
+        height: activeScreen.height,
+        availWidth: activeScreen.width,
+        availHeight: Math.max(600, activeScreen.height - 40),
+        colorDepth: activeScreen.colorDepth || 24,
+        pixelDepth: activeScreen.colorDepth || 24,
+        availLeft: 0,
+        availTop: 0
+      };
+
+      for (const [k, v] of Object.entries(screenProps)) {
+        try {
+          if (typeof Screen !== 'undefined' && Screen.prototype) {
+            Object.defineProperty(Screen.prototype, k, { get: makeNative(() => v, `get ${k}`, 0), configurable: true, enumerable: true });
+          }
+        } catch (_) {}
+        try {
+          if (window.screen) {
+            Object.defineProperty(window.screen, k, { get: makeNative(() => v, `get ${k}`, 0), configurable: true, enumerable: true });
+          }
+        } catch (_) {}
+      }
+
+      try {
+        Object.defineProperty(window, 'devicePixelRatio', {
+          get: makeNative(() => activeHw.devicePixelRatio || 1, 'get devicePixelRatio', 0),
+          configurable: true,
+          enumerable: true
+        });
+      } catch (_) {}
+
+      try {
+        Object.defineProperty(window, 'outerWidth', {
+          get: makeNative(() => activeScreen.width, 'get outerWidth', 0),
+          configurable: true,
+          enumerable: true
+        });
+        Object.defineProperty(window, 'outerHeight', {
+          get: makeNative(() => activeScreen.height, 'get outerHeight', 0),
+          configurable: true,
+          enumerable: true
+        });
+      } catch (_) {}
 
       // Apply WebGL Hardware Vendor & GPU Renderer Spoofing
       if (sessionStorage.getItem('bs_webgl_disabled') !== 'true') {
@@ -570,11 +671,16 @@
       if (sessionStorage.getItem('bs_webrtc_disabled') !== 'true') {
         try {
           if (typeof RTCPeerConnection !== 'undefined') {
+            const filterSdp = (sdp) => {
+              if (typeof sdp !== 'string') return sdp;
+              return sdp.replace(/(\r\n|\n)?a=candidate:.*?(192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+|172\.(1[6-9]|2\d|3[0-1])\.\d+\.\d+|\.local).*/gi, '');
+            };
+
             const origCreateOffer = RTCPeerConnection.prototype.createOffer;
             RTCPeerConnection.prototype.createOffer = makeNative(function(options) {
               return origCreateOffer.apply(this, arguments).then(offer => {
                 if (offer && offer.sdp) {
-                  offer.sdp = offer.sdp.replace(/(\r\n|\n)?a=candidate:.*?(192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+|172\.(1[6-9]|2\d|3[0-1])\.\d+\.\d+|\.local).*/gi, '');
+                  offer.sdp = filterSdp(offer.sdp);
                 }
                 return offer;
               });
@@ -585,11 +691,21 @@
               RTCPeerConnection.prototype.createAnswer = makeNative(function(options) {
                 return origCreateAnswer.apply(this, arguments).then(answer => {
                   if (answer && answer.sdp) {
-                    answer.sdp = answer.sdp.replace(/(\r\n|\n)?a=candidate:.*?(192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+|172\.(1[6-9]|2\d|3[0-1])\.\d+\.\d+|\.local).*/gi, '');
+                    answer.sdp = filterSdp(answer.sdp);
                   }
                   return answer;
                 });
               }, 'createAnswer', 0);
+            }
+
+            if (RTCPeerConnection.prototype.setLocalDescription) {
+              const origSetLocalDesc = RTCPeerConnection.prototype.setLocalDescription;
+              RTCPeerConnection.prototype.setLocalDescription = makeNative(function(desc) {
+                if (desc && desc.sdp) {
+                  desc.sdp = filterSdp(desc.sdp);
+                }
+                return origSetLocalDesc.apply(this, arguments);
+              }, 'setLocalDescription', 1);
             }
           }
         } catch (_) {}
@@ -615,19 +731,47 @@
               return rect;
             }, 'getBoundingClientRect', 0);
           }
+
+          if (typeof Element !== 'undefined' && Element.prototype.getClientRects) {
+            const origGetClientRects = Element.prototype.getClientRects;
+            Element.prototype.getClientRects = makeNative(function() {
+              const rects = origGetClientRects.apply(this, arguments);
+              return rects;
+            }, 'getClientRects', 0);
+          }
         } catch (_) {}
       }
 
-      // 12. High-Resolution Timer Coarsening (Spectre & Cache-Timing Protection)
+      // 12. High-Resolution Timer Coarsening (Spectre, Date & Cache-Timing Protection)
       if (sessionStorage.getItem('bs_timercoarse_disabled') !== 'true') {
         try {
           if (typeof performance !== 'undefined' && performance.now) {
             const origNow = performance.now;
             performance.now = makeNative(function() {
               const t = origNow.apply(performance, arguments);
-              // Coarsen resolution to nearest 20 microseconds (0.02ms)
-              return Math.floor(t * 50) / 50;
+              // Coarsen resolution to nearest 20ms to destroy CPU cache benchmarking
+              return Math.floor(t / 20) * 20;
             }, 'now', 0);
+          }
+
+          const origDateNow = Date.now;
+          Date.now = makeNative(function() {
+            const d = origDateNow.apply(Date, arguments);
+            return Math.floor(d / 20) * 20;
+          }, 'now', 0);
+
+          if (typeof Event !== 'undefined' && Event.prototype) {
+            const origTimeStamp = Object.getOwnPropertyDescriptor(Event.prototype, 'timeStamp');
+            if (origTimeStamp && origTimeStamp.get) {
+              Object.defineProperty(Event.prototype, 'timeStamp', {
+                get: makeNative(function() {
+                  const ts = origTimeStamp.get.call(this);
+                  return Math.floor(ts / 20) * 20;
+                }, 'get timeStamp', 0),
+                configurable: true,
+                enumerable: true
+              });
+            }
           }
         } catch (_) {}
       }
@@ -1107,5 +1251,5 @@
     } catch (_) {}
   })();
 
-  console.log('[BraveShield Bypass Pro] v5.6.0 Enterprise Stealth Engine Armed.');
+  console.log('[BraveShield Bypass Pro] v6.0.0 CreepJS Evasion & Stealth Engine Armed.');
 })();

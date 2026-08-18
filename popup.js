@@ -1,6 +1,6 @@
 /**
  * BraveShield Bypass Pro — Popup HUD Controller
- * Version: 5.6.0
+ * Version: 6.0.0
  */
 
 document.addEventListener('DOMContentLoaded', async () => {

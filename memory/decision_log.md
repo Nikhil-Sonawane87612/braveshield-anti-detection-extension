@@ -19,7 +19,7 @@
 ## ADR-003: Unforgeable `makeNative` Proxy Architecture
 - **Date**: 2026-08-18
 - **Context**: Anti-bot engines inspect `Function.prototype.toString.call(fn)` and check if `.toString()` or custom wrapper properties are visible on hooked functions.
-- **Decision**: Centralize native wrapping through `makeNative(fn, name, length)`. Proxy `Function.prototype.toString` to return standard native signatures and track hooked functions in a private `WeakSet` with zero property leakage.
+- **Decision**: Centralize native wrapping through `makeNative(fn, name, length)`. Proxy `Function.prototype.toString` to return standard native signatures and track hooked functions in a private `WeakMap` with zero property leakage.
 - **Status**: Accepted.
 
 ---
@@ -28,4 +28,12 @@
 - **Date**: 2026-08-18
 - **Context**: Modern Chromium browsers use `navigator.userAgentData` (Client Hints API) in addition to `navigator.userAgent`. Mismatches between User-Agent strings and `getHighEntropyValues()` are primary signals for fingerprinting scripts.
 - **Decision**: Overwrite `navigator.userAgentData` properties and `getHighEntropyValues()` to return consistent architecture, bitness, platform version, and brand lists matching the active hardware profile.
+- **Status**: Accepted.
+
+---
+
+## ADR-005: CreepJS Lie Evasion & Error Stack Sanitization
+- **Date**: 2026-08-18
+- **Context**: Advanced fingerprinting suites like CreepJS inspect `Reflect.apply`, `Reflect.construct`, and error stack traces (`Error.prototype.stack`) to detect proxy traps, prototype inconsistencies, and extension source URLs.
+- **Decision**: Hook `Reflect.apply` and `Reflect.construct` natively to preserve reflection behavior, and filter out `chrome-extension://` paths from `Error.prototype.stack` and `Error.captureStackTrace`.
 - **Status**: Accepted.

@@ -225,6 +225,176 @@
   } catch (_) {}
 
   // ─────────────────────────────────────────────────────────────────────────────
+  // 2.6. BRAVE SCHEME CLOAKING & AD PROBE MOCKING (fetch & XMLHttpRequest)
+  // ─────────────────────────────────────────────────────────────────────────────
+  try {
+    const AD_SCRIPT_PROBE_REGEX = /pagead2\.googlesyndication\.com|adservice\.google\.com|securepubads\.g\.doubleclick\.net|adnxs\.com|prebid\.js|\/ads?\.js|\/adframe\.js|\/adbanner\.js|\/adsbygoogle\.js|adblockdetector/i;
+
+    if (typeof window.fetch === 'function') {
+      const origFetch = window.fetch;
+      window.fetch = makeNative(function(input, init) {
+        try {
+          const url = typeof input === 'string' ? input : (input instanceof Request ? input.url : input?.url);
+          if (url && typeof url === 'string') {
+            if (/^brave:\/\//i.test(url)) {
+              return Promise.resolve(new Response('', { status: 404, statusText: 'Not Found' }));
+            }
+            if (AD_SCRIPT_PROBE_REGEX.test(url)) {
+              return Promise.resolve(new Response('window.canRunAds=true;window.isAdBlockActive=false;window.adblock=false;', {
+                status: 200,
+                statusText: 'OK',
+                headers: { 'Content-Type': 'application/javascript' }
+              }));
+            }
+          }
+        } catch (_) {}
+        return origFetch.apply(window, arguments);
+      }, 'fetch', 1);
+    }
+
+    if (typeof XMLHttpRequest !== 'undefined') {
+      const origXHROpen = XMLHttpRequest.prototype.open;
+      const origXHRSend = XMLHttpRequest.prototype.send;
+
+      XMLHttpRequest.prototype.open = makeNative(function(method, url, ...rest) {
+        if (typeof url === 'string') {
+          if (/^brave:\/\//i.test(url)) {
+            this._braveShieldBypass = true;
+          } else if (AD_SCRIPT_PROBE_REGEX.test(url)) {
+            this._adScriptMock = true;
+          }
+        }
+        return origXHROpen.apply(this, [method, url, ...rest]);
+      }, 'open', 2);
+
+      XMLHttpRequest.prototype.send = makeNative(function(...args) {
+        if (this._braveShieldBypass) {
+          setTimeout(() => {
+            try { this.dispatchEvent(new Event('error')); } catch (_) {}
+          }, 0);
+          return;
+        }
+        if (this._adScriptMock) {
+          try {
+            Object.defineProperty(this, 'status', { get: () => 200, configurable: true });
+            Object.defineProperty(this, 'statusText', { get: () => 'OK', configurable: true });
+            Object.defineProperty(this, 'responseText', { get: () => 'window.canRunAds=true;window.isAdBlockActive=false;window.adblock=false;', configurable: true });
+            Object.defineProperty(this, 'readyState', { get: () => 4, configurable: true });
+            setTimeout(() => {
+              try { this.dispatchEvent(new Event('readystatechange')); } catch (_) {}
+              try { this.dispatchEvent(new Event('load')); } catch (_) {}
+            }, 0);
+          } catch (_) {}
+          return;
+        }
+        return origXHRSend.apply(this, args);
+      }, 'send', 1);
+    }
+  } catch (_) {}
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // 2.7. DOM BAIT TRAP DEFUSAL & COMPUTEDSTYLE HOOK (Defeats Bait-Element Probes)
+  // ─────────────────────────────────────────────────────────────────────────────
+  try {
+    const AD_BAIT_REGEX = /ad[s_-]?box|ad[s_-]?banner|ad[s_-]?unit|ad[s_-]?container|ad[s_-]?wrapper|adsbygoogle|pub_300|banner-ad|ad-zone|ad_slot|sponsor|advertisement|textads|carbonads|ad-detector|ad-test/i;
+
+    function isBaitElement(el) {
+      if (!el || !(el instanceof Element)) return false;
+      const idOrClass = (el.id || '') + ' ' + (typeof el.className === 'string' ? el.className : '') + ' ' + (el.getAttribute ? (el.getAttribute('data-ad') || '') : '');
+      return AD_BAIT_REGEX.test(idOrClass);
+    }
+
+    if (typeof window.getComputedStyle === 'function') {
+      const origGetComputedStyle = window.getComputedStyle;
+      window.getComputedStyle = makeNative(function(el, pseudo) {
+        const style = origGetComputedStyle.call(window, el, pseudo);
+        if (isBaitElement(el) && style) {
+          return new Proxy(style, {
+            get(target, prop) {
+              if (prop === 'display') return 'block';
+              if (prop === 'visibility') return 'visible';
+              if (prop === 'opacity') return '1';
+              if (prop === 'height') return '250px';
+              if (prop === 'width') return '300px';
+              const val = target[prop];
+              return typeof val === 'function' ? val.bind(target) : val;
+            }
+          });
+        }
+        return style;
+      }, 'getComputedStyle', 1);
+    }
+
+    if (typeof HTMLElement !== 'undefined') {
+      const origOffsetHeight = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'offsetHeight');
+      const origOffsetWidth = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'offsetWidth');
+      const origClientHeight = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'clientHeight');
+      const origClientWidth = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'clientWidth');
+      const origOffsetParent = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'offsetParent');
+
+      if (origOffsetHeight && origOffsetHeight.get) {
+        Object.defineProperty(HTMLElement.prototype, 'offsetHeight', {
+          get: makeNative(function() {
+            const real = origOffsetHeight.get.call(this);
+            if (real === 0 && isBaitElement(this)) return 250;
+            return real;
+          }, 'get offsetHeight', 0),
+          configurable: true,
+          enumerable: true
+        });
+      }
+
+      if (origOffsetWidth && origOffsetWidth.get) {
+        Object.defineProperty(HTMLElement.prototype, 'offsetWidth', {
+          get: makeNative(function() {
+            const real = origOffsetWidth.get.call(this);
+            if (real === 0 && isBaitElement(this)) return 300;
+            return real;
+          }, 'get offsetWidth', 0),
+          configurable: true,
+          enumerable: true
+        });
+      }
+
+      if (origClientHeight && origClientHeight.get) {
+        Object.defineProperty(HTMLElement.prototype, 'clientHeight', {
+          get: makeNative(function() {
+            const real = origClientHeight.get.call(this);
+            if (real === 0 && isBaitElement(this)) return 250;
+            return real;
+          }, 'get clientHeight', 0),
+          configurable: true,
+          enumerable: true
+        });
+      }
+
+      if (origClientWidth && origClientWidth.get) {
+        Object.defineProperty(HTMLElement.prototype, 'clientWidth', {
+          get: makeNative(function() {
+            const real = origClientWidth.get.call(this);
+            if (real === 0 && isBaitElement(this)) return 300;
+            return real;
+          }, 'get clientWidth', 0),
+          configurable: true,
+          enumerable: true
+        });
+      }
+
+      if (origOffsetParent && origOffsetParent.get) {
+        Object.defineProperty(HTMLElement.prototype, 'offsetParent', {
+          get: makeNative(function() {
+            const real = origOffsetParent.get.call(this);
+            if (!real && isBaitElement(this)) return document.body || this.parentElement;
+            return real;
+          }, 'get offsetParent', 0),
+          configurable: true,
+          enumerable: true
+        });
+      }
+    }
+  } catch (_) {}
+
+  // ─────────────────────────────────────────────────────────────────────────────
   // 3. DETERMINISTIC SESSION-SEEDED PRNG (Mulberry32)
   // ─────────────────────────────────────────────────────────────────────────────
   let sessionSeed = 1337;

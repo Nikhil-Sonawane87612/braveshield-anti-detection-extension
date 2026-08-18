@@ -153,6 +153,78 @@
   } catch (_) {}
 
   // ─────────────────────────────────────────────────────────────────────────────
+  // 2.5. MOCK COMMON LINK-SHORTENER TRACKING & AD GLOBALS (Prevents Button Lockup)
+  // ─────────────────────────────────────────────────────────────────────────────
+  try {
+    window.ga = window.ga || makeNative(function() {
+      (window.ga.q = window.ga.q || []).push(arguments);
+    }, 'ga', 0);
+    window.ga.l = window.ga.l || Date.now();
+
+    window.gtag = window.gtag || makeNative(function() {
+      (window.dataLayer = window.dataLayer || []).push(arguments);
+    }, 'gtag', 0);
+    window.dataLayer = window.dataLayer || [];
+
+    window.adsbygoogle = window.adsbygoogle || [];
+    window.adsbygoogle.loaded = true;
+    if (!window.adsbygoogle.push || window.adsbygoogle.push === Array.prototype.push) {
+      window.adsbygoogle.push = makeNative(function(arg) {
+        return Array.prototype.push.call(this, arg);
+      }, 'push', 1);
+    }
+
+    window.canRunAds = true;
+    window.isAdBlockActive = false;
+    window.adblock = false;
+    window.google_ad_client = 'ca-pub-9999999999999999';
+    window.google_ad_status = 1;
+    window._pop = window._pop || [];
+    window.popns = window.popns || {};
+    window.AdServer = window.AdServer || {};
+    window.fba = window.fba || makeNative(function() {}, 'fba', 0);
+    window.fbq = window.fbq || makeNative(function() {}, 'fbq', 0);
+    window.pys = window.pys || {};
+
+    if (!window.googletag) {
+      window.googletag = {
+        cmd: [],
+        display: makeNative(function() {}, 'display', 1),
+        enableServices: makeNative(function() {}, 'enableServices', 0),
+        pubads: makeNative(function() {
+          return {
+            addEventListener: makeNative(function() {}, 'addEventListener', 2),
+            enableSingleRequest: makeNative(function() {}, 'enableSingleRequest', 0),
+            setTargeting: makeNative(function() {}, 'setTargeting', 2),
+            refresh: makeNative(function() {}, 'refresh', 0),
+            clear: makeNative(function() {}, 'clear', 0),
+            collapseEmptyDivs: makeNative(function() {}, 'collapseEmptyDivs', 0)
+          };
+        }, 'pubads', 0)
+      };
+      window.googletag.cmd.push = makeNative(function(fn) {
+        if (typeof fn === 'function') {
+          try { fn(); } catch (_) {}
+        }
+        return Array.prototype.push.apply(this, arguments);
+      }, 'push', 1);
+    }
+
+    // Hook window.open safely to prevent ad popunders while allowing genuine download actions
+    const origWindowOpen = window.open;
+    window.open = makeNative(function(url, target, features) {
+      if (!isCaptchaHost && url && typeof url === 'string') {
+        const isAdUrl = /(popcash|popads|adsterra|propellerads|exoclick|bet365|1xbet|clickadu|trafficjunky|adkeeper|syndication)/i.test(url);
+        if (isAdUrl) {
+          reportTelemetry('trapsNeutralized', 1);
+          return { closed: false, focus: () => {}, blur: () => {}, close: () => {}, location: { href: url } };
+        }
+      }
+      return origWindowOpen.apply(window, arguments);
+    }, 'open', 3);
+  } catch (_) {}
+
+  // ─────────────────────────────────────────────────────────────────────────────
   // 3. DETERMINISTIC SESSION-SEEDED PRNG (Mulberry32)
   // ─────────────────────────────────────────────────────────────────────────────
   let sessionSeed = 1337;
@@ -908,21 +980,88 @@
       }, 'setInterval', 2);
     } catch (_) {}
 
-    function fastPassButtons() {
+    function purgeInvisibleClickBlockers() {
       try {
-        const timerBtnIds = ['btn-main', 'download-btn', 'get-link', 'continue-btn', 'btn-download', 'submit-btn', 'final-link'];
-        timerBtnIds.forEach(id => {
-          const btn = document.getElementById(id);
-          if (btn && btn.disabled) {
-            btn.disabled = false;
-            btn.classList.remove('disabled');
-            reportTelemetry('trapsNeutralized', 1);
+        if (isCaptchaHost) return;
+        const vw = window.innerWidth || document.documentElement.clientWidth || 800;
+        const vh = window.innerHeight || document.documentElement.clientHeight || 600;
+        const candidates = document.querySelectorAll('div, a, span, section, iframe');
+
+        candidates.forEach(el => {
+          if (!el || el._bsOverlayNeutralized) return;
+          if (el === document.body || el === document.documentElement || el.id?.startsWith('bs-')) return;
+
+          const style = window.getComputedStyle ? window.getComputedStyle(el) : null;
+          if (!style) return;
+
+          const isFixed = style.position === 'fixed' || style.position === 'absolute';
+          const zIndex = parseInt(style.zIndex, 10) || 0;
+          const opacity = parseFloat(style.opacity);
+          const isTransparent = opacity === 0 || style.visibility === 'hidden' || style.backgroundColor === 'transparent' || style.backgroundColor === 'rgba(0, 0, 0, 0)';
+
+          const rect = el.getBoundingClientRect();
+          const coversFullViewport = rect.width >= (vw * 0.75) && rect.height >= (vh * 0.75);
+
+          if (isFixed && zIndex >= 50 && (isTransparent || opacity < 0.1) && coversFullViewport) {
+            const hasVisibleText = el.innerText && el.innerText.trim().length > 0;
+            const hasInputs = el.querySelector('input, form, video, button, select');
+
+            if (!hasVisibleText && !hasInputs) {
+              el._bsOverlayNeutralized = true;
+              el.style.setProperty('display', 'none', 'important');
+              el.style.setProperty('pointer-events', 'none', 'important');
+              el.style.setProperty('z-index', '-9999', 'important');
+              if (el.tagName === 'A' && el.parentNode) {
+                el.remove();
+              }
+              reportTelemetry('trapsNeutralized', 1);
+            }
           }
         });
       } catch (_) {}
     }
 
-    setInterval(fastPassButtons, 600);
+    function fastPassButtons() {
+      try {
+        const btnSelectors = [
+          'button', 'a.btn', 'a[class*="download"]', 'a[class*="button"]', 'div[class*="download"]',
+          'a[href*="download"]', 'a[href*="server"]', 'a[href*="drive"]', 'a[href*="mega"]',
+          '#download-btn', '#btn-main', '#get-link', '.btn-download', '.download-now',
+          '.get-link', '.download_link', '[id*="download"]', '[class*="download"]',
+          '.download-box a', '.download-box button', 'a[onclick*="download"]',
+          '#btn-main', '#download-btn', '#get-link', '#continue-btn', '#btn-download', '#submit-btn', '#final-link'
+        ];
+
+        const nodes = document.querySelectorAll(btnSelectors.join(', '));
+        nodes.forEach(el => {
+          if (!el) return;
+          const txt = (el.innerText || el.textContent || '').trim().toLowerCase();
+          const isDownloadTarget = txt.includes('download') || txt.includes('server') || txt.includes('get link') || txt.includes('continue') || txt.includes('tutorial') || txt.includes('watch') || txt.includes('final');
+
+          if (isDownloadTarget || el.classList.contains('btn') || el.id?.includes('download') || el.className?.includes('download') || el.className?.includes('server')) {
+            if (el.disabled) {
+              el.disabled = false;
+              el.removeAttribute('disabled');
+            }
+            if (el.getAttribute('aria-disabled') === 'true') {
+              el.removeAttribute('aria-disabled');
+            }
+            if (el.classList.contains('disabled')) {
+              el.classList.remove('disabled');
+            }
+
+            el.style.setProperty('pointer-events', 'auto', 'important');
+            el.style.setProperty('cursor', 'pointer', 'important');
+            el.style.setProperty('opacity', '1', 'important');
+            el.style.setProperty('position', 'relative', 'important');
+            el.style.setProperty('z-index', '9999', 'important');
+          }
+        });
+      } catch (_) {}
+    }
+
+    setInterval(purgeInvisibleClickBlockers, 800);
+    setInterval(fastPassButtons, 500);
   })();
 
   // ─────────────────────────────────────────────────────────────────────────────

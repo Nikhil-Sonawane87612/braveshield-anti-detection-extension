@@ -352,22 +352,76 @@
     } catch (_) {}
   }
 
-  // 6. Shortener Button Unlocker (Arm buttons without altering generic elements)
+  // 6. Shortener & Download Button Unlocker
+  function purgeInvisibleOverlays() {
+    try {
+      if (sessionStorage.getItem('bs_master_disabled') === 'true') return;
+      const vw = window.innerWidth || document.documentElement.clientWidth || 800;
+      const vh = window.innerHeight || document.documentElement.clientHeight || 600;
+      const candidates = document.querySelectorAll('div, a, span, section, iframe');
+
+      for (const el of candidates) {
+        if (!el || el._bsContentOverlayNeutralized || isProtectedCaptchaOrAuth(el)) continue;
+        if (el === document.body || el === document.documentElement || el.id?.startsWith('bs-')) continue;
+
+        const style = window.getComputedStyle ? window.getComputedStyle(el) : null;
+        if (!style) continue;
+
+        const isFixed = style.position === 'fixed' || style.position === 'absolute';
+        const zIndex = parseInt(style.zIndex, 10) || 0;
+        const opacity = parseFloat(style.opacity);
+        const isTransparent = opacity === 0 || style.visibility === 'hidden' || style.backgroundColor === 'transparent' || style.backgroundColor === 'rgba(0, 0, 0, 0)';
+
+        const rect = el.getBoundingClientRect();
+        const coversFullViewport = rect.width >= (vw * 0.75) && rect.height >= (vh * 0.75);
+
+        if (isFixed && zIndex >= 50 && (isTransparent || opacity < 0.1) && coversFullViewport) {
+          const hasVisibleText = el.innerText && el.innerText.trim().length > 0;
+          const hasInputs = el.querySelector('input, form, video, button, select');
+
+          if (!hasVisibleText && !hasInputs) {
+            el._bsContentOverlayNeutralized = true;
+            el.style.setProperty('display', 'none', 'important');
+            el.style.setProperty('pointer-events', 'none', 'important');
+            el.style.setProperty('z-index', '-9999', 'important');
+            if (el.tagName === 'A' && el.parentNode) {
+              el.remove();
+            }
+          }
+        }
+      }
+    } catch (_) {}
+  }
+
   function fastPassButtons() {
     try {
       if (sessionStorage.getItem('bs_master_disabled') === 'true') return;
       if (sessionStorage.getItem('bs_timers_disabled') === 'true') return;
 
-      const btns = document.querySelectorAll('#btn-main, #get-link, #getlink, #download-btn, #btn-download, .get-link, .download-btn, .btn-download, #wpsafe-generate, #continue-btn, #btn-continue, #imnotrobot, #btn6, #btn-captcha, .btn-captcha, #openInChrome, .btn-open-chrome');
+      const btnSelectors = [
+        'button', 'a.btn', 'a[class*="download"]', 'a[class*="button"]', 'div[class*="download"]',
+        'a[href*="download"]', 'a[href*="server"]', 'a[href*="drive"]', 'a[href*="mega"]',
+        '#btn-main', '#get-link', '#getlink', '#download-btn', '#btn-download', '.get-link',
+        '.download-btn', '.btn-download', '#wpsafe-generate', '#continue-btn', '#btn-continue',
+        '#imnotrobot', '#btn6', '#btn-captcha', '.btn-captcha', '#openInChrome', '.btn-open-chrome',
+        '.download-box a', '.download-box button', 'a[onclick*="download"]'
+      ];
+
+      const btns = document.querySelectorAll(btnSelectors.join(', '));
       for (const btn of btns) {
-        if (btn) {
+        if (!btn) continue;
+        const txt = (btn.innerText || btn.textContent || '').trim().toLowerCase();
+        const isDownloadTarget = txt.includes('download') || txt.includes('server') || txt.includes('get link') || txt.includes('continue') || txt.includes('tutorial') || txt.includes('watch') || txt.includes('final');
+
+        if (isDownloadTarget || btn.classList.contains('btn') || btn.id?.includes('download') || btn.className?.includes('download') || btn.className?.includes('server')) {
           btn.removeAttribute('disabled');
           btn.removeAttribute('aria-disabled');
           if (btn.classList.contains('disabled')) btn.classList.remove('disabled');
           btn.style.setProperty('pointer-events', 'auto', 'important');
           btn.style.setProperty('opacity', '1', 'important');
-          btn.style.setProperty('display', 'inline-block', 'important');
           btn.style.setProperty('cursor', 'pointer', 'important');
+          btn.style.setProperty('position', 'relative', 'important');
+          btn.style.setProperty('z-index', '9999', 'important');
         }
       }
     } catch (_) {}
@@ -378,16 +432,18 @@
     if (cScanTimer) return;
     cScanTimer = setTimeout(() => {
       annihilateAntiAdblockModals();
+      purgeInvisibleOverlays();
       fastPassButtons();
       cScanTimer = null;
-    }, 500);
+    }, 400);
   }
 
   // Run immediately and monitor DOM
   annihilateAntiAdblockModals();
+  purgeInvisibleOverlays();
   fastPassButtons();
-  const trapInterval = setInterval(debouncedContentScan, 1000);
-  setTimeout(() => clearInterval(trapInterval), 15000);
+  const trapInterval = setInterval(debouncedContentScan, 800);
+  setTimeout(() => clearInterval(trapInterval), 30000);
 
   const trapObserver = new MutationObserver(debouncedContentScan);
   if (document.documentElement) {

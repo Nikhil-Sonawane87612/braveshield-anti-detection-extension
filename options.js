@@ -1,6 +1,6 @@
 /**
  * BraveShield Bypass Pro — Control Studio Controller
- * Version: 5.5.0
+ * Version: 6.0.1
  */
 
 document.addEventListener('DOMContentLoaded', () => {

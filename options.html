@@ -2,84 +2,106 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>BraveShield Bypass Pro — Control Studio</title>
+<title>BraveShield Bypass Pro — Enterprise Control Studio</title>
 <link rel="stylesheet" href="options.css">
 </head>
 <body>
 
 <div class="studio-container">
 
-  <!-- Header -->
+  <!-- Header & Master Defense Matrix -->
   <header class="studio-header">
     <div class="brand-row">
       <div class="brand-left">
-        <div class="brand-icon">
-          <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        <div class="shield-beacon">
+          <div class="beacon-pulse"></div>
+          <div class="beacon-icon">
+            <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          </div>
         </div>
         <div class="brand-titles">
-          <h1>BraveShield Control Studio</h1>
-          <span>Universal Anti-Detection, 50x Turbo &amp; Stealth Suite • v5.5.0</span>
+          <div class="brand-h1">BRAVESHIELD CONTROL STUDIO <span class="studio-ver-pill">v6.0.1</span></div>
+          <div class="brand-subtitle">Enterprise Anti-Fingerprinting, Hardware Cloaking &amp; Automation Matrix</div>
         </div>
       </div>
       <div class="master-dock">
         <span class="master-label" id="studio-master-status">SYSTEM DEFENSE ARMED</span>
-        <label class="master-sw">
+        <label class="cyber-switch master-sw" title="Toggle System Master Protection">
           <input type="checkbox" id="studio-master-toggle" checked>
-          <span class="master-sl"></span>
+          <span class="cyber-slider"></span>
         </label>
       </div>
     </div>
   </header>
 
-  <!-- Metrics Grid -->
+  <!-- Metrics & Telemetry Dock -->
   <section class="stats-row">
-    <div class="stat-box">
-      <div class="stat-val" id="stat-time-saved">0s</div>
+    <div class="stat-card">
+      <div class="stat-meta">
+        <span class="stat-glyph">⏱️</span>
+        <span class="stat-val" id="stat-time-saved">0s</span>
+      </div>
       <div class="stat-lbl">Time Saved</div>
     </div>
-    <div class="stat-box">
-      <div class="stat-val" id="stat-traps-defused">0</div>
-      <div class="stat-lbl">Traps Defused</div>
+    <div class="stat-card">
+      <div class="stat-meta">
+        <span class="stat-glyph">🛡️</span>
+        <span class="stat-val" id="stat-traps-defused">0</span>
+      </div>
+      <div class="stat-lbl">Traps &amp; Modals Defused</div>
     </div>
-    <div class="stat-box">
-      <div class="stat-val" id="stat-links-unlocked">0</div>
+    <div class="stat-card">
+      <div class="stat-meta">
+        <span class="stat-glyph">⚡</span>
+        <span class="stat-val" id="stat-links-unlocked">0</span>
+      </div>
       <div class="stat-lbl">Direct Links Unlocked</div>
     </div>
-    <div class="stat-box">
-      <div class="stat-val" id="stat-sync-status">Synced</div>
-      <div class="stat-lbl">GitHub Rule Definition</div>
+    <div class="stat-card">
+      <div class="stat-meta">
+        <span class="stat-glyph">🔄</span>
+        <span class="stat-val" id="stat-sync-status">Synced</span>
+      </div>
+      <div class="stat-lbl">GitHub Rule Intelligence</div>
     </div>
   </section>
 
   <!-- Main Settings Grid -->
   <main class="studio-grid">
 
-    <!-- Card 1: Anti-Detection & Hardware Identity Profiles -->
-    <div class="card">
-      <div class="card-header">
-        <span class="card-icon">🛡️</span>
-        <h2>Anti-Detection &amp; Hardware Identity (110+ Presets)</h2>
+    <!-- Card 1: Hardware Identity & 110+ Profile Studio -->
+    <div class="cyber-panel" style="grid-column: 1 / -1;">
+      <div class="panel-header">
+        <div class="panel-tag">
+          <span class="tag-beacon"></span>
+          CLOAKED HARDWARE PROFILE ENGINE (110+ PRESETS)
+        </div>
       </div>
-      <div class="card-body">
-        <div class="setting-row" style="flex-direction:column; align-items:flex-start; gap:8px;">
-          <div class="setting-info" style="width:100%;">
-            <div class="setting-title">Cloaked Hardware Profile</div>
-            <div class="setting-desc">Select simulated GPU, CPU concurrency, RAM, and OS signature</div>
+      <div class="panel-body">
+        <div class="profile-selection-box">
+          <div class="setting-meta">
+            <div class="setting-title">Select Active Hardware Identity Preset</div>
+            <div class="setting-desc">Emulates native GPU, CPU cores, RAM, screen geometry, and OS signature in WebGL, WebGPU, and Client Hints</div>
           </div>
-          <input type="text" id="studio-profile-search" placeholder="🔍 Search 110+ hardware profiles (e.g. RTX 4090, Apple M3, Pixel 9, Ubuntu)..." class="studio-input" style="width:100%;">
-          <select id="opt-profile" class="studio-select" style="width:100%;">
-            <!-- Populated dynamically with 110+ categorized presets from hardware-profiles.js -->
-          </select>
+          <div class="profile-inputs-row">
+            <input type="text" id="studio-profile-search" placeholder="🔍 Search 110+ profiles (e.g. RTX 4090, Apple M3, Pixel 9, Ubuntu)..." class="cyber-input">
+            <select id="opt-profile" class="cyber-select">
+              <!-- Populated dynamically with 110+ categorized presets from hardware-profiles.js -->
+            </select>
+          </div>
         </div>
 
         <!-- Custom Hardware Builder Section (Collapsible) -->
-        <div id="custom-hw-panel" class="custom-builder-panel" style="display:none;">
-          <div class="builder-title">🛠️ Custom Hardware Profile Builder</div>
+        <div id="custom-hw-panel" class="custom-builder-box" style="display:none;">
+          <div class="builder-heading">
+            <span class="builder-icon">🛠️</span>
+            <span>Custom Hardware Profile Architect</span>
+          </div>
           
           <div class="builder-grid">
             <div class="builder-field">
               <label>OS Platform</label>
-              <select id="cust-platform" class="studio-select">
+              <select id="cust-platform" class="cyber-select">
                 <option value="Win32">Windows (Win32)</option>
                 <option value="MacIntel">macOS (MacIntel)</option>
                 <option value="Linux x86_64">Linux (x86_64)</option>
@@ -91,7 +113,7 @@
 
             <div class="builder-field">
               <label>CPU Concurrency (Cores)</label>
-              <select id="cust-concurrency" class="studio-select">
+              <select id="cust-concurrency" class="cyber-select">
                 <option value="4">4 Cores</option>
                 <option value="8">8 Cores</option>
                 <option value="12">12 Cores</option>
@@ -105,7 +127,7 @@
 
             <div class="builder-field">
               <label>RAM Device Memory</label>
-              <select id="cust-memory" class="studio-select">
+              <select id="cust-memory" class="cyber-select">
                 <option value="4">4 GB</option>
                 <option value="8">8 GB</option>
                 <option value="16">16 GB</option>
@@ -118,7 +140,7 @@
 
             <div class="builder-field">
               <label>WebGL GPU Vendor</label>
-              <select id="cust-vendor" class="studio-select">
+              <select id="cust-vendor" class="cyber-select">
                 <option value="Google Inc. (NVIDIA)">Google Inc. (NVIDIA)</option>
                 <option value="Google Inc. (AMD)">Google Inc. (AMD)</option>
                 <option value="Google Inc. (Intel)">Google Inc. (Intel)</option>
@@ -130,15 +152,15 @@
             </div>
           </div>
 
-          <div class="builder-field" style="margin-top:10px;">
+          <div class="builder-field" style="margin-top:12px;">
             <label>WebGL GPU Unmasked Renderer String</label>
-            <input type="text" id="cust-renderer" class="studio-input" value="ANGLE (NVIDIA, NVIDIA GeForce RTX 4090 Direct3D11 vs_5_0 ps_5_0, D3D11)" style="width:100%;">
+            <input type="text" id="cust-renderer" class="cyber-input" value="ANGLE (NVIDIA, NVIDIA GeForce RTX 4090 Direct3D11 vs_5_0 ps_5_0, D3D11)">
           </div>
 
-          <div class="builder-grid" style="margin-top:10px;">
+          <div class="builder-grid" style="margin-top:12px;">
             <div class="builder-field">
               <label>Screen Resolution</label>
-              <select id="cust-screen" class="studio-select">
+              <select id="cust-screen" class="cyber-select">
                 <option value="3840x2160">3840 x 2160 (4K UHD)</option>
                 <option value="2560x1440" selected>2560 x 1440 (2K QHD)</option>
                 <option value="1920x1080">1920 x 1080 (Full HD)</option>
@@ -150,8 +172,8 @@
             </div>
 
             <div class="builder-field">
-              <label>Device Pixel Ratio</label>
-              <select id="cust-dpr" class="studio-select">
+              <label>Device Pixel Ratio (DPR)</label>
+              <select id="cust-dpr" class="cyber-select">
                 <option value="1" selected>1.0 (Standard Desktop)</option>
                 <option value="1.25">1.25 (125% Scaling)</option>
                 <option value="1.5">1.5 (150% Scaling)</option>
@@ -162,219 +184,214 @@
             </div>
           </div>
 
-          <button id="btn-save-custom-hw" class="btn-action" style="margin-top:12px; width:100%; justify-content:center;">💾 Save &amp; Apply Custom Hardware Profile</button>
+          <button id="btn-save-custom-hw" class="cyber-btn btn-primary" style="margin-top:14px; width:100%; justify-content:center;">
+            💾 Save &amp; Apply Custom Hardware Profile
+          </button>
         </div>
 
-        <div class="setting-row">
-          <div class="setting-info">
-            <div class="setting-title">Deep Brave API Cloak</div>
-            <div class="setting-desc">Neutralizes navigator.brave and Web3 wallet tokens</div>
+        <div class="panel-rows-group" style="margin-top:14px;">
+          <div class="setting-row">
+            <div class="setting-meta">
+              <div class="setting-title">Deep Brave Identity Cloak</div>
+              <div class="setting-desc">Purges navigator.brave, isBrave(), and Web3 wallet identifiers across prototypes</div>
+            </div>
+            <label class="cyber-switch"><input type="checkbox" id="opt-brave" checked><span class="cyber-slider"></span></label>
           </div>
-          <label class="toggle-sw"><input type="checkbox" id="opt-brave" checked><span class="toggle-sl"></span></label>
-        </div>
 
-        <div class="setting-row">
-          <div class="setting-info">
-            <div class="setting-title">WebGL &amp; Client Hints Parity</div>
-            <div class="setting-desc">Injects Google Chrome brand headers and GPU renderer strings</div>
+          <div class="setting-row">
+            <div class="setting-meta">
+              <div class="setting-title">Client Hints (UA-CH) Synchronizer</div>
+              <div class="setting-desc">Injects Google Chrome brand headers and synchronizes getHighEntropyValues()</div>
+            </div>
+            <label class="cyber-switch"><input type="checkbox" id="opt-hints" checked><span class="cyber-slider"></span></label>
           </div>
-          <label class="toggle-sw"><input type="checkbox" id="opt-hints" checked><span class="toggle-sl"></span></label>
         </div>
       </div>
     </div>
 
-    <!-- Card 2: Turbo Timers & Link Unshortening -->
-    <div class="card">
-      <div class="card-header">
-        <span class="card-icon">⚡</span>
-        <h2>Turbo Timers &amp; Link Resolvers</h2>
-      </div>
-      <div class="card-body">
-        <div class="setting-row">
-          <div class="setting-info">
-            <div class="setting-title">Instant URL Unshortener &amp; Direct HUD</div>
-            <div class="setting-desc">Decodes destination URLs and renders floating 1-click jump bar</div>
-          </div>
-          <label class="toggle-sw"><input type="checkbox" id="opt-unshortener" checked><span class="toggle-sl"></span></label>
-        </div>
-
-        <div class="setting-row">
-          <div class="setting-info">
-            <div class="setting-title">50x Countdown Fast-Forward</div>
-            <div class="setting-desc">Accelerates setTimeout/setInterval compression safely</div>
-          </div>
-          <label class="toggle-sw"><input type="checkbox" id="opt-timers" checked><span class="toggle-sl"></span></label>
-        </div>
-
-        <div class="setting-row">
-          <div class="setting-info">
-            <div class="setting-title">Universal Paywall &amp; Blur Defuser</div>
-            <div class="setting-desc">Unblurs Quora, Medium, Pinterest, and news paywall overlays</div>
-          </div>
-          <label class="toggle-sw"><input type="checkbox" id="opt-paywall" checked><span class="toggle-sl"></span></label>
-        </div>
-
-        <div class="setting-row">
-          <div class="setting-info">
-            <div class="setting-title">AdBlock Modal Annihilator</div>
-            <div class="setting-desc">Hides anti-adblock popups and blocked browser alerts safely</div>
-          </div>
-          <label class="toggle-sw"><input type="checkbox" id="opt-adblock" checked><span class="toggle-sl"></span></label>
+    <!-- Card 2: Advanced Anti-Fingerprinting Suite -->
+    <div class="cyber-panel">
+      <div class="panel-header">
+        <div class="panel-tag">
+          <span class="tag-beacon"></span>
+          ADVANCED ANTI-FINGERPRINTING
         </div>
       </div>
-    </div>
-
-    <!-- Card 3: Advanced Anti-Fingerprinting Suite -->
-    <div class="card">
-      <div class="card-header">
-        <span class="card-icon">🎵</span>
-        <h2>Advanced Anti-Fingerprinting Suite</h2>
-      </div>
-      <div class="card-body">
+      <div class="panel-body">
         <div class="setting-row">
-          <div class="setting-info">
+          <div class="setting-meta">
+            <div class="setting-title">Canvas Bit-Shift Noise</div>
+            <div class="setting-desc">Non-destructive ±1 RGB sub-pixel bit shifts on toDataURL/getImageData</div>
+          </div>
+          <label class="cyber-switch"><input type="checkbox" id="opt-canvas" checked><span class="cyber-slider"></span></label>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-meta">
             <div class="setting-title">AudioContext Sub-Pixel Noise</div>
-            <div class="setting-desc">Injects imperceptible float jitter into AudioBuffer to defeat audio hashing</div>
+            <div class="setting-desc">Sub-audible ±1e-7 float jitter on AnalyserNode and AudioBuffer</div>
           </div>
-          <label class="toggle-sw"><input type="checkbox" id="opt-audio" checked><span class="toggle-sl"></span></label>
+          <label class="cyber-switch"><input type="checkbox" id="opt-audio" checked><span class="cyber-slider"></span></label>
         </div>
 
         <div class="setting-row">
-          <div class="setting-info">
-            <div class="setting-title">Canvas Sub-Dither Noise Cloaker</div>
-            <div class="setting-desc">Applies single-pixel RGB sub-dithering to prevent canvas fingerprinting</div>
-          </div>
-          <label class="toggle-sw"><input type="checkbox" id="opt-canvas" checked><span class="toggle-sl"></span></label>
-        </div>
-
-        <div class="setting-row">
-          <div class="setting-info">
-            <div class="setting-title">WebRTC Local IP Leak Protection</div>
+          <div class="setting-meta">
+            <div class="setting-title">WebRTC LAN IP Isolation</div>
             <div class="setting-desc">Filters private LAN IP addresses (192.168.x.x) in WebRTC SDP offers</div>
           </div>
-          <label class="toggle-sw"><input type="checkbox" id="opt-webrtc" checked><span class="toggle-sl"></span></label>
+          <label class="cyber-switch"><input type="checkbox" id="opt-webrtc" checked><span class="cyber-slider"></span></label>
         </div>
 
         <div class="setting-row">
-          <div class="setting-info">
+          <div class="setting-meta">
+            <div class="setting-title">DOM Rect Micro-Pixel Jitter</div>
+            <div class="setting-desc">Injects ±0.001px micro-jitter on getBoundingClientRect to defeat font probing</div>
+          </div>
+          <label class="cyber-switch"><input type="checkbox" id="opt-domjitter" checked><span class="cyber-slider"></span></label>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-meta">
+            <div class="setting-title">High-Resolution Timer Coarsening</div>
+            <div class="setting-desc">Clamps performance.now to 20ms resolution against Spectre CPU cache attacks</div>
+          </div>
+          <label class="cyber-switch"><input type="checkbox" id="opt-timercoarse" checked><span class="cyber-slider"></span></label>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-meta">
             <div class="setting-title">Battery &amp; Network Info Cloak</div>
             <div class="setting-desc">Mocks Battery API (100% charging) and Network Information (4G 10Mbps)</div>
           </div>
-          <label class="toggle-sw"><input type="checkbox" id="opt-battery" checked><span class="toggle-sl"></span></label>
-        </div>
-
-        <div class="setting-row">
-          <div class="setting-info">
-            <div class="setting-title">DOM Rect Micro-Jitter</div>
-            <div class="setting-desc">Injects ±0.001px micro-jitter on getBoundingClientRect to defeat font probing</div>
-          </div>
-          <label class="toggle-sw"><input type="checkbox" id="opt-domjitter" checked><span class="toggle-sl"></span></label>
-        </div>
-
-        <div class="setting-row">
-          <div class="setting-info">
-            <div class="setting-title">High-Resolution Timer Coarsening</div>
-            <div class="setting-desc">Clamps performance.now resolution to 20µs to defeat CPU cache timing attacks</div>
-          </div>
-          <label class="toggle-sw"><input type="checkbox" id="opt-timercoarse" checked><span class="toggle-sl"></span></label>
+          <label class="cyber-switch"><input type="checkbox" id="opt-battery" checked><span class="cyber-slider"></span></label>
         </div>
       </div>
     </div>
 
-    <!-- Card 4: Web Automation & Usability Suite -->
-    <div class="card">
-      <div class="card-header">
-        <span class="card-icon">🔓</span>
-        <h2>Web Automation &amp; Usability Suite</h2>
+    <!-- Card 3: Turbo Timers & Link Resolvers -->
+    <div class="cyber-panel">
+      <div class="panel-header">
+        <div class="panel-tag">
+          <span class="tag-beacon"></span>
+          TURBO TIMERS &amp; LINK UNLOCKERS
+        </div>
       </div>
-      <div class="card-body">
+      <div class="panel-body">
         <div class="setting-row">
-          <div class="setting-info">
+          <div class="setting-meta">
+            <div class="setting-title">Instant URL Unshortener &amp; Direct HUD</div>
+            <div class="setting-desc">Auto-resolves redirect chains and renders floating 1-click jump HUD</div>
+          </div>
+          <label class="cyber-switch"><input type="checkbox" id="opt-unshortener" checked><span class="cyber-slider"></span></label>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-meta">
+            <div class="setting-title">50x Countdown Fast-Forward</div>
+            <div class="setting-desc">Accelerates setTimeout/setInterval loops safely to unlock buttons</div>
+          </div>
+          <label class="cyber-switch"><input type="checkbox" id="opt-timers" checked><span class="cyber-slider"></span></label>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-meta">
+            <div class="setting-title">Universal Paywall &amp; Blur Defuser</div>
+            <div class="setting-desc">Unblurs Quora, Medium, Pinterest, and news paywall modal overlays</div>
+          </div>
+          <label class="cyber-switch"><input type="checkbox" id="opt-paywall" checked><span class="cyber-slider"></span></label>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-meta">
+            <div class="setting-title">AdBlock Trap Modal Defuser</div>
+            <div class="setting-desc">Neutralizes anti-adblock popups and blocked browser overlays safely</div>
+          </div>
+          <label class="cyber-switch"><input type="checkbox" id="opt-adblock" checked><span class="cyber-slider"></span></label>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-meta">
             <div class="setting-title">Clean URL Tracker Stripper</div>
             <div class="setting-desc">Auto-strips utm_*, fbclid, gclid, and analytics queries on navigation</div>
           </div>
-          <label class="toggle-sw"><input type="checkbox" id="opt-cleanurl" checked><span class="toggle-sl"></span></label>
-        </div>
-
-        <div class="setting-row">
-          <div class="setting-info">
-            <div class="setting-title">Universal Right-Click &amp; Copy Enabler</div>
-            <div class="setting-desc">Defuses contextmenu and text selection blockers on restricted websites</div>
-          </div>
-          <label class="toggle-sw"><input type="checkbox" id="opt-rightclick" checked><span class="toggle-sl"></span></label>
-        </div>
-
-        <div class="setting-row">
-          <div class="setting-info">
-            <div class="setting-title">Universal Video Speed Controller</div>
-            <div class="setting-desc">Keyboard hotkeys [ (slow) / ] (fast) / \ (reset 1.0x) on any HTML5 video</div>
-          </div>
-          <label class="toggle-sw"><input type="checkbox" id="opt-videospeed" checked><span class="toggle-sl"></span></label>
-        </div>
-
-        <div class="setting-row">
-          <div class="setting-info">
-            <div class="setting-title">Auto-Skip Video Intros &amp; Recaps</div>
-            <div class="setting-desc">Auto-clicks Skip Intro / Skip Recap buttons on Netflix, Prime &amp; Anime portals</div>
-          </div>
-          <label class="toggle-sw"><input type="checkbox" id="opt-autoskip" checked><span class="toggle-sl"></span></label>
+          <label class="cyber-switch"><input type="checkbox" id="opt-cleanurl" checked><span class="cyber-slider"></span></label>
         </div>
       </div>
     </div>
 
-    <!-- Card 5: Media & Streaming Suite -->
-    <div class="card">
-      <div class="card-header">
-        <span class="card-icon">🎬</span>
-        <h2>Media &amp; Streaming Suite</h2>
+    <!-- Card 4: Web Usability & Streaming Media Suite -->
+    <div class="cyber-panel">
+      <div class="panel-header">
+        <div class="panel-tag">
+          <span class="tag-beacon"></span>
+          STREAMING &amp; WEB USABILITY
+        </div>
       </div>
-      <div class="card-body">
+      <div class="panel-body">
         <div class="setting-row">
-          <div class="setting-info">
+          <div class="setting-meta">
             <div class="setting-title">YouTube Turbo 16x Skip</div>
             <div class="setting-desc">Fast-forwards YouTube video ads and auto-skips sponsor segments</div>
           </div>
-          <label class="toggle-sw"><input type="checkbox" id="opt-youtube" checked><span class="toggle-sl"></span></label>
+          <label class="cyber-switch"><input type="checkbox" id="opt-youtube" checked><span class="cyber-slider"></span></label>
         </div>
 
         <div class="setting-row">
-          <div class="setting-info">
+          <div class="setting-meta">
             <div class="setting-title">Spotify Unlocked</div>
-            <div class="setting-desc">Audio/video ad acceleration, auto-muting, and live synced lyrics</div>
+            <div class="setting-desc">Audio ad acceleration, auto-muting, and live synced karaoke lyrics</div>
           </div>
-          <label class="toggle-sw"><input type="checkbox" id="opt-spotify" checked><span class="toggle-sl"></span></label>
+          <label class="cyber-switch"><input type="checkbox" id="opt-spotify" checked><span class="cyber-slider"></span></label>
         </div>
 
         <div class="setting-row">
-          <div class="setting-info">
+          <div class="setting-meta">
             <div class="setting-title">Twitch &amp; Streaming Ad Shield</div>
             <div class="setting-desc">Auto-mutes live stream mid-rolls and accelerates media buffers</div>
           </div>
-          <label class="toggle-sw"><input type="checkbox" id="opt-twitch" checked><span class="toggle-sl"></span></label>
+          <label class="cyber-switch"><input type="checkbox" id="opt-twitch" checked><span class="cyber-slider"></span></label>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-meta">
+            <div class="setting-title">Universal Right-Click &amp; Copy</div>
+            <div class="setting-desc">Restores contextmenu and text selection on restricted websites</div>
+          </div>
+          <label class="cyber-switch"><input type="checkbox" id="opt-rightclick" checked><span class="cyber-slider"></span></label>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-meta">
+            <div class="setting-title">HTML5 Video Speed Controller &amp; Skip Intros</div>
+            <div class="setting-desc">Keyboard hotkeys [ / ] / \ and auto-click Skip Intro buttons</div>
+          </div>
+          <label class="cyber-switch"><input type="checkbox" id="opt-videospeed" checked><span class="cyber-slider"></span></label>
         </div>
       </div>
     </div>
 
-    <!-- Card 6: Whitelist, Backup & Rule Sync Engine -->
-    <div class="card">
-      <div class="card-header">
-        <span class="card-icon">🔄</span>
-        <h2>Rule Sync, Whitelist &amp; JSON Backup</h2>
+    <!-- Card 5: Whitelist, Backup & Rule Sync Engine -->
+    <div class="cyber-panel">
+      <div class="panel-header">
+        <div class="panel-tag">
+          <span class="tag-beacon"></span>
+          RULE SYNC, WHITELIST &amp; JSON BACKUP
+        </div>
       </div>
-      <div class="card-body">
+      <div class="panel-body">
         <div class="sync-banner">
           <div class="sync-info">
             <div class="sync-title" id="sync-title">GitHub Rules: Connected</div>
             <div class="sync-subtitle" id="sync-time">Last checked: Just now</div>
           </div>
-          <button class="btn-action" id="btn-studio-sync">Check &amp; Sync</button>
+          <button class="cyber-btn btn-secondary" id="btn-studio-sync">Check &amp; Sync</button>
         </div>
 
         <div class="whitelist-section">
           <div class="whitelist-title">Custom Whitelisted Domains</div>
           <div class="whitelist-input-row">
-            <input type="text" id="whitelist-input" placeholder="e.g. example.com" class="studio-input">
-            <button class="btn-action" id="btn-add-whitelist">Add Domain</button>
+            <input type="text" id="whitelist-input" placeholder="e.g. example.com" class="cyber-input">
+            <button class="cyber-btn btn-primary" id="btn-add-whitelist">Add Domain</button>
           </div>
           <div class="whitelist-tags" id="whitelist-tags">
             <!-- Domain tags injected via JS -->
@@ -382,13 +399,13 @@
         </div>
 
         <!-- JSON Backup Studio -->
-        <div style="margin-top:16px; padding-top:14px; border-top:1px solid rgba(255,255,255,0.08); display:flex; gap:10px; flex-wrap:wrap; justify-content:space-between; align-items:center;">
-          <div style="display:flex; gap:8px;">
-            <button class="btn-action" id="btn-export-backup" style="background:#132a24; border-color:#00f076; color:#00f076;">💾 Export Backup (JSON)</button>
-            <button class="btn-action" id="btn-import-backup-trigger" style="background:#132238; border-color:#00e5ff; color:#00e5ff;">📂 Restore Backup</button>
+        <div class="backup-actions-dock">
+          <div class="backup-btns-left">
+            <button class="cyber-btn btn-emerald" id="btn-export-backup">💾 Export Backup (JSON)</button>
+            <button class="cyber-btn btn-cyan" id="btn-import-backup-trigger">📂 Restore Backup</button>
             <input type="file" id="file-import-backup" accept=".json" style="display:none;">
           </div>
-          <button class="btn-action" id="btn-reset-telemetry" style="background:#2d1b2e; border-color:#e53e3e; color:#fc8181;">Reset Telemetry</button>
+          <button class="cyber-btn btn-crimson" id="btn-reset-telemetry">Reset Telemetry</button>
         </div>
       </div>
     </div>

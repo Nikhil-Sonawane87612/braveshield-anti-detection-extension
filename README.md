@@ -1,22 +1,22 @@
 <div align="center">
 
-<img src="icons/icon128.png" alt="BraveShield Bypass Pro Logo" width="120" height="120" style="border-radius: 24px; box-shadow: 0 8px 32px rgba(99, 102, 241, 0.35);" />
+<img src="icons/icon128.png" alt="BraveShield Bypass Pro Logo" width="120" height="120" style="border-radius: 24px; box-shadow: 0 8px 32px rgba(0, 240, 118, 0.35);" />
 
-# 🛡️ BraveShield Bypass Pro & Android Super Suite
-### Universal Stealth, Anti-Detection, Spotify Unlocked & Turbo Automation Suite
+# 🛡️ BraveShield Bypass Pro — Enterprise Anti-Fingerprinting Suite
+### Manifest V3 Stealth Engine • CreepJS & BrowserLeaks Evasion • Multi-Device Hardware Spoofer
 
-[![Version](https://img.shields.io/badge/version-v5.3.0-6366f1?style=for-the-badge&logo=semver&logoColor=white)](https://github.com/Nikhil-Sonawane87612/braveshield-anti-detection-extension/releases/latest)
+[![Version](https://img.shields.io/badge/version-v6.0.0-00f076?style=for-the-badge&logo=semver&logoColor=black)](https://github.com/Nikhil-Sonawane87612/braveshield-anti-detection-extension/releases/latest)
 [![Manifest](https://img.shields.io/badge/manifest-v3-10b981?style=for-the-badge&logo=googlechrome&logoColor=white)](#-desktop-installation)
-[![Android](https://img.shields.io/badge/Android-55%2B%20Features-3ddc84?style=for-the-badge&logo=android&logoColor=white)](#-android-super-suite-setup)
-[![Modules](https://img.shields.io/badge/modules-55%2B%20Armed-8b5cf6?style=for-the-badge&logo=shield&logoColor=white)](#-the-core-stealth-modules)
-[![Privacy Grade](https://img.shields.io/badge/Privacy%20Grade-A%2B%20(100%25)-06b6d4?style=for-the-badge&logo=safari&logoColor=white)](#-live-privacy-audit-score)
+[![CreepJS Evasion](https://img.shields.io/badge/CreepJS-A%2B%20Evasion-8b5cf6?style=for-the-badge&logo=shield&logoColor=white)](#-the-creepjs--browserleaks-evasion-pack)
+[![Hardware Presets](https://img.shields.io/badge/Hardware%20Profiles-110%2B%20Presets-3b82f6?style=for-the-badge&logo=nvidia&logoColor=white)](#-multi-device-hardware-studio)
+[![Privacy Grade](https://img.shields.io/badge/Privacy%20Grade-100%25%20A%2B-00f076?style=for-the-badge&logo=safari&logoColor=black)](#-live-privacy-audit-score)
 
 <p align="center">
-  <b>The definitive stealth & ad-blocking engine for Desktop (PC/Mac) and Android devices.</b><br>
-  Keep Brave Shields at maximum strength while appearing as pure Google Chrome. Enjoy ad-free Spotify with live synced lyrics, 16x YouTube fast-forwarding, 50x timer bypass, and system-wide in-app ad blocking.
+  <b>The enterprise-grade anti-fingerprinting and stealth engine compliant with Manifest V3.</b><br>
+  Neutralize CreepJS, BrowserLeaks, and anti-bot heuristic detectors. Run with maximum Brave Shields strength while presenting a 100% authentic Google Chrome hardware profile, session-seeded canvas/audio mathematical noise, 20ms timer coarsening, WebRTC IP shielding, and unshortening automation.
 </p>
 
-[📥 Download Extension (.ZIP)](https://github.com/Nikhil-Sonawane87612/braveshield-anti-detection-extension/releases/latest) • [📱 Android Userscript (`.user.js`)](braveshield-android.user.js) • [🛡️ AdGuard Filters (`rules.txt`)](filters/rules.txt) • [📖 Android Guide](ANDROID-SETUP.md)
+[📥 Download Extension (.ZIP)](https://github.com/Nikhil-Sonawane87612/braveshield-anti-detection-extension/releases/latest) • [📱 Android Userscript (`.user.js`)](braveshield-android.user.js) • [🛡️ AdGuard Filters (`rules.txt`)](filters/rules.txt) • [📖 Architecture Docs](memory/architecture.md)
 
 ---
 
@@ -24,122 +24,90 @@
 
 ## 📖 About The Project
 
-Modern websites, streaming platforms, and link shorteners deploy intrusive **anti-adblock traps**, **canvas/audio fingerprinting**, **Brave browser detectors**, and **artificial countdown gates**. When using Brave Browser with Shields enabled, sites detect internal indicators like `navigator.brave`, missing ad variables, or custom styling, then block access with popups, dimmed screens, or stalled timers.
+Modern websites, streaming platforms, and bot-detection engines (Cloudflare, DataDome, Akamai, PerimeterX, CreepJS) utilize sophisticated fingerprinting heuristics:
+1. **Prototype Inspection & Lie Detection**: Testing whether native methods have been wrapped or proxied via `Function.prototype.toString`, `Reflect.apply`, or invalid receiver invocations.
+2. **Error Stack Analysis**: Checking `Error.prototype.stack` to uncover internal `chrome-extension://` or script URLs.
+3. **Canvas & Audio Fingerprinting**: Rendering hidden 2D/WebGL scenes and synthesizing audio signals to compute cross-origin hardware hashes.
+4. **Side-Channel Timing Probes**: Running sub-millisecond `performance.now()` loops to benchmark CPU caches (Spectre).
+5. **Client Hints Mismatches**: Checking discrepancies between `navigator.userAgent` and `navigator.userAgentData.getHighEntropyValues()`.
+6. **WebRTC Private IP Leaks**: Probing STUN/TURN servers to discover internal LAN IPs behind VPNs.
 
-**BraveShield Bypass Pro** is an enterprise-grade stealth suite that bridges ad-blocking with complete web invisibility:
-- **On Desktop**: Seamless Manifest V3 extension featuring 42 active defense modules.
-- **On Android**: Universal Userscript (`braveshield-android.user.js`) + System-Wide DNS Hostlist (`braveshield-dns-blocklist.txt`) that works in **normal mobile browsers** (AdGuard, Firefox Mobile, Samsung Internet) without requiring Kiwi or desktop-like browser setups.
+**BraveShield Bypass Pro v6.0.0** solves this comprehensively by injecting an unforgeable, mathematically robust stealth layer directly at `document_start` in the `MAIN` execution world.
 
 ---
 
-## ✨ Key Features Overview
+## ✨ Architectural Highlights (v6.0.0)
 
 ```mermaid
 graph TD
-    A[Brave Browser / Android Device] --> B[BraveShield Super Engine]
-    B --> C[Google Chrome Identity Spoofing]
-    B --> D[Universal Trap & Backdrop Annihilator]
-    B --> E[50x Turbo Timer & Shortener Engine]
-    B --> F[Spotify Web Player Unlocked: Lyrics + Ad-Free]
-    B --> G[YouTube Turbo: 16x Skip + SponsorBlock + Dislike]
-    B --> H[System-Wide OEM & In-Game Ad DNS Shield]
-    C --> I[100% Native Web Compatibility & Ad-Free Experience]
-    D --> I
-    E --> I
-    F --> I
-    G --> I
-    H --> I
+    A[Webpage / Anti-Bot Script] --> B[MAIN Execution Realm document_start]
+    B --> C[Unforgeable makeNative Proxy & WeakMap Registry]
+    C --> D[Reflect.apply & construct Transparency]
+    C --> E[Error Stack Extension Masking]
+    B --> F[Session-Seeded PRNG Mulberry32]
+    F --> G[Non-Destructive Canvas ±1 RGB Bit Shift]
+    F --> H[High-Precision Audio ±1e-7 Float Variance]
+    F --> I[DOM Measurement Micro-Jitter ±0.001px]
+    B --> J[20ms High-Res Timer Coarsening Spectre Defense]
+    B --> K[Screen & Geometry Normalization Profile Engine]
+    B --> L[WebGL / WebGPU Vendor & Shader Precision Masking]
+    B --> M[Client Hints UA-CH getHighEntropyValues Sync]
+    B --> N[WebRTC LAN IP Shield disable_non_proxied_udp]
+    C --> O[100% Clean CreepJS / BrowserLeaks Audit Score]
+    G --> O
+    H --> O
+    I --> O
+    J --> O
+    K --> O
+    L --> O
+    M --> O
+    N --> O
 ```
-
-### ⚡ 1. Master Kill Switch (0ms Latency)
-A global emergency toggle in popup and options headers to instantly pause or re-arm all modules, Declarative Net Request rules, and DOM hooks in real time.
-
-### 🎭 2. Pure Google Chrome Emulation
-- Completely purges `navigator.brave` and `isBrave()` from prototype chains.
-- Spoofs Google Chrome Client Hints (`navigator.userAgentData.brands`), `window.chrome.app`, `window.chrome.runtime`, `csi`, and `loadTimes`.
-- Strips Brave crypto wallet identifiers (`isMetaMask = true; isBraveWallet = false`).
-
-### 🎵 3. Spotify Web Player Super Engine
-- **Instant Audio Ad Mute & Skip**: Detects ad audio tracks, mutes them, and skips to the end in under 100ms.
-- **🎤 Live Synced Karaoke Lyrics**: Automatically fetches real-time synced lyrics from `lrclib.net` API with a floating toggle.
-- **⏭️ Unlimited Skips & Shuffles**: Re-enables disabled skip/shuffle buttons for free-tier users.
-- **🛡️ Zero-Error Safe-List**: Preserves all audio streaming CDNs (`audio-fa.scdn.co`) and playlist APIs to guarantee **zero blank playlists or streaming errors**.
-- **🔊 Mobile Audio Booster**: Built-in WebAudio Gain compressor allowing **100%–200% volume boost**.
-
-### 🎬 4. YouTube Turbo Suite
-- **16x Video Ad Fast-Forwarding**: Speeds through unskippable video ads in milliseconds with auto-mute.
-- **👎 Return YouTube Dislike**: Real dislike count fetched via `returnyoutubedislikeapi.com` and injected next to the Like button.
-- **🔒 Auto-Max 1080p/4K Quality Lock**: Locks video playback to highest available quality.
-- **Universal Picture-in-Picture (PiP)** & Anti-Tab-Switch background playback.
-
-### ⏩ 5. Turbo Timer & Shortener Fast-Pass (50x–100x Speedup)
-- Compresses 15s–60s countdown loops into <0.3s while preserving security tokens.
-- Safelink auto-clicker for WordPress Safelink, GPVadnagar (`#wpsafe-generate`, `#btn-main`, `.get-link`).
-- Strictly excludes Blogger/WordPress pagination links (`reverse-paginate`) to eliminate infinite reload loops.
-
-### 🛑 6. Mobile Protection & Usability
-- **🛡️ Universal Consent & Disclaimer Fast-Pass**: Auto-preseeds compliance verification cookies/storage tokens and auto-confirms disclaimer gates while unhiding blocked media containers.
-- **Android Back-Button Trap Neutralizer**: Suppresses malicious `history.pushState` redirect traps.
-- **Anti-Vibration & Fake Alert Blocker**: Silences `navigator.vibrate` and fake virus warning dialogs.
-- **⚡ Direct Media Stream Sniffer**: Auto-detects raw `.mp4`/`.m3u8` video streams with 1-tap VLC streaming.
-- **📰 Paywall & Login-Wall Bypass**: Auto-unhides paywalled articles (Medium, Quora, Pinterest, news sites).
-
-### 🎨 7. 10 Premium Visual Themes Gallery
-| # | Theme Name | Background | Cards | Accent Gradient | Vibe |
-| :-: | :--- | :--- | :--- | :--- | :--- |
-| 🖤 1 | **Obsidian Noir** | `#0A0A0F` deep black | Glassmorphic `rgba(255,255,255,0.04)` | `#8B5CF6` → `#6366F1` | Dark luxury, premium stealth |
-| 💜 2 | **Cyberpunk Neon** | `#0D0221` dark navy | Neon-bordered `rgba(0,255,136,0.06)` | `#00FF88` → `#00D4FF` | Futuristic hacker terminal |
-| 🧊 3 | **Arctic Frost** | `#F0F4FF` icy white | Frosted glass `rgba(255,255,255,0.7)` | `#3B82F6` → `#06B6D4` | Clean, minimal, Apple-esque |
-| 🌅 4 | **Sunset Gradient** | Animated gradient | Warm glass `rgba(255,107,53,0.08)` | `#F72585` → `#FF6B35` | Warm, energetic, vibrant |
-| 🌊 5 | **Ocean Depth** | `#0B1628` deep sea | Aqua glass `rgba(6,182,212,0.06)` | `#06B6D4` → `#0EA5E9` | Calm, deep, mysterious |
-| 🌿 6 | **Forest Emerald** | `#0A1F0A` dark forest | Leaf glass `rgba(16,185,129,0.06)` | `#10B981` → `#059669` | Natural, organic, fresh |
-| 💜 7 | **Lavender Dream** | `#1A1025` soft plum | Lilac glass `rgba(167,139,250,0.08)` | `#A78BFA` → `#C084FC` | Soft, dreamy, premium |
-| 🔥 8 | **Solar Flare** | `#1A0A00` ember black | Flame glass `rgba(249,115,22,0.06)` | `#F97316` → `#EAB308` | Bold, powerful, fiery |
-| 🌌 9 | **Midnight Galaxy** | Animated starfield `#030014` | Cosmic glass `rgba(99,102,241,0.05)` | `#6366F1` → `#8B5CF6` | Space, cosmic, infinite |
-| 🌹 10 | **Rose Gold** | `#1A0F0F` dark rose | Blush glass `rgba(244,114,182,0.06)` | `#F472B6` → `#FB923C` | Elegant, luxurious, refined |
 
 ---
 
-## 📱 Android Super Suite Setup (Normal Browsers & System-Wide)
+## 🛡️ Core Stealth & Anti-Fingerprinting Pillars
 
-You do **not** need Kiwi Browser or a PC-like desktop browser to use BraveShield on Android! Here are the 3 best setups:
+### 1. Unforgeable Native Function Proxies (`makeNative`)
+- Wraps overridden prototypes with `WeakMap`-backed tracking.
+- `Function.prototype.toString.call(fn)` returns genuine `function [name]() { [native code] }`.
+- `toString.toString()` returns `function toString() { [native code] }`.
+- Transparent `Reflect.apply` and `Reflect.construct` forwarding ensures deep JavaScript reflection validation passes with zero illegal invocation errors.
+- Sanitizes `Error.prototype.stack` and `Error.captureStackTrace` to strip internal extension URLs.
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                    ANDROID DEVICE                           │
-│                                                             │
-│  Layer 1: Network & In-App Ads (System-Wide)                │
-│  → Private DNS / AdGuard Filter                             │
-│  → Blocks Spotify app ads, in-game ads, and OEM telemetry   │
-│                                                             │
-│  Layer 2: Browser & In-Page Engine                          │
-│  → braveshield-android.user.js                              │
-│  → Fast-forwards timers, destroys anti-adblock traps,       │
-│    unlocks Spotify Web Player with synced lyrics & boost,   │
-│    auto-skips YouTube sponsors, sniffs direct video streams  │
-└─────────────────────────────────────────────────────────────┘
-```
+### 2. Session-Seeded Mathematical Noise (Non-Destructive)
+- **Canvas Noise**: Injects non-destructive `±1` RGB sub-pixel bit shifts into `HTMLCanvasElement.prototype.toDataURL`, `toBlob`, and `CanvasRenderingContext2D.prototype.getImageData`. Human-visible images and CAPTCHAs render with zero flaws while cross-session hashes differ.
+- **Audio Stack Variance**: Injects sub-audible `±1e-7` statistical float variance into `AnalyserNode`, `AudioBuffer`, and `OfflineAudioContext`.
 
-### 🚀 Setup A: AdGuard for Android (System-Wide + All Browsers)
-1. Download & install **AdGuard for Android** from [adguard.com](https://adguard.com/en/adguard-android/overview.html).
-2. **Prerequisite**: Ensure **HTTPS filtering** is enabled (*Protection 🛡️ → Ad blocking → HTTPS filtering*).
-3. **Add Userscript**: Go to **Settings (⚙️)** → **Extensions** (or **Filtering → Extensions**) → Tap **Add extension (+)** → Choose **Import from URL** and paste the [`braveshield-android.user.js`](braveshield-android.user.js) link.
-4. **Add DNS Blocklist**: In AdGuard → **Protection (🛡️)** → **DNS protection** → **DNS blocklists** → Import [`braveshield-dns-blocklist.txt`](braveshield-dns-blocklist.txt).
-5. **Done!** Works automatically across Google Chrome, Brave Android, Samsung Internet, and background apps.
+### 3. Screen, Font, & Geometry Normalization
+- **DOM Rect Micro-Jitter**: Injects `±0.001px` deterministic sub-pixel noise into `Element.prototype.getBoundingClientRect` to defeat font measurement tracking.
+- **Screen Masking**: Standardizes `window.screen` (`width`, `height`, `availWidth`, `availHeight`, `colorDepth`, `pixelDepth`), `window.devicePixelRatio`, `outerWidth`, and `outerHeight` to match the selected active hardware profile.
 
-### 🦊 Setup B: Firefox Mobile / Mull Browser (100% Free)
-1. Open **Firefox for Android** → Tap **Menu (⋮)** → **Add-ons**.
-2. Install **Tampermonkey** or **Violentmonkey**.
-3. Open Tampermonkey dashboard → Tap **+ Create a new script** → Paste the entire code from [`braveshield-android.user.js`](braveshield-android.user.js) → Save.
-4. **Done!** Open Spotify (`open.spotify.com`), YouTube, or download links to experience instant fast-forwarding.
+### 4. High-Resolution Timing & Side-Channel Defense
+- Clamps `performance.now()`, `Date.now()`, and `Event.prototype.timeStamp` to **20ms coarsened resolution**, destroying CPU cache benchmarking and Spectre timing probes.
 
-### 🌐 Setup C: Android Private DNS (Zero Battery, Zero VPN Icon)
-1. Open Android **Settings** → **Network & Internet** → **Private DNS**.
-2. Select **Private DNS provider hostname**.
-3. Enter your NextDNS or Cloudflare Gateway endpoint (configured with [`braveshield-dns-blocklist.txt`](braveshield-dns-blocklist.txt)).
-4. Tap **Save** — blocks in-app ads and OEM telemetry (Xiaomi, Samsung, Oppo) across your entire phone!
+### 5. WebGL, WebGPU, & Client Hints (UA-CH) Parity
+- Masks `UNMASKED_VENDOR_WEBGL` (`0x9245`), `UNMASKED_RENDERER_WEBGL` (`0x9246`), `VENDOR`, `RENDERER`, `WEBGL_debug_renderer_info`, and `getShaderPrecisionFormat`.
+- Fully synchronizes `navigator.userAgentData.brands`, `platform`, and `getHighEntropyValues(['architecture', 'bitness', 'model', 'platform', 'platformVersion', 'fullVersionList', 'wow64'])`.
 
-👉 *For detailed setup guides, check out the full [**ANDROID-SETUP.md**](ANDROID-SETUP.md) documentation.*
+### 6. WebRTC Deep Shield & Media Sanitization
+- Enforces `chrome.privacy.network.webRTCIPHandlingPolicy` (`disable_non_proxied_udp`) in service worker.
+- Filters private LAN candidates (`192.168.x.x`, `10.x.x.x`, `172.16.x.x`, `.local`) in SDP offers and answers.
+- Standardizes virtual hardware arrays on `navigator.mediaDevices.enumerateDevices()` and voices on `speechSynthesis.getVoices()`.
+
+### 7. DeclarativeNetRequest Tracking Query Parameter Stripper
+- Automatically strips `utm_*`, `fbclid`, `gclid`, `mc_eid`, `igshid`, `msclkid`, and `yclid` query parameters via high-performance DNR rules.
+
+---
+
+## 🎛️ Multi-Device Hardware Studio (110+ Presets)
+
+The Options Studio features over 110 real-world device profiles and a custom hardware builder:
+- **NVIDIA GeForce Series**: RTX 4090, RTX 4080, RTX 3080, RTX 3060.
+- **AMD Radeon Series**: RX 7900 XTX, RX 6800 XT, Radeon RX 580.
+- **Apple Silicon Series**: Apple M3 Max, Apple M2 Pro, Apple M1 Ultra.
+- **Intel Arc & Iris Series**: Intel Arc A770, Intel Iris Xe Graphics.
+- **Custom Hardware Builder**: Configure custom Platform, CPU Concurrency, RAM, Screen Resolution, DPR, and GPU strings with JSON backup export/import.
 
 ---
 
@@ -157,60 +125,27 @@ You do **not** need Kiwi Browser or a PC-like desktop browser to use BraveShield
 
 ---
 
-## 🧩 The Core Stealth Modules
-
-| # | Module Name | Category | Functionality |
-| :-: | :--- | :--- | :--- |
-| **01** | `Navigator.brave Purge` | Core Stealth | Removes `navigator.brave`, `isBrave()`, and cleans prototypes |
-| **02** | `Client Hints Sanitizer` | Core Stealth | Spoofs Chrome 124–131 brand lists & platform metadata |
-| **03** | `Ad Variable Bait Engine` | AdBlock Trap | Fakes `adsbygoogle`, `canRunAds`, `isAdBlockActive`, `ga`, `gtag` |
-| **04** | `Modal & Backdrop Annihilator` | AdBlock Trap | Destroys anti-adblock modals, removes fullscreen dark overlays |
-| **05** | `DOM Bait Dimension Trap Hook` | AdBlock Trap | Returns valid dimensions (`250x300`) for hidden ad-bait elements |
-| **06** | `WebGL GPU Profile Spoofing` | Fingerprint | Emulates 14 realistic GPU profiles (RTX 4090, Apple M3 Max) |
-| **07** | `Link Shortener Auto-Bypass` | Automation | Automated token resolution for 50+ shorteners (GPLinks, ouo.io) |
-| **08** | `Countdown Timer Accelerator` | Automation | Compresses countdown loops (`setInterval`) to unlock downloads in <0.3s |
-| **09** | `Click-Image-Wait Bypass` | Automation | Bypasses "Click ad banner and wait 15 seconds" download gates |
-| **10** | `Cookie Consent Auto-Dismiss` | Usability | Automatically dismisses 28+ cookie consent banners |
-| **11** | `Smart Auto-Scroll Trigger` | Automation | Simulates natural scrolling for scroll-gated links |
-| **12** | `Redirect Chain Follower` | Automation | Instantly follows meta-refresh and client-side redirect chains |
-| **13** | `Popunder Interceptor` | Anti-Malware | Blocks intrusive popunders while returning safe mock window handles |
-| **14** | `Universal AdBlock Defeater` | AdBlock Trap | Defeats Admiral, BlockAdBlock, FuckAdBlock, and custom detection |
-| **15** | `Synthetic Ad Network Responses` | Network | Intercepts ad-bait script network requests, returns 200 OK |
-| **16** | `Spotify Ad Muter & Skipper` | Media Engine | Auto-mutes and skips Spotify audio ads in <100ms |
-| **17** | `Spotify Synced Lyrics Engine` | Media Engine | Fetches and displays real-time synced lyrics from lrclib.net |
-| **18** | `Spotify Unlimited Skips` | Media Engine | Unlocks forward skip and shuffle controls for free-tier users |
-| **19** | `YouTube 16x Ad Fast-Forward` | Video Turbo | Accelerates video ads by 16x with auto-skip button trigger |
-| **20** | `YouTube Return Dislike` | Video Turbo | Injects live dislike count via returnyoutubedislikeapi.com |
-| **21** | `YouTube Auto-Max Quality` | Video Turbo | Forces 1080p60/4K video resolution |
-| **22** | `Mobile Audio Booster 150%` | Audio Engine | WebAudio Gain + DynamicsCompressor volume booster |
-| **23** | `Direct Media Stream Sniffer` | Media Engine | Auto-detects raw `.mp4`/`.m3u8` video streams for VLC playback |
-| **24** | `Back-Button Trap Neutralizer` | Mobile Defense | Suppresses `history.pushState` redirect loops |
-| **25** | `Anti-Vibration & Siren Blocker`| Mobile Defense | Silences `navigator.vibrate` and fake virus warning alerts |
-| **26** | `Paywall & Login-Wall Bypass` | Web Usability | Unhides paywalled articles on Medium, Quora, news portals |
-| **27** | `OEM Telemetry Killer (DNS)` | Network | Blocks Xiaomi, Samsung, Oppo, and Huawei tracking domains |
-| **28** | `In-Game Ad SDK Blocker (DNS)` | Network | Blocks UnityAds, AppLovin, IronSource, and Vungle in mobile games |
-
----
-
-## 🛠️ Project Structure
+## 📂 Project Architecture
 
 ```
 braveshield-anti-detection-extension/
-├── manifest.json                 # Manifest V3 configuration (v5.1.0)
-├── background.js                 # Service worker & DNR coordinator
-├── content.js                    # Content script (ISOLATED realm)
-├── inject.js                     # Desktop stealth engine (MAIN realm)
-├── settings.js                   # Centralized module definitions & defaults
-├── rules.json                    # Declarative Net Request rules
-├── popup.html / .css / .js        # Glassmorphic Popup Dashboard
-├── options.html / .css / .js      # Full-page Configuration Suite
-├── theme.css                      # 10 Premium Visual Themes engine
+├── manifest.json                 # Manifest V3 configuration (v6.0.0)
+├── background.js                 # Service worker, DNR coordinator & WebRTC policy
+├── content.js                    # Content script (ISOLATED realm storage sync)
+├── inject.js                     # Enterprise stealth engine (MAIN realm document_start)
+├── settings.js                   # Module definitions & storage defaults
+├── hardware-profiles.js          # Catalog of 110+ authentic hardware presets
+├── rules.json                    # Declarative Net Request tracking parameter rules
+├── popup.html / .css / .js        # Glassmorphic Popup Dashboard with live score
+├── options.html / .css / .js      # Full-page Hardware Studio & Custom Builder
+├── memory/                       # Obsidian-compatible Context & Architecture Vault
+│   ├── INDEX.md                  # Vault index and navigation
+│   ├── project_state.md          # Active state, backlog, and release target
+│   ├── architecture.md           # Low-level technical specifications
+│   ├── decision_log.md           # Architectural Decision Records (ADRs)
+│   ├── changelog.md              # Semantic Versioning release notes
+│   └── test_matrix.md            # CreepJS & BrowserLeaks verification tests
 ├── icons/                        # High-res extension icons (16, 48, 128)
-├── filters/
-│   └── rules.txt                 # AdGuard / uBlock Origin formatted filter list
-├── braveshield-android.user.js   # Universal Android Userscript (55+ features)
-├── braveshield-dns-blocklist.txt # Curated System-Wide DNS Hostlist
-├── ANDROID-SETUP.md              # Complete Android Setup & Deployment Guide
 └── README.md                     # Main documentation
 ```
 

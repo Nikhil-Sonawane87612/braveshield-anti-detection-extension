@@ -28,12 +28,14 @@ document.addEventListener('DOMContentLoaded', async () => {
   const toggleDomjitter = document.getElementById('toggle-domjitter');
   const toggleWebrtc = document.getElementById('toggle-webrtc');
   const toggleBrave = document.getElementById('toggle-brave');
+  const toggleScreenshotevasion = document.getElementById('toggle-screenshotevasion');
 
   // Web Automation & Acceleration Switches
   const toggleUnshortener = document.getElementById('toggle-unshortener');
   const togglePaywall = document.getElementById('toggle-paywall');
   const toggleTimers = document.getElementById('toggle-timers');
   const toggleMedia = document.getElementById('toggle-media');
+  const toggleMediasniffer = document.getElementById('toggle-mediasniffer');
 
   // Domain & Whitelist Controls
   const statusSite = document.getElementById('status-site');
@@ -198,11 +200,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (toggleDomjitter) toggleDomjitter.checked = res.domJitterEnabled !== false;
     if (toggleWebrtc) toggleWebrtc.checked = res.webrtcShieldEnabled !== false;
     if (toggleBrave) toggleBrave.checked = res.maskBraveApi !== false;
+    if (toggleScreenshotevasion) toggleScreenshotevasion.checked = res.screenshotEvasionEnabled !== false;
 
     if (toggleUnshortener) toggleUnshortener.checked = res.unshortenerEnabled !== false;
     if (togglePaywall) togglePaywall.checked = res.paywallDefuserEnabled !== false;
     if (toggleTimers) toggleTimers.checked = res.autoBypassTimers !== false;
     if (toggleMedia) toggleMedia.checked = res.youtubeAds !== false;
+    if (toggleMediasniffer) toggleMediasniffer.checked = res.mediaSnifferEnabled !== false;
 
     if (res.deviceProfile) {
       selectedProfileId = res.deviceProfile;
@@ -247,6 +251,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (changes.domJitterEnabled !== undefined && toggleDomjitter) toggleDomjitter.checked = changes.domJitterEnabled.newValue !== false;
     if (changes.webrtcShieldEnabled !== undefined && toggleWebrtc) toggleWebrtc.checked = changes.webrtcShieldEnabled.newValue !== false;
     if (changes.maskBraveApi !== undefined && toggleBrave) toggleBrave.checked = changes.maskBraveApi.newValue !== false;
+    if (changes.screenshotEvasionEnabled !== undefined && toggleScreenshotevasion) toggleScreenshotevasion.checked = changes.screenshotEvasionEnabled.newValue !== false;
+
+    if (changes.unshortenerEnabled !== undefined && toggleUnshortener) toggleUnshortener.checked = changes.unshortenerEnabled.newValue !== false;
+    if (changes.paywallDefuserEnabled !== undefined && togglePaywall) togglePaywall.checked = changes.paywallDefuserEnabled.newValue !== false;
+    if (changes.autoBypassTimers !== undefined && toggleTimers) toggleTimers.checked = changes.autoBypassTimers.newValue !== false;
+    if (changes.youtubeAds !== undefined && toggleMedia) toggleMedia.checked = changes.youtubeAds.newValue !== false;
+    if (changes.mediaSnifferEnabled !== undefined && toggleMediasniffer) toggleMediasniffer.checked = changes.mediaSnifferEnabled.newValue !== false;
 
     if (changes.whitelist !== undefined) {
       const list = changes.whitelist.newValue || [];
@@ -279,11 +290,13 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (toggleDomjitter) toggleDomjitter.addEventListener('change', () => chrome.storage.local.set({ domJitterEnabled: toggleDomjitter.checked }));
   if (toggleWebrtc) toggleWebrtc.addEventListener('change', () => chrome.storage.local.set({ webrtcShieldEnabled: toggleWebrtc.checked }));
   if (toggleBrave) toggleBrave.addEventListener('change', () => chrome.storage.local.set({ maskBraveApi: toggleBrave.checked }));
+  if (toggleScreenshotevasion) toggleScreenshotevasion.addEventListener('change', () => chrome.storage.local.set({ screenshotEvasionEnabled: toggleScreenshotevasion.checked }));
 
   if (toggleUnshortener) toggleUnshortener.addEventListener('change', () => chrome.storage.local.set({ unshortenerEnabled: toggleUnshortener.checked }));
   if (togglePaywall) togglePaywall.addEventListener('change', () => chrome.storage.local.set({ paywallDefuserEnabled: togglePaywall.checked }));
   if (toggleTimers) toggleTimers.addEventListener('change', () => chrome.storage.local.set({ autoBypassTimers: toggleTimers.checked }));
   if (toggleMedia) toggleMedia.addEventListener('change', () => chrome.storage.local.set({ youtubeAds: toggleMedia.checked, spotifyUnlocked: toggleMedia.checked, twitchShieldEnabled: toggleMedia.checked }));
+  if (toggleMediasniffer) toggleMediasniffer.addEventListener('change', () => chrome.storage.local.set({ mediaSnifferEnabled: toggleMediasniffer.checked }));
 
   // 8. Instant Domain Whitelist Toggle
   if (btnWhitelist) {

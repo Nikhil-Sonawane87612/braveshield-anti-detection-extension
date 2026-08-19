@@ -54,6 +54,8 @@ chrome.runtime.onInstalled.addListener(() => {
       rightClickEnabled: true,
       videoSpeedEnabled: true,
       autoSkipIntrosEnabled: true,
+      screenshotEvasionEnabled: true,
+      mediaSnifferEnabled: true,
       youtubeAds: true,
       spotifyUnlocked: true,
       twitchShieldEnabled: true,

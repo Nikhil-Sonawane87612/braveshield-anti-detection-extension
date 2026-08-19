@@ -39,6 +39,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const optRightclick = document.getElementById('opt-rightclick');
   const optVideospeed = document.getElementById('opt-videospeed');
   const optAutoskip = document.getElementById('opt-autoskip');
+  const optScreenshotevasion = document.getElementById('opt-screenshotevasion');
+  const optMediasniffer = document.getElementById('opt-mediasniffer');
 
   const statTimeSaved = document.getElementById('stat-time-saved');
   const statTrapsDefused = document.getElementById('stat-traps-defused');
@@ -177,6 +179,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if (optRightclick) optRightclick.checked = res.rightClickEnabled !== false;
     if (optVideospeed) optVideospeed.checked = res.videoSpeedEnabled !== false;
     if (optAutoskip) optAutoskip.checked = res.autoSkipIntrosEnabled !== false;
+    if (optScreenshotevasion) optScreenshotevasion.checked = res.screenshotEvasionEnabled !== false;
+    if (optMediasniffer) optMediasniffer.checked = res.mediaSnifferEnabled !== false;
 
     if (statTimeSaved) statTimeSaved.textContent = formatSeconds(res.timeSavedSeconds || 0);
     if (statTrapsDefused) statTrapsDefused.textContent = (res.trapsNeutralized || 0).toString();
@@ -216,6 +220,8 @@ document.addEventListener('DOMContentLoaded', () => {
       if (changes.rightClickEnabled !== undefined && optRightclick) optRightclick.checked = changes.rightClickEnabled.newValue !== false;
       if (changes.videoSpeedEnabled !== undefined && optVideospeed) optVideospeed.checked = changes.videoSpeedEnabled.newValue !== false;
       if (changes.autoSkipIntrosEnabled !== undefined && optAutoskip) optAutoskip.checked = changes.autoSkipIntrosEnabled.newValue !== false;
+      if (changes.screenshotEvasionEnabled !== undefined && optScreenshotevasion) optScreenshotevasion.checked = changes.screenshotEvasionEnabled.newValue !== false;
+      if (changes.mediaSnifferEnabled !== undefined && optMediasniffer) optMediasniffer.checked = changes.mediaSnifferEnabled.newValue !== false;
 
       if (changes.deviceProfile !== undefined) {
         selectedProfileId = changes.deviceProfile.newValue;
@@ -296,6 +302,8 @@ document.addEventListener('DOMContentLoaded', () => {
   if (optRightclick) optRightclick.addEventListener('change', () => chrome.storage.local.set({ rightClickEnabled: optRightclick.checked }));
   if (optVideospeed) optVideospeed.addEventListener('change', () => chrome.storage.local.set({ videoSpeedEnabled: optVideospeed.checked }));
   if (optAutoskip) optAutoskip.addEventListener('change', () => chrome.storage.local.set({ autoSkipIntrosEnabled: optAutoskip.checked }));
+  if (optScreenshotevasion) optScreenshotevasion.addEventListener('change', () => chrome.storage.local.set({ screenshotEvasionEnabled: optScreenshotevasion.checked }));
+  if (optMediasniffer) optMediasniffer.addEventListener('change', () => chrome.storage.local.set({ mediaSnifferEnabled: optMediasniffer.checked }));
 
   // 5. JSON Backup Export & Import
   if (btnExportBackup) {

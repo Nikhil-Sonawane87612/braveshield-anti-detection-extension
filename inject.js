@@ -229,6 +229,23 @@
   // ─────────────────────────────────────────────────────────────────────────────
   try {
     const AD_SCRIPT_PROBE_REGEX = /pagead2\.googlesyndication\.com|adservice\.google\.com|securepubads\.g\.doubleclick\.net|adnxs\.com|prebid\.js|\/ads?\.js|\/adframe\.js|\/adbanner\.js|\/adsbygoogle\.js|adblockdetector/i;
+    const MEDIA_STREAM_REGEX = /\.(m3u8|mpd|mp4|webm|ts|flv)(\?|$)/i;
+
+    function notifySniffedMedia(url) {
+      if (!url || typeof url !== 'string') return;
+      if (sessionStorage.getItem('bs_mediasniffer_disabled') === 'true') return;
+      try {
+        const match = url.match(MEDIA_STREAM_REGEX);
+        if (match && !url.includes('doubleclick') && !url.includes('googleads') && !url.includes('adservice')) {
+          const format = match[1].toLowerCase();
+          window.postMessage({
+            type: 'bs-media-sniffed',
+            url: url,
+            format: format
+          }, '*');
+        }
+      } catch (_) {}
+    }
 
     if (typeof window.fetch === 'function') {
       const origFetch = window.fetch;
@@ -236,6 +253,7 @@
         try {
           const url = typeof input === 'string' ? input : (input instanceof Request ? input.url : input?.url);
           if (url && typeof url === 'string') {
+            notifySniffedMedia(url);
             if (/^brave:\/\//i.test(url)) {
               return Promise.resolve(new Response('', { status: 404, statusText: 'Not Found' }));
             }
@@ -258,6 +276,7 @@
 
       XMLHttpRequest.prototype.open = makeNative(function(method, url, ...rest) {
         if (typeof url === 'string') {
+          notifySniffedMedia(url);
           if (/^brave:\/\//i.test(url)) {
             this._braveShieldBypass = true;
           } else if (AD_SCRIPT_PROBE_REGEX.test(url)) {
@@ -1608,5 +1627,100 @@
     } catch (_) {}
   })();
 
-  console.log('[BraveShield Bypass Pro] v6.0.0 CreepJS Evasion & Stealth Engine Armed.');
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Module 12: Screenshot & Focus Loss Evasion Shield
+  // ─────────────────────────────────────────────────────────────────────────────
+  (() => {
+    try {
+      if (sessionStorage.getItem('bs_master_disabled') === 'true') return;
+      if (sessionStorage.getItem('bs_screenshotevasion_disabled') === 'true') return;
+      if (isCaptchaHost) return;
+
+      // 1. Visibility Normalization (Always 'visible' and hidden = false)
+      try {
+        if (typeof Document !== 'undefined' && Document.prototype) {
+          Object.defineProperty(Document.prototype, 'visibilityState', {
+            get: makeNative(() => 'visible', 'get visibilityState', 0),
+            configurable: true,
+            enumerable: true
+          });
+          Object.defineProperty(Document.prototype, 'hidden', {
+            get: makeNative(() => false, 'get hidden', 0),
+            configurable: true,
+            enumerable: true
+          });
+          if (Document.prototype.hasFocus) {
+            Document.prototype.hasFocus = makeNative(() => true, 'hasFocus', 0);
+          }
+        }
+      } catch (_) {}
+
+      try {
+        if (typeof document !== 'undefined') {
+          Object.defineProperty(document, 'visibilityState', {
+            get: makeNative(() => 'visible', 'get visibilityState', 0),
+            configurable: true,
+            enumerable: true
+          });
+          Object.defineProperty(document, 'hidden', {
+            get: makeNative(() => false, 'get hidden', 0),
+            configurable: true,
+            enumerable: true
+          });
+          document.hasFocus = makeNative(() => true, 'hasFocus', 0);
+        }
+      } catch (_) {}
+
+      // 2. Event Swallowing: Neutralize blur, visibilitychange, and mouseleave trackers
+      const FOCUS_TRACKING_EVENTS = new Set(['blur', 'visibilitychange', 'mouseleave', 'focusout']);
+      if (typeof EventTarget !== 'undefined' && EventTarget.prototype.addEventListener) {
+        const origAddEventListener = EventTarget.prototype.addEventListener;
+        EventTarget.prototype.addEventListener = makeNative(function(type, listener, options) {
+          if (typeof type === 'string' && FOCUS_TRACKING_EVENTS.has(type.toLowerCase())) {
+            if (this === window || this === document || this === document.body) {
+              const guardedListener = function(event) {
+                if (event && (event.type === 'visibilitychange' || event.type === 'blur' || event.type === 'focusout')) {
+                  return; // Swallow tab focus loss event
+                }
+                if (typeof listener === 'function') {
+                  return listener.apply(this, arguments);
+                } else if (listener && typeof listener.handleEvent === 'function') {
+                  return listener.handleEvent(event);
+                }
+              };
+              return origAddEventListener.call(this, type, guardedListener, options);
+            }
+          }
+          return origAddEventListener.apply(this, arguments);
+        }, 'addEventListener', 2);
+      }
+
+      // 3. Keystroke Masking for Screenshot Shortcuts (PrintScreen, Meta+Shift+S, Cmd+Shift+3/4)
+      const isScreenshotKey = (e) => {
+        if (!e) return false;
+        const code = e.keyCode || e.which;
+        const key = e.key;
+        if (key === 'PrintScreen' || code === 44) return true;
+        // Meta+Shift+S / Ctrl+Shift+S (Snipping tool)
+        if ((e.metaKey || e.ctrlKey) && e.shiftKey && (key === 'S' || key === 's' || code === 83)) return true;
+        // Cmd+Shift+3, 4, 5 (macOS screenshot)
+        if (e.metaKey && e.shiftKey && (key === '3' || key === '4' || key === '5' || code === 51 || code === 52 || code === 53)) return true;
+        return false;
+      };
+
+      const handleKeyBlock = (e) => {
+        if (isScreenshotKey(e)) {
+          e.stopImmediatePropagation();
+          e.stopPropagation();
+        }
+      };
+
+      window.addEventListener('keydown', handleKeyBlock, true);
+      window.addEventListener('keyup', handleKeyBlock, true);
+      document.addEventListener('keydown', handleKeyBlock, true);
+      document.addEventListener('keyup', handleKeyBlock, true);
+    } catch (_) {}
+  })();
+
+  console.log('[BraveShield Bypass Pro] v6.0.2 CreepJS, Screenshot Evasion & Media Sniffer Armed.');
 })();

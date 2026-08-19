@@ -120,6 +120,12 @@
       if (res.autoSkipIntrosEnabled === false) sessionStorage.setItem('bs_autoskip_disabled', 'true');
       else sessionStorage.removeItem('bs_autoskip_disabled');
 
+      if (res.screenshotEvasionEnabled === false) sessionStorage.setItem('bs_screenshotevasion_disabled', 'true');
+      else sessionStorage.removeItem('bs_screenshotevasion_disabled');
+
+      if (res.mediaSnifferEnabled === false) sessionStorage.setItem('bs_mediasniffer_disabled', 'true');
+      else sessionStorage.removeItem('bs_mediasniffer_disabled');
+
       if (res.deviceProfile) sessionStorage.setItem('bs_device_profile', res.deviceProfile);
       if (res.customHardwareProfile) sessionStorage.setItem('bs_custom_hardware', JSON.stringify(res.customHardwareProfile));
       if (res.webglVendor) sessionStorage.setItem('bs_webgl_vendor', res.webglVendor);
@@ -160,11 +166,18 @@
       }
     } else if (e.data && e.data.type === 'bs-direct-link' && e.data.url) {
       renderDirectLinkHud(e.data.url);
+    } else if (e.data && e.data.type === 'bs-media-sniffed' && e.data.url) {
+      latestSniffedMediaUrl = e.data.url;
+      sniffedMediaRegistry.add(e.data.url);
+      mountVideoSnifferOverlays();
     }
   });
 
   // 3. Feature A: Floating Obsidian-Neon Direct Link HUD
   let hudRendered = false;
+  let latestSniffedMediaUrl = '';
+  const sniffedMediaRegistry = new Set();
+
   function renderDirectLinkHud(targetUrl) {
     if (hudRendered || !targetUrl) return;
 
@@ -427,6 +440,134 @@
     } catch (_) {}
   }
 
+  // 7. Universal DOM Video HUD & Stream Sniffer Overlay (Shadow DOM)
+  function mountVideoSnifferOverlays() {
+    try {
+      if (sessionStorage.getItem('bs_master_disabled') === 'true') return;
+      if (sessionStorage.getItem('bs_mediasniffer_disabled') === 'true') return;
+
+      const videos = document.querySelectorAll('video');
+      videos.forEach(video => {
+        if (!video || video._bsSnifferMounted) return;
+        const parent = video.parentElement || video.parentNode;
+        if (!parent || parent.tagName === 'BODY' || parent.tagName === 'HTML') return;
+
+        video._bsSnifferMounted = true;
+
+        try {
+          const pStyle = window.getComputedStyle(parent);
+          if (pStyle && pStyle.position === 'static') {
+            parent.style.position = 'relative';
+          }
+
+          const host = document.createElement('div');
+          host.className = 'bs-sniffer-shadow-host';
+          host.style.cssText = `
+            position: absolute !important;
+            top: 10px !important;
+            right: 10px !important;
+            z-index: 2147483647 !important;
+            pointer-events: auto !important;
+          `;
+
+          const shadow = host.attachShadow({ mode: 'open' });
+          shadow.innerHTML = `
+            <style>
+              .sniffer-pill {
+                background: rgba(11, 15, 23, 0.88);
+                border: 1px solid rgba(16, 185, 129, 0.45);
+                border-radius: 20px;
+                padding: 5px 12px;
+                display: inline-flex;
+                align-items: center;
+                gap: 6px;
+                backdrop-filter: blur(12px);
+                -webkit-backdrop-filter: blur(12px);
+                box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6), 0 0 12px rgba(16, 185, 129, 0.2);
+                color: #f3f4f6;
+                font-family: system-ui, -apple-system, sans-serif;
+                font-size: 11.5px;
+                font-weight: 700;
+                cursor: pointer;
+                transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+                user-select: none;
+                line-height: 1.4;
+              }
+              .sniffer-pill:hover {
+                background: rgba(17, 24, 39, 0.95);
+                border-color: #10b981;
+                box-shadow: 0 4px 20px rgba(16, 185, 129, 0.4);
+                transform: translateY(-1px);
+              }
+              .sniffer-icon {
+                color: #10b981;
+                font-size: 12px;
+              }
+              .copied {
+                color: #10b981 !important;
+                border-color: #10b981 !important;
+              }
+            </style>
+            <div class="sniffer-pill" id="btn-copy" title="Click to copy stream URL (or Right-Click to open in new tab)">
+              <span class="sniffer-icon">🔗</span>
+              <span id="btn-text">Copy Stream</span>
+            </div>
+          `;
+
+          const btn = shadow.getElementById('btn-copy');
+          const btnText = shadow.getElementById('btn-text');
+
+          function getTargetMediaUrl() {
+            if (latestSniffedMediaUrl) return latestSniffedMediaUrl;
+            if (video.currentSrc) return video.currentSrc;
+            if (video.src) return video.src;
+            const source = video.querySelector('source');
+            if (source && source.src) return source.src;
+            return '';
+          }
+
+          if (btn && btnText) {
+            btn.addEventListener('click', (e) => {
+              e.stopPropagation();
+              e.preventDefault();
+              const targetUrl = getTargetMediaUrl();
+              if (targetUrl) {
+                try {
+                  navigator.clipboard.writeText(targetUrl).then(() => {
+                    btnText.textContent = '✅ Copied!';
+                    btn.classList.add('copied');
+                    setTimeout(() => {
+                      btnText.textContent = 'Copy Stream';
+                      btn.classList.remove('copied');
+                    }, 2000);
+                  }).catch(() => {
+                    btnText.textContent = '⚠️ Copied Link';
+                  });
+                } catch (_) {
+                  btnText.textContent = '✅ Copied!';
+                }
+              } else {
+                btnText.textContent = '⏳ Sniffing...';
+                setTimeout(() => { btnText.textContent = 'Copy Stream'; }, 1500);
+              }
+            });
+
+            btn.addEventListener('contextmenu', (e) => {
+              e.stopPropagation();
+              e.preventDefault();
+              const targetUrl = getTargetMediaUrl();
+              if (targetUrl) {
+                window.open(targetUrl, '_blank');
+              }
+            });
+          }
+
+          parent.appendChild(host);
+        } catch (_) {}
+      });
+    } catch (_) {}
+  }
+
   let cScanTimer = null;
   function debouncedContentScan() {
     if (cScanTimer) return;
@@ -434,6 +575,7 @@
       annihilateAntiAdblockModals();
       purgeInvisibleOverlays();
       fastPassButtons();
+      mountVideoSnifferOverlays();
       cScanTimer = null;
     }, 400);
   }
@@ -442,6 +584,7 @@
   annihilateAntiAdblockModals();
   purgeInvisibleOverlays();
   fastPassButtons();
+  mountVideoSnifferOverlays();
   const trapInterval = setInterval(debouncedContentScan, 800);
   setTimeout(() => clearInterval(trapInterval), 30000);
 

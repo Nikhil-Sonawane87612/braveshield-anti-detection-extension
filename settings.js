@@ -32,11 +32,13 @@ const SETTINGS_MAP = {
   'prevent-webrtc': 'preventWebRTC',
   'auto-deny-perm': 'autoDenyPermissions',
   'clamp-timers': 'clampTimers',
-  // Media Enhancements
+  // Media Enhancements & Evasion
   'youtube-ads': 'youtubeAds',
   'spotify-unlocked': 'spotifyUnlocked',
   'twitch-shield': 'twitchShieldEnabled',
-  'video-speed': 'videoTurboAdSpeed'
+  'video-speed': 'videoTurboAdSpeed',
+  'screenshot-evasion': 'screenshotEvasionEnabled',
+  'media-sniffer': 'mediaSnifferEnabled'
 };
 
 const CATEGORIES = {

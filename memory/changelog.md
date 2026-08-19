@@ -1,5 +1,21 @@
 # 📦 Semantic Version Changelog
 
+## [v6.0.2] - 2026-08-19 (Screenshot/Focus Evasion Shield & Universal Media Sniffer HUD)
+
+### 📸 Screenshot & Focus Loss Evasion Shield
+- **Visibility Normalization**: Enforced `document.visibilityState` to always return `"visible"` and `document.hidden` to always return `false` with native-code wrapped getters.
+- **Focus Loss Event Swallowing**: Intercepted `EventTarget.prototype.addEventListener` for `blur`, `visibilitychange`, `mouseleave`, and `focusout` to prevent tracking of backgrounding, alt-tabbing, or snipping tool activation.
+- **Screenshot Hotkey Masking**: Intercepted `PrintScreen`, `Meta+Shift+S`, and `Cmd+Shift+3/4/5` key combinations to block web-based screen capture detectors while preserving native OS clipping functionality.
+
+### 📹 Universal Media Sniffer HUD
+- **Network Stream Sniffing**: Deeply hooked `window.fetch` and `XMLHttpRequest.prototype.open` to intercept active HLS (`.m3u8`), DASH (`.mpd`), MP4 (`.mp4`), WebM, and FLV video stream URLs.
+- **Shadow DOM Video Pill**: Injected an isolated Shadow DOM pill overlay positioned at `top: 10px; right: 10px;` of all `<video>` element containers with 1-click clipboard stream URL copying and right-click open-in-tab actions.
+
+### 🎛️ UI & Settings Sync
+- **Cockpit Controls**: Added dedicated toggles for Screenshot & Focus Shield and Universal Media Sniffer HUD in both `popup.html` and `options.html` with bidirectional live storage sync.
+
+---
+
 ## [v6.0.1] - 2026-08-18 (Stitch Cyber-Dark UI & Dual Auto-Updater Release)
 
 ### 🎨 Stitch Cyber-Dark Design System & HUD Overhaul

@@ -14,12 +14,21 @@
 (() => {
   'use strict';
 
+  const href = (window.location && window.location.href) ? window.location.href.toLowerCase() : '';
   const host = (window.location && window.location.hostname) ? window.location.hostname.toLowerCase() : '';
+  const path = (window.location && window.location.pathname) ? window.location.pathname.toLowerCase() : '';
 
   // ─────────────────────────────────────────────────────────────────────────────
   // ZERO-TOUCH PASSTHROUGH FOR ALL INDUSTRY CAPTCHA PROVIDERS & INTERSTITIALS
   // ─────────────────────────────────────────────────────────────────────────────
   const isCaptchaHost = (
+    host.includes('recaptcha') ||
+    host.includes('hcaptcha') ||
+    host.includes('turnstile') ||
+    host.includes('arkoselabs') ||
+    host.includes('funcaptcha') ||
+    host.includes('geetest') ||
+    host.includes('awswaf') ||
     host.includes('challenges.cloudflare.com') ||
     host.includes('recaptcha.net') ||
     host.includes('hcaptcha.com') ||
@@ -37,8 +46,13 @@
     host.includes('captcha-delivery.com') ||
     host.includes('perimeterx.net') ||
     host.includes('kasada.io') ||
-    (host.includes('google.com') && window.location.pathname.includes('/recaptcha/')) ||
-    (host.includes('cloudflare.com') && window.location.pathname.includes('/cdn-cgi/challenge-platform/')) ||
+    href.includes('/recaptcha/') ||
+    href.includes('recaptcha/api') ||
+    href.includes('/turnstile/') ||
+    href.includes('/hcaptcha/') ||
+    (host.includes('google.com') && (path.includes('/recaptcha/') || href.includes('recaptcha'))) ||
+    (host.includes('gstatic.com') && (path.includes('/recaptcha/') || href.includes('recaptcha'))) ||
+    (host.includes('cloudflare.com') && (path.includes('/cdn-cgi/challenge-platform/') || href.includes('challenge-platform'))) ||
     typeof window._cf_chl_opt !== 'undefined' ||
     typeof window._cf_chl_ctx !== 'undefined' ||
     document.getElementById('challenge-stage') ||
@@ -52,7 +66,7 @@
     return isCaptchaHost;
   }
 
-  // If inside ANY Captcha iframe or security challenge interstitial, exit immediately with 100% zero-touch!
+  // If inside ANY Captcha iframe, host, or security challenge interstitial, exit immediately with 100% zero-touch!
   if (isCaptchaHost) {
     return;
   }
@@ -228,6 +242,7 @@
   // 2.6. BRAVE SCHEME CLOAKING & AD PROBE MOCKING (fetch & XMLHttpRequest)
   // ─────────────────────────────────────────────────────────────────────────────
   try {
+    const CAPTCHA_AUTH_URL_REGEX = /recaptcha|hcaptcha|turnstile|arkose|funcaptcha|geetest|awswaf|challenges\.cloudflare\.com|recaptcha\.net|google\.com\/recaptcha|gstatic\.com\/recaptcha|smartcaptcha|friendlycaptcha|perimeterx|kasada/i;
     const AD_SCRIPT_PROBE_REGEX = /pagead2\.googlesyndication\.com|adservice\.google\.com|securepubads\.g\.doubleclick\.net|adnxs\.com|prebid\.js|\/ads?\.js|\/adframe\.js|\/adbanner\.js|\/adsbygoogle\.js|adblockdetector/i;
     const MEDIA_STREAM_REGEX = /\.(m3u8|mpd|mp4|webm|ts|flv)(\?|$)/i;
 
@@ -235,8 +250,9 @@
       if (!url || typeof url !== 'string') return;
       if (sessionStorage.getItem('bs_mediasniffer_disabled') === 'true') return;
       try {
+        if (CAPTCHA_AUTH_URL_REGEX.test(url)) return;
         const match = url.match(MEDIA_STREAM_REGEX);
-        if (match && !url.includes('doubleclick') && !url.includes('googleads') && !url.includes('adservice')) {
+        if (match && !url.includes('doubleclick') && !url.includes('googleads') && !url.includes('adservice') && !url.includes('google.com') && !url.includes('gstatic.com')) {
           const format = match[1].toLowerCase();
           window.postMessage({
             type: 'bs-media-sniffed',
@@ -253,6 +269,11 @@
         try {
           const url = typeof input === 'string' ? input : (input instanceof Request ? input.url : input?.url);
           if (url && typeof url === 'string') {
+            // STRICT ZERO-TOUCH: Immediately passthrough all Captcha / Auth network calls without modification
+            if (CAPTCHA_AUTH_URL_REGEX.test(url)) {
+              return origFetch.apply(window, arguments);
+            }
+
             notifySniffedMedia(url);
             if (/^brave:\/\//i.test(url)) {
               return Promise.resolve(new Response('', { status: 404, statusText: 'Not Found' }));
@@ -276,6 +297,11 @@
 
       XMLHttpRequest.prototype.open = makeNative(function(method, url, ...rest) {
         if (typeof url === 'string') {
+          // STRICT ZERO-TOUCH: Immediately passthrough all Captcha / Auth network calls
+          if (CAPTCHA_AUTH_URL_REGEX.test(url)) {
+            return origXHROpen.apply(this, [method, url, ...rest]);
+          }
+
           notifySniffedMedia(url);
           if (/^brave:\/\//i.test(url)) {
             this._braveShieldBypass = true;

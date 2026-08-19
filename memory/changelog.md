@@ -1,5 +1,19 @@
 # 📦 Semantic Version Changelog
 
+## [v6.0.3] - 2026-08-19 (reCAPTCHA & Auth Provider Network Immunity)
+
+### 🛡️ Zero-Touch Captcha Network Passthrough (`inject.js`)
+- **Direct fetch & XHR Passthrough**: Implemented raw bypass in `window.fetch` and `XMLHttpRequest.prototype.open` for all URLs matching `recaptcha`, `hcaptcha`, `turnstile`, `arkose`, `funcaptcha`, `geetest`, `awswaf`, `smartcaptcha`, and `friendlycaptcha` without Promise manipulation, mock interception, or media sniffing interference.
+- **Strict Header & Credential Preservation**: Guaranteed that credentials, origin headers, and CORS cookies are untouched across all auth verification requests.
+- **Global Challenge Frame Escape**: Expanded `isCaptchaHost` at the top of `inject.js` to immediately halt all native function proxies and stealth hooks whenever executed inside a Captcha iframe, host, or security challenge interstitial.
+
+### 🧩 Invisible Captcha Container Protection (`content.js`)
+- **Ancestor & Descendant Immunity**: Hardened `isProtectedCaptchaOrAuth` with full selector hierarchy (`.matches`, `.closest`, `.querySelector`) protecting all Google reCAPTCHA (`.grecaptcha-badge`, `.g-recaptcha-bubble`, `#g-recaptcha-response`), hCaptcha, and Cloudflare Turnstile containers.
+- **Preserved Invisible Token Layout**: Refactored `ensureCaptchasVisible` to avoid mutating layout coordinates or CSS positions of invisible badges and token elements.
+- **Overlay Exemption**: Prevented `purgeInvisibleOverlays` from modifying or hiding any invisible full-page containers that house verification iframes or token fields.
+
+---
+
 ## [v6.0.2] - 2026-08-19 (Screenshot/Focus Evasion Shield & Universal Media Sniffer HUD)
 
 ### 📸 Screenshot & Focus Loss Evasion Shield

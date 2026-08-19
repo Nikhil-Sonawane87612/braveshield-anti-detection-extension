@@ -261,34 +261,62 @@
   const ADBLOCK_MODAL_TEXT_REGEX = /adblock(?:er)?\s+detected|browser\s+not\s+allowed|brave\s+browser\s+is\s+not\s+allowed|brave\s+browser\s+is\s+not\s+supported|open\s+this\s+page\s+in\s+google\s+chrome|disable\s+(?:your\s+)?ad\s*blocker|disable\s+(?:your\s+)?private\s+dns|ad\s*blocker\/vpn\/proxy|vpn\/proxy\/custom\s+dns|using\s+an\s+ad\s*blocker|custom\s+dns|please\s+consider\s+disabling\s+it|turn\s+off\s+adblock|ad\s*block\s+detected|please\s+whitelist|adblocker\s+is\s+detected|i've\s+disabled\s+adblocker|ad\s*blocker\s+found|ad\s*block\s+shield|block\s+adblock|adblocker\s+notice/i;
 
   function isProtectedCaptchaOrAuth(el) {
-    if (!el) return false;
+    if (!el || !(el instanceof Element)) return false;
     const host = (window.location.hostname || '').toLowerCase();
+    const href = (window.location.href || '').toLowerCase();
+
+    // 1. Host-level Immunity for Captcha Providers & Auth Gateways
     if (
-      host.includes('challenges.cloudflare.com') || host.includes('recaptcha.net') || host.includes('google.com') ||
+      host.includes('recaptcha') || host.includes('hcaptcha') || host.includes('turnstile') ||
+      host.includes('challenges.cloudflare.com') || host.includes('recaptcha.net') ||
+      host.includes('google.com') || host.includes('gstatic.com') ||
       host.includes('hcaptcha.com') || host.includes('accounts.spotify.com') || host.includes('challenge.spotify.com') ||
       host.includes('arkoselabs.com') || host.includes('funcaptcha.com') || host.includes('geetest.com') ||
       host.includes('awswaf.com') || host.includes('mtcaptcha.com') || host.includes('leminnow.com') ||
       host.includes('smartcaptcha.yandexcloud.net') || host.includes('captcha-api.yandex.ru') ||
       host.includes('capy.me') || host.includes('friendlycaptcha.com') || host.includes('friendlycaptcha.eu') ||
-      host.includes('captcha-delivery.com') || host.includes('perimeterx.net') || host.includes('kasada.io')
+      host.includes('captcha-delivery.com') || host.includes('perimeterx.net') || host.includes('kasada.io') ||
+      href.includes('/recaptcha/') || href.includes('recaptcha/api') || href.includes('/turnstile/') || href.includes('/hcaptcha/')
     ) return true;
 
-    const htmlSnippet = (el.outerHTML || '').slice(0, 1200).toLowerCase();
+    // 2. Comprehensive CSS Selector matching on el, its parents/ancestors, and descendants
+    const CAPTCHA_SELECTORS = [
+      'iframe[src*="recaptcha"]', 'iframe[src*="hcaptcha"]', 'iframe[src*="turnstile"]',
+      'iframe[src*="cloudflare"]', 'iframe[src*="arkose"]', 'iframe[src*="funcaptcha"]',
+      'iframe[src*="geetest"]', 'iframe[src*="awswaf"]', 'iframe[src*="mtcaptcha"]',
+      'iframe[src*="lemin"]', 'iframe[src*="smartcaptcha"]', 'iframe[src*="capy"]',
+      'iframe[src*="friendlycaptcha"]', 'iframe[src*="captcha-delivery"]',
+      '.g-recaptcha', '.g-recaptcha-bubble', '.grecaptcha-badge', '.grecaptcha-logo',
+      '.h-captcha', '.hcaptcha-box', '.cf-turnstile', '.geetest_holder', '#aws-waf-captcha',
+      '.mtcaptcha', '#lemin-cropped-captcha', '.smart-captcha', '.frc-captcha',
+      '#challenge-stage', '#cf-wrapper', '#g-recaptcha-response', '[name="g-recaptcha-response"]',
+      '[name="h-captcha-response"]', '[name="cf-turnstile-response"]', '[data-sitekey]',
+      '[class*="recaptcha"]', '[id*="recaptcha"]', '[class*="hcaptcha"]', '[id*="hcaptcha"]',
+      '[class*="turnstile"]', '[id*="turnstile"]', '[class*="geetest"]', '[id*="geetest"]'
+    ].join(', ');
+
+    try {
+      if (el.matches && el.matches(CAPTCHA_SELECTORS)) return true;
+      if (el.closest && el.closest(CAPTCHA_SELECTORS)) return true;
+      if (el.querySelector && el.querySelector(CAPTCHA_SELECTORS)) return true;
+    } catch (_) {}
+
+    // 3. String & Attribute inspection
+    const htmlSnippet = (el.outerHTML || '').slice(0, 1500).toLowerCase();
     const textSnippet = (el.innerText || el.textContent || '').toLowerCase();
 
-    // Check for all 14 known industry Captcha & verification systems
     if (
-      htmlSnippet.includes('arkose') || htmlSnippet.includes('funcaptcha') ||
       htmlSnippet.includes('recaptcha') || htmlSnippet.includes('hcaptcha') ||
       htmlSnippet.includes('turnstile') || htmlSnippet.includes('cf-chl') ||
       htmlSnippet.includes('challenge-form') || htmlSnippet.includes('geetest') ||
+      htmlSnippet.includes('arkose') || htmlSnippet.includes('funcaptcha') ||
       htmlSnippet.includes('g-recaptcha') || htmlSnippet.includes('h-captcha') ||
       htmlSnippet.includes('cf-turnstile') || htmlSnippet.includes('challenges.cloudflare') ||
       htmlSnippet.includes('awswaf') || htmlSnippet.includes('mtcaptcha') ||
       htmlSnippet.includes('lemin') || htmlSnippet.includes('smartcaptcha') ||
       htmlSnippet.includes('capy') || htmlSnippet.includes('friendlycaptcha') ||
       htmlSnippet.includes('captcha-delivery') || htmlSnippet.includes('perimeterx') ||
-      htmlSnippet.includes('kasada')
+      htmlSnippet.includes('kasada') || htmlSnippet.includes('data-sitekey')
     ) return true;
 
     if (
@@ -303,26 +331,22 @@
       textSnippet.includes('verifying you are human')
     ) return true;
 
-    if (el.querySelector && el.querySelector('iframe[src*="arkose"], iframe[src*="funcaptcha"], iframe[src*="recaptcha"], iframe[src*="hcaptcha"], iframe[src*="turnstile"], iframe[src*="cloudflare"], iframe[src*="geetest"], iframe[src*="awswaf"], iframe[src*="mtcaptcha"], iframe[src*="lemin"], iframe[src*="smartcaptcha"], iframe[src*="capy"], iframe[src*="friendlycaptcha"], iframe[src*="captcha-delivery"], .g-recaptcha, .h-captcha, .cf-turnstile, .geetest_holder, #aws-waf-captcha, .mtcaptcha, #lemin-cropped-captcha, .smart-captcha, .frc-captcha, #challenge-stage, #cf-wrapper, [data-sitekey]')) return true;
-
     return false;
   }
 
   function ensureCaptchasVisible() {
     try {
+      // Only un-hide visible interactive captcha containers if hidden, never alter invisible badges/tokens
       const captchaNodes = document.querySelectorAll(
-        '.g-recaptcha, .h-captcha, .cf-turnstile, .geetest_holder, #aws-waf-captcha, .mtcaptcha, #lemin-cropped-captcha, .smart-captcha, .frc-captcha, [data-sitekey], ' +
-        'iframe[src*="recaptcha"], iframe[src*="hcaptcha"], iframe[src*="turnstile"], iframe[src*="cloudflare"], iframe[src*="arkose"], iframe[src*="funcaptcha"], iframe[src*="geetest"], iframe[src*="awswaf"], iframe[src*="mtcaptcha"], iframe[src*="lemin"], iframe[src*="smartcaptcha"], iframe[src*="capy"], iframe[src*="friendlycaptcha"], iframe[src*="captcha-delivery"], ' +
-        '#challenge-stage, #cf-wrapper, div[class*="recaptcha"], div[class*="hcaptcha"], div[class*="turnstile"], div[class*="geetest"], ' +
-        '#imnotrobot, #btn6, #btn-captcha, .btn-captcha, #captcha-btn'
+        '.g-recaptcha:not(.grecaptcha-badge), .h-captcha, .cf-turnstile, .geetest_holder, #aws-waf-captcha, .mtcaptcha, .frc-captcha'
       );
       for (const c of captchaNodes) {
-        c.style.setProperty('display', 'inline-block', 'important');
-        c.style.setProperty('visibility', 'visible', 'important');
-        c.style.setProperty('opacity', '1', 'important');
-        c.style.setProperty('pointer-events', 'auto', 'important');
-        c.style.setProperty('z-index', '2147483647', 'important');
-        c.style.setProperty('position', 'relative', 'important');
+        const style = window.getComputedStyle ? window.getComputedStyle(c) : null;
+        if (style && style.display === 'none') {
+          c.style.setProperty('display', 'block', 'important');
+          c.style.setProperty('visibility', 'visible', 'important');
+          c.style.setProperty('opacity', '1', 'important');
+        }
       }
     } catch (_) {}
   }
@@ -376,6 +400,9 @@
       for (const el of candidates) {
         if (!el || el._bsContentOverlayNeutralized || isProtectedCaptchaOrAuth(el)) continue;
         if (el === document.body || el === document.documentElement || el.id?.startsWith('bs-')) continue;
+
+        // Strictly ignore anything containing iframes, tokens, or form controls
+        if (el.querySelector && el.querySelector('iframe, textarea, input, form, video, [data-sitekey], [class*="recaptcha"], [id*="recaptcha"]')) continue;
 
         const style = window.getComputedStyle ? window.getComputedStyle(el) : null;
         if (!style) continue;

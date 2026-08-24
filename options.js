@@ -57,6 +57,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
   let selectedProfileId = 'win-rtx4090';
 
+  // Dynamic version from manifest — single source of truth
+  const verPill = document.getElementById('studio-ver-pill');
+  if (verPill) {
+    try { verPill.textContent = 'v' + chrome.runtime.getManifest().version; } catch (_) { verPill.textContent = ''; }
+  }
+
   function formatSeconds(secs) {
     if (!secs || secs < 0) return '0s';
     if (secs < 60) return `${secs}s`;

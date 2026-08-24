@@ -9,9 +9,9 @@ const GITHUB_MANIFEST_URL = 'https://raw.githubusercontent.com/Nikhil-Sonawane87
 
 function getLocalVersion() {
   try {
-    return chrome.runtime.getManifest().version || '6.0.1';
+    return chrome.runtime.getManifest().version || 'unknown';
   } catch (_) {
-    return '6.0.1';
+    return 'unknown';
   }
 }
 

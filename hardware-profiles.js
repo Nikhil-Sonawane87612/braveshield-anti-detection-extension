@@ -1,7 +1,7 @@
 /**
- * BraveShield Bypass Pro — Hardware Profiles Catalog (100+ Presets)
- * Version: 5.4.0
+ * BraveShield Bypass Pro — Hardware Profiles Catalog (110+ Presets)
  * Comprehensive spoofing definitions covering Windows, macOS, Linux, Android, and iOS.
+ * Loaded into the MAIN world (manifest content_scripts) and both extension pages.
  */
 
 const HARDWARE_PROFILES_CATALOG = [

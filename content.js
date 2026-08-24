@@ -86,29 +86,51 @@
   } catch (_) {}
 
 
-  // 2. Feature D: Live Telemetry Event Listener & Incrementor
+  // ─────────────────────────────────────────────────────────────────────────────
+  // 2. Live Telemetry Event Listener & Incrementor
+  // Security: only accept same-frame messages from the MAIN world, restrict
+  // counters to a known key set and clamp deltas so hostile pages cannot
+  // forge or flood stats.
+  // ─────────────────────────────────────────────────────────────────────────────
+  const BS_VALID_STATS = new Set(['timeSavedSeconds', 'trapsNeutralized', 'directLinksUnlocked']);
+
   window.addEventListener('message', (e) => {
-    if (e.data && e.data.type === 'bs-telemetry-event') {
-      const { stat, delta } = e.data;
-      if (stat && typeof delta === 'number' && delta > 0) {
-        try {
-          chrome.storage.local.get(['timeSavedSeconds', 'trapsNeutralized', 'directLinksUnlocked'], (res) => {
-            const current = (res && res[stat]) ? res[stat] : 0;
-            const update = {};
-            update[stat] = current + delta;
-            chrome.storage.local.set(update);
-          });
-        } catch (_) {}
+    try {
+      if (e.source !== window || !e.data || typeof e.data !== 'object') return;
+
+      if (e.data.type === 'bs-telemetry-event') {
+        const { stat, delta } = e.data;
+        if (!BS_VALID_STATS.has(stat)) return;
+        const inc = Math.floor(Number(delta));
+        if (!Number.isFinite(inc) || inc <= 0 || inc > 50) return;
+        chrome.storage.local.get([stat], (res) => {
+          const current = (res && typeof res[stat] === 'number') ? res[stat] : 0;
+          chrome.storage.local.set({ [stat]: Math.min(9_999_999, current + inc) });
+        });
+      } else if (e.data.type === 'bs-direct-link' && typeof e.data.url === 'string') {
+        renderDirectLinkHud(e.data.url);
       }
-    } else if (e.data && e.data.type === 'bs-direct-link' && e.data.url) {
-      renderDirectLinkHud(e.data.url);
-    }
+    } catch (_) {}
   });
 
+  // Only absolute http(s) URLs may ever reach the HUD renderer.
+  function bsSafeHudUrl(raw) {
+    if (typeof raw !== 'string' || raw.length > 2048) return null;
+    try {
+      const u = new URL(raw);
+      return (u.protocol === 'https:' || u.protocol === 'http:') ? u.href : null;
+    } catch (_) {
+      return null;
+    }
+  }
+
   // 3. Feature A: Floating Obsidian-Neon Direct Link HUD
+  // Built exclusively with DOM APIs + textContent — the target URL is never
+  // interpolated into markup, so hostile pages cannot inject HTML.
   let hudRendered = false;
   function renderDirectLinkHud(targetUrl) {
-    if (hudRendered || !targetUrl) return;
+    const safeUrl = bsSafeHudUrl(targetUrl);
+    if (hudRendered || !safeUrl) return;
 
     function mountHud() {
       const container = document.body || document.documentElement;
@@ -118,57 +140,67 @@
       try {
         const bar = document.createElement('div');
         bar.id = 'bs-direct-link-bar';
-        bar.innerHTML = `
-          <div style="display:flex; align-items:center; gap:10px;">
-            <span style="font-size:16px;">âš¡</span>
-            <span style="font-weight:700; color:#00ffcc; letter-spacing:0.5px;">Direct Link Detected:</span>
-            <span style="max-width:240px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:#a0aec0; font-size:12px;">${targetUrl}</span>
-          </div>
-          <div style="display:flex; align-items:center; gap:8px;">
-            <button id="bs-copy-hud" style="background:rgba(255,255,255,0.1); color:#00ffcc; border:1px solid rgba(0,255,204,0.3); font-weight:700; font-size:11px; padding:6px 10px; border-radius:6px; cursor:pointer; transition:all 0.2s ease;">ðŸ“‹ Copy</button>
-            <a href="${targetUrl}" target="_blank" rel="noopener noreferrer" style="background:linear-gradient(135deg, #00ffcc, #0077ff); color:#000; font-weight:800; font-size:12px; padding:6px 14px; border-radius:6px; text-decoration:none; text-transform:uppercase; letter-spacing:0.5px; box-shadow:0 0 12px rgba(0,255,204,0.4); cursor:pointer;">Jump Directly â†—</a>
-            <button id="bs-close-hud" style="background:transparent; border:none; color:#718096; font-size:16px; cursor:pointer; padding:2px 6px;">âœ•</button>
-          </div>
-        `;
         bar.style.cssText = `
-          position: fixed !important;
-          top: 14px !important;
-          right: 14px !important;
-          z-index: 2147483647 !important;
-          background: rgba(10, 15, 25, 0.94) !important;
+          position: fixed !important; top: 14px !important; right: 14px !important;
+          z-index: 2147483647 !important; background: rgba(10, 15, 25, 0.94) !important;
           border: 1px solid rgba(0, 255, 204, 0.4) !important;
           box-shadow: 0 8px 32px rgba(0, 0, 0, 0.8), 0 0 15px rgba(0, 255, 204, 0.2) !important;
-          backdrop-filter: blur(12px) !important;
-          border-radius: 10px !important;
-          padding: 10px 16px !important;
-          display: flex !important;
-          align-items: center !important;
-          justify-content: space-between !important;
-          gap: 16px !important;
+          backdrop-filter: blur(12px) !important; border-radius: 10px !important;
+          padding: 10px 16px !important; display: flex !important; align-items: center !important;
+          justify-content: space-between !important; gap: 16px !important;
           font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
-          font-size: 13px !important;
-          color: #fff !important;
-          animation: bsSlideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+          font-size: 13px !important; color: #fff !important;
         `;
 
-        const style = document.createElement('style');
-        style.textContent = `@keyframes bsSlideIn { from { transform: translateY(-30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }`;
-        document.head ? document.head.appendChild(style) : container.appendChild(style);
+        const left = document.createElement('div');
+        left.style.cssText = 'display:flex; align-items:center; gap:10px;';
+        const glyph = document.createElement('span');
+        glyph.textContent = '⚡';
+        glyph.style.fontSize = '16px';
+        const label = document.createElement('span');
+        label.textContent = 'Direct Link Detected:';
+        label.style.cssText = 'font-weight:700; color:#00ffcc; letter-spacing:0.5px;';
+        const urlSpan = document.createElement('span');
+        urlSpan.textContent = safeUrl;
+        urlSpan.title = safeUrl;
+        urlSpan.style.cssText = 'max-width:240px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:#a0aec0; font-size:12px;';
+        left.append(glyph, label, urlSpan);
 
-        container.appendChild(bar);
+        const right = document.createElement('div');
+        right.style.cssText = 'display:flex; align-items:center; gap:8px;';
 
-        document.getElementById('bs-copy-hud')?.addEventListener('click', () => {
+        const copyBtn = document.createElement('button');
+        copyBtn.textContent = '📋 Copy';
+        copyBtn.style.cssText = 'background:rgba(255,255,255,0.1); color:#00ffcc; border:1px solid rgba(0,255,204,0.3); font-weight:700; font-size:11px; padding:6px 10px; border-radius:6px; cursor:pointer; transition:all 0.2s ease;';
+        copyBtn.addEventListener('click', () => {
           try {
-            navigator.clipboard.writeText(targetUrl);
-            const btn = document.getElementById('bs-copy-hud');
-            if (btn) {
-              btn.textContent = 'âœ… Copied!';
-              setTimeout(() => { btn.textContent = 'ðŸ“‹ Copy'; }, 2000);
-            }
+            navigator.clipboard.writeText(safeUrl);
+            copyBtn.textContent = '✅ Copied!';
+            setTimeout(() => { copyBtn.textContent = '📋 Copy'; }, 2000);
           } catch (_) {}
         });
 
-        document.getElementById('bs-close-hud')?.addEventListener('click', () => bar.remove());
+        const jump = document.createElement('a');
+        jump.href = safeUrl;
+        jump.target = '_blank';
+        jump.rel = 'noopener noreferrer';
+        jump.textContent = 'Jump Directly ↗';
+        jump.style.cssText = 'background:linear-gradient(135deg, #00ffcc, #0077ff); color:#000; font-weight:800; font-size:12px; padding:6px 14px; border-radius:6px; text-decoration:none; text-transform:uppercase; letter-spacing:0.5px; box-shadow:0 0 12px rgba(0,255,204,0.4);';
+
+        const closeBtn = document.createElement('button');
+        closeBtn.textContent = '✕';
+        closeBtn.setAttribute('aria-label', 'Dismiss direct link bar');
+        closeBtn.style.cssText = 'background:transparent; border:none; color:#718096; font-size:16px; cursor:pointer; padding:2px 6px;';
+        closeBtn.addEventListener('click', () => bar.remove());
+
+        right.append(copyBtn, jump, closeBtn);
+        bar.append(left, right);
+        container.appendChild(bar);
+
+        const style = document.createElement('style');
+        style.textContent = '@keyframes bsSlideIn { from { transform: translateY(-30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }';
+        (document.head || container).appendChild(style);
+        bar.style.animation = 'bsSlideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1)';
       } catch (_) {}
     }
 
@@ -179,10 +211,11 @@
     }
   }
 
-  // 4. Message Listener from Extension Cockpit
   chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.type === 'get-audit') {
-      sendResponse({ status: 'active', version: '5.4.0' });
+      let ver = 'unknown';
+      try { ver = chrome.runtime.getManifest().version; } catch (_) {}
+      sendResponse({ status: 'active', version: ver });
     }
   });
 

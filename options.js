@@ -133,6 +133,7 @@ document.addEventListener('DOMContentLoaded', () => {
     'bypassAdblockDetection', 'spotifyUnlocked', 'youtubeAds', 'twitchShieldEnabled',
     'audioNoiseEnabled', 'canvasNoiseEnabled', 'webrtcShieldEnabled', 'batteryMaskEnabled',
     'cleanUrlEnabled', 'rightClickEnabled', 'videoSpeedEnabled', 'autoSkipIntrosEnabled',
+    'timerCoarseningEnabled', 'domJitterEnabled',
     'timeSavedSeconds', 'trapsNeutralized', 'directLinksUnlocked',
     'whitelist', 'lastSyncTime'
   ], (res) => {
@@ -318,26 +319,85 @@ document.addEventListener('DOMContentLoaded', () => {
   if (btnImportTrigger && fileImportBackup) {
     btnImportTrigger.addEventListener('click', () => fileImportBackup.click());
 
+    // Restore is SCHEMA-VALIDATED: unknown keys, wrong types and oversized or
+    // malformed values from a crafted backup file are silently dropped.
+    const BS_IMPORT_STRINGS = new Set(['deviceProfile', 'spoofTimezone', 'spoofLocale']);
+    const BS_IMPORT_BOOLEANS = new Set([
+      'enabled', 'masterEnabled', 'autoBypassLinks', 'autoBypassTimers', 'turboAllSites',
+      'unshortenerEnabled', 'paywallDefuserEnabled', 'bypassAdblockDetection',
+      'maskBraveApi', 'maskClientHints', 'clientHintsEnabled', 'normalizeWebgl',
+      'webglSpoofingEnabled', 'canvasNoiseEnabled', 'audioNoiseEnabled',
+      'webrtcShieldEnabled', 'domJitterEnabled', 'timerCoarseningEnabled',
+      'mediaDevicesSanitizeEnabled', 'speechVoicesSanitizeEnabled', 'batteryMaskEnabled',
+      'screenNormalizationEnabled', 'uaSpoofingEnabled', 'timezoneSpoofingEnabled',
+      'webgpuMaskingEnabled', 'fontEnumMaskingEnabled', 'cleanUrlEnabled',
+      'rightClickEnabled', 'videoSpeedEnabled', 'autoSkipIntrosEnabled',
+      'youtubeAds', 'spotifyUnlocked', 'twitchShieldEnabled'
+    ]);
+    const BS_IMPORT_NUMBERS = new Set(['timeSavedSeconds', 'trapsNeutralized', 'directLinksUnlocked']);
+
+    function bsSanitizeImport(parsed) {
+      const clean = {};
+      for (const [k, v] of Object.entries(parsed)) {
+        if (BS_IMPORT_STRINGS.has(k) && typeof v === 'string' && v.length <= 128) clean[k] = v;
+        else if (BS_IMPORT_BOOLEANS.has(k) && typeof v === 'boolean') clean[k] = v;
+        else if (BS_IMPORT_NUMBERS.has(k) && typeof v === 'number' && Number.isFinite(v)) {
+          clean[k] = Math.max(0, Math.min(9_999_999, Math.floor(v)));
+        }
+      }
+      if (typeof parsed.deviceProfile === 'string' && parsed.deviceProfile.length <= 64) {
+        clean.deviceProfile = parsed.deviceProfile;
+      }
+      if (Array.isArray(parsed.whitelist)) {
+        clean.whitelist = [...new Set(parsed.whitelist.filter(bsIsValidDomain))].slice(0, 500);
+      }
+      if (parsed.customHardwareProfile && typeof parsed.customHardwareProfile === 'object' && !Array.isArray(parsed.customHardwareProfile)) {
+        const c = parsed.customHardwareProfile;
+        clean.customHardwareProfile = {
+          platform: String(c.platform ?? 'Win32').slice(0, 32),
+          vendor: String(c.vendor ?? '').slice(0, 128),
+          renderer: String(c.renderer ?? '').slice(0, 256),
+          concurrency: Math.max(1, Math.min(256, parseInt(c.concurrency, 10) || 16)),
+          memory: Math.max(1, Math.min(8, parseInt(c.memory, 10) || 8)),
+          devicePixelRatio: Math.max(1, Math.min(4, parseFloat(c.devicePixelRatio) || 1)),
+          screen: {
+            width: Math.max(320, Math.min(7680, parseInt(c.screen?.width, 10) || 1920)),
+            height: Math.max(240, Math.min(4320, parseInt(c.screen?.height, 10) || 1080)),
+            colorDepth: Math.max(16, Math.min(30, parseInt(c.screen?.colorDepth, 10) || 24))
+          }
+        };
+      }
+      return clean;
+    }
+
     fileImportBackup.addEventListener('change', (e) => {
       const file = e.target.files?.[0];
       if (!file) return;
+      if (file.size > 1024 * 1024) {
+        btnImportTrigger.textContent = '❌ File Too Large';
+        setTimeout(() => { btnImportTrigger.textContent = '📂 Restore Backup'; }, 2000);
+        e.target.value = '';
+        return;
+      }
       const reader = new FileReader();
       reader.onload = (evt) => {
         try {
           const parsed = JSON.parse(evt.target.result);
-          if (parsed && typeof parsed === 'object') {
-            chrome.storage.local.set(parsed, () => {
-              btnImportTrigger.textContent = '✅ Restored Successfully!';
-              setTimeout(() => {
-                btnImportTrigger.textContent = '📂 Restore Backup';
-                window.location.reload();
-              }, 1500);
-            });
-          }
+          if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) throw new Error('invalid');
+          const clean = bsSanitizeImport(parsed);
+          if (Object.keys(clean).length === 0) throw new Error('empty');
+          chrome.storage.local.set(clean, () => {
+            btnImportTrigger.textContent = '✅ Restored Successfully!';
+            setTimeout(() => {
+              btnImportTrigger.textContent = '📂 Restore Backup';
+              window.location.reload();
+            }, 1500);
+          });
         } catch (_) {
           btnImportTrigger.textContent = '❌ Invalid JSON File';
           setTimeout(() => { btnImportTrigger.textContent = '📂 Restore Backup'; }, 2000);
         }
+        e.target.value = '';
       };
       reader.readAsText(file);
     });
@@ -357,30 +417,45 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // Whitelist Logic
-  function renderWhitelist(list) {
-    whitelistTags.innerHTML = '';
-    list.forEach(domain => {
-      const tag = document.createElement('div');
-      tag.className = 'wtag';
-      tag.innerHTML = `<span>${domain}</span><span class="wtag-del" data-domain="${domain}">×</span>`;
-      whitelistTags.appendChild(tag);
-    });
+  // Domains are validated on input and rendered via DOM APIs only.
+  const BS_DOMAIN_RE = /^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$/;
 
-    document.querySelectorAll('.wtag-del').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        const dom = e.target.getAttribute('data-domain');
+  function bsIsValidDomain(val) {
+    return typeof val === 'string' && val.length <= 253 && BS_DOMAIN_RE.test(val);
+  }
+
+  function renderWhitelist(list) {
+    whitelistTags.textContent = '';
+    (Array.isArray(list) ? list : []).filter(bsIsValidDomain).forEach(domain => {
+      const tag = document.createElement('div');
+      tag.className = 'whitelist-tag';
+      const name = document.createElement('span');
+      name.textContent = domain;
+      const del = document.createElement('span');
+      del.className = 'remove-btn';
+      del.textContent = '×';
+      del.setAttribute('role', 'button');
+      del.setAttribute('aria-label', `Remove ${domain} from whitelist`);
+      del.addEventListener('click', () => {
         chrome.storage.local.get(['whitelist'], (r) => {
-          const updated = (r.whitelist || []).filter(d => d !== dom);
+          const updated = (r.whitelist || []).filter(d => d !== domain);
           chrome.storage.local.set({ whitelist: updated });
           renderWhitelist(updated);
         });
       });
+      tag.append(name, del);
+      whitelistTags.appendChild(tag);
     });
   }
 
   btnAddWhitelist.addEventListener('click', () => {
-    const val = (whitelistInput.value || '').trim().toLowerCase();
+    const val = (whitelistInput.value || '').trim().toLowerCase().replace(/^https?:\/\//, '').replace(/\/.*$/, '');
     if (!val) return;
+    if (!bsIsValidDomain(val)) {
+      btnAddWhitelist.textContent = 'Invalid Domain';
+      setTimeout(() => { btnAddWhitelist.textContent = 'Add Domain'; }, 1800);
+      return;
+    }
     chrome.storage.local.get(['whitelist'], (r) => {
       const list = r.whitelist || [];
       if (!list.includes(val)) {

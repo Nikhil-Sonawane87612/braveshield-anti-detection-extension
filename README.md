@@ -113,15 +113,31 @@ The Options Studio features over 110 real-world device profiles and a custom har
 
 ## 💻 Desktop Installation (Chrome / Brave / Edge / Opera)
 
-1. Download the latest release from [**GitHub Releases**](https://github.com/Nikhil-Sonawane87612/braveshield-anti-detection-extension/releases/latest).
-2. Extract the ZIP folder on your computer.
-3. Open your browser and navigate to the extensions page:
+### Option A — Release ZIP (recommended)
+1. Download **`BraveShield-vX.Y.Z.zip`** from the [**Releases page**](https://github.com/Nikhil-Sonawane87612/braveshield-anti-detection-extension/releases).
+2. Extract it — all extension files sit at the **root** of the extracted folder (`manifest.json` is immediately visible).
+3. Open your browser's extensions page:
    - **Brave**: `brave://extensions`
    - **Chrome**: `chrome://extensions`
    - **Edge**: `edge://extensions`
 4. Toggle **Developer mode** ON (top-right corner).
-5. Click **"Load unpacked"** and select the extracted folder.
+5. Click **"Load unpacked"** and select the **extracted folder itself** (the one containing `manifest.json`).
 6. 🎉 **All stealth modules are armed and active!**
+
+> Build your own ZIP any time with one command: `powershell -File build.ps1` → outputs `dist/BraveShield-v<version>.zip`.
+
+### ⚠️ Import Troubleshooting
+| Error | Cause | Fix |
+|-------|-------|-----|
+| *"Manifest file is missing or not accessible"* | Selected the wrong folder level, or used GitHub's **"Source code (ZIP)"** which nests everything inside `braveshield-anti-detection-extension-main/` | Select the folder that **directly contains** `manifest.json`. Prefer release ZIPs built by `build.ps1` |
+| *Icon/ruleset load errors* | Partial extraction or moved files after loading | Re-extract fully and re-load |
+| *Toggles don't seem to apply* | Extension was updated while pages were open | Reload the page once — after that every toggle applies live, no reloads needed |
+
+### Option B — Clone for development
+```bash
+git clone https://github.com/Nikhil-Sonawane87612/braveshield-anti-detection-extension.git
+# then chrome://extensions -> Developer mode -> Load unpacked -> select repo root
+```
 
 ---
 
@@ -129,14 +145,16 @@ The Options Studio features over 110 real-world device profiles and a custom har
 
 ```
 braveshield-anti-detection-extension/
-├── manifest.json                 # Manifest V3 configuration (v6.0.0)
-├── background.js                 # Service worker, DNR coordinator & WebRTC policy
-├── content.js                    # Content script (ISOLATED realm storage sync)
-├── inject.js                     # Enterprise stealth engine (MAIN realm document_start)
-├── settings.js                   # Module definitions & storage defaults
-├── hardware-profiles.js          # Catalog of 110+ authentic hardware presets
+├── manifest.json                 # Manifest V3 configuration
+├── background.js                 # Service worker: defaults, WebRTC policy, update checker
+├── content.js                    # ISOLATED world: LIVE config bridge (instant toggles) + HUD + DOM defense
+├── inject.js                     # MAIN world stealth engine — hooks consult live BS_CONFIG at call-time
+├── shared/constants.js           # Shared hosts/params/helpers loaded in BOTH worlds + pages
+├── hardware-profiles.js          # Catalog of 110+ authentic hardware presets (MAIN world)
+├── useragents.js                 # UA database used to resolve per-profile User-Agents
+├── build.ps1                     # Release packager -> root-level load-ready ZIP
 ├── rules.json                    # Declarative Net Request tracking parameter rules
-├── popup.html / .css / .js        # Glassmorphic Popup Dashboard with live score
+├── popup.html / .css / .js        # Glassmorphic Popup Dashboard with honest live counters
 ├── options.html / .css / .js      # Full-page Hardware Studio & Custom Builder
 ├── memory/                       # Obsidian-compatible Context & Architecture Vault
 │   ├── INDEX.md                  # Vault index and navigation

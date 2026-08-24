@@ -34,6 +34,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const optCanvas = document.getElementById('opt-canvas');
   const optWebrtc = document.getElementById('opt-webrtc');
   const optBattery = document.getElementById('opt-battery');
+  const optTzspoof = document.getElementById('opt-tzspoof');
+  const custTimezone = document.getElementById('cust-timezone');
+  const custLocale = document.getElementById('cust-locale');
   const optDomjitter = document.getElementById('opt-domjitter');
   const optTimercoarse = document.getElementById('opt-timercoarse');
   const optCleanurl = document.getElementById('opt-cleanurl');
@@ -141,7 +144,7 @@ document.addEventListener('DOMContentLoaded', () => {
     'bypassAdblockDetection', 'spotifyUnlocked', 'youtubeAds', 'twitchShieldEnabled',
     'audioNoiseEnabled', 'canvasNoiseEnabled', 'webrtcShieldEnabled', 'batteryMaskEnabled',
     'cleanUrlEnabled', 'rightClickEnabled', 'videoSpeedEnabled', 'autoSkipIntrosEnabled',
-    'timerCoarseningEnabled', 'domJitterEnabled',
+    'timerCoarseningEnabled', 'domJitterEnabled', 'timezoneSpoofingEnabled', 'spoofTimezone', 'spoofLocale',
     'timeSavedSeconds', 'trapsNeutralized', 'directLinksUnlocked',
     'whitelist', 'lastSyncTime'
   ], (res) => {
@@ -181,6 +184,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if (optCanvas) optCanvas.checked = res.canvasNoiseEnabled !== false;
     if (optWebrtc) optWebrtc.checked = res.webrtcShieldEnabled !== false;
     if (optBattery) optBattery.checked = res.batteryMaskEnabled !== false;
+    if (optTzspoof) optTzspoof.checked = res.timezoneSpoofingEnabled === true;
+    if (custTimezone) custTimezone.value = res.spoofTimezone || '';
+    if (custLocale) custLocale.value = res.spoofLocale || '';
     if (optDomjitter) optDomjitter.checked = res.domJitterEnabled !== false;
     if (optTimercoarse) optTimercoarse.checked = res.timerCoarseningEnabled !== false;
     if (optCleanurl) optCleanurl.checked = res.cleanUrlEnabled !== false;
@@ -301,6 +307,9 @@ document.addEventListener('DOMContentLoaded', () => {
   if (optCanvas) optCanvas.addEventListener('change', () => chrome.storage.local.set({ canvasNoiseEnabled: optCanvas.checked }));
   if (optWebrtc) optWebrtc.addEventListener('change', () => chrome.storage.local.set({ webrtcShieldEnabled: optWebrtc.checked }));
   if (optBattery) optBattery.addEventListener('change', () => chrome.storage.local.set({ batteryMaskEnabled: optBattery.checked }));
+  if (optTzspoof) optTzspoof.addEventListener('change', () => chrome.storage.local.set({ timezoneSpoofingEnabled: optTzspoof.checked }));
+  if (custTimezone) custTimezone.addEventListener('change', () => chrome.storage.local.set({ spoofTimezone: custTimezone.value || null }));
+  if (custLocale) custLocale.addEventListener('change', () => chrome.storage.local.set({ spoofLocale: custLocale.value || null }));
   if (optDomjitter) optDomjitter.addEventListener('change', () => chrome.storage.local.set({ domJitterEnabled: optDomjitter.checked }));
   if (optTimercoarse) optTimercoarse.addEventListener('change', () => chrome.storage.local.set({ timerCoarseningEnabled: optTimercoarse.checked }));
   if (optCleanurl) optCleanurl.addEventListener('change', () => chrome.storage.local.set({ cleanUrlEnabled: optCleanurl.checked }));

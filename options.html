@@ -182,6 +182,40 @@
                 <option value="3.5">3.5 (Ultra Mobile 3.5x)</option>
               </select>
             </div>
+
+            <div class="builder-field">
+              <label>Timezone (with Parity enabled)</label>
+              <select id="cust-timezone" class="cyber-select">
+                <option value="">Browser default</option>
+                <option value="UTC">UTC</option>
+                <option value="America/New_York">America/New_York (EST)</option>
+                <option value="America/Chicago">America/Chicago (CST)</option>
+                <option value="America/Los_Angeles">America/Los_Angeles (PST)</option>
+                <option value="Europe/London">Europe/London (GMT)</option>
+                <option value="Europe/Berlin">Europe/Berlin (CET)</option>
+                <option value="Europe/Paris">Europe/Paris (CET)</option>
+                <option value="Asia/Dubai">Asia/Dubai (GST)</option>
+                <option value="Asia/Kolkata">Asia/Kolkata (IST)</option>
+                <option value="Asia/Tokyo">Asia/Tokyo (JST)</option>
+                <option value="Australia/Sydney">Australia/Sydney (AEST)</option>
+              </select>
+            </div>
+
+            <div class="builder-field">
+              <label>Locale (navigator.languages)</label>
+              <select id="cust-locale" class="cyber-select">
+                <option value="">Browser default</option>
+                <option value="en-US">en-US</option>
+                <option value="en-GB">en-GB</option>
+                <option value="de-DE">de-DE</option>
+                <option value="fr-FR">fr-FR</option>
+                <option value="es-ES">es-ES</option>
+                <option value="pt-BR">pt-BR</option>
+                <option value="ja-JP">ja-JP</option>
+                <option value="ko-KR">ko-KR</option>
+                <option value="hi-IN">hi-IN</option>
+              </select>
+            </div>
           </div>
 
           <button id="btn-save-custom-hw" class="cyber-btn btn-primary" style="margin-top:14px; width:100%; justify-content:center;">
@@ -272,6 +306,14 @@
             <div class="setting-desc">Mocks Battery API (100% charging) and Network Information (4G 10Mbps)</div>
           </div>
           <label class="cyber-switch"><input type="checkbox" id="opt-battery" checked><span class="cyber-slider"></span></label>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-meta">
+            <div class="setting-title">Timezone &amp; Locale Parity</div>
+            <div class="setting-desc">Aligns Intl, Date math and navigator.languages with the zone picked below — closes the #1 CreepJS platform/clock mismatch</div>
+          </div>
+          <label class="cyber-switch"><input type="checkbox" id="opt-tzspoof"><span class="cyber-slider"></span></label>
         </div>
       </div>
     </div>

@@ -1254,6 +1254,133 @@
   const isMediaPlatform = host.includes('spotify.com') || host.includes('youtube.com') || host.includes('youtu.be') || host.includes('netflix.com') || host.includes('twitch.tv') || host.includes('reddit.com');
 
   // ─────────────────────────────────────────────────────────────────────────────
+  // Module 1.5: Timezone & Locale Parity (LIVE-GATED, opt-in per profile)
+  // A Win32 platform claim paired with a real Asia/Kolkata clock is the single
+  // cheapest CreepJS catch — this closes it end-to-end (Intl, Date math,
+  // toString rendering, navigator.languages).
+  // ─────────────────────────────────────────────────────────────────────────────
+  (() => {
+    try {
+      const tzCache = { tz: null, stamp: -1, offset: 0 };
+
+      function bsTargetTz() {
+        if (!bsOptIn('timezoneSpoofingEnabled')) return null;
+        const tz = BS_CONFIG.spoofTimezone;
+        return (typeof tz === 'string' && tz.length > 0 && tz.length < 64) ? tz : null;
+      }
+
+      function bsSpoofLocale() {
+        if (!bsOptIn('timezoneSpoofingEnabled')) return null;
+        const loc = BS_CONFIG.spoofLocale;
+        return (typeof loc === 'string' && /^[a-z]{2,3}(-[A-Za-z0-9]{2,8})*$/i.test(loc)) ? loc : null;
+      }
+
+      function bsOffsetMinutes(tz) {
+        const stamp = Math.floor(Date.now() / 60000);
+        if (tzCache.tz === tz && tzCache.stamp === stamp) return tzCache.offset;
+        const now = new Date();
+        const dtf = new Intl.DateTimeFormat('en-US', {
+          timeZone: tz, hour12: false,
+          year: 'numeric', month: '2-digit', day: '2-digit',
+          hour: '2-digit', minute: '2-digit', second: '2-digit'
+        });
+        const parts = {};
+        for (const p of dtf.formatToParts(now)) parts[p.type] = p.value;
+        const asUTC = Date.UTC(
+          Number(parts.year), Number(parts.month) - 1, Number(parts.day),
+          Number(parts.hour) % 24, Number(parts.minute), Number(parts.second)
+        );
+        const offset = Math.round((asUTC - now.getTime()) / 60000);
+        tzCache.tz = tz; tzCache.stamp = stamp; tzCache.offset = offset;
+        return offset;
+      }
+
+      // Date.prototype.getTimezoneOffset (positive-west convention)
+      const origGetTZOffset = Date.prototype.getTimezoneOffset;
+      Date.prototype.getTimezoneOffset = makeNative(function() {
+        const tz = bsTargetTz();
+        if (!tz) return origGetTZOffset.apply(this, arguments);
+        const off = bsOffsetMinutes(tz);
+        return off === null ? origGetTZOffset.apply(this, arguments) : off;
+      }, 'getTimezoneOffset', 0);
+
+      // Intl.DateTimeFormat.prototype.resolvedOptions
+      if (typeof Intl !== 'undefined' && Intl.DateTimeFormat && Intl.DateTimeFormat.prototype.resolvedOptions) {
+        const origResolved = Intl.DateTimeFormat.prototype.resolvedOptions;
+        Intl.DateTimeFormat.prototype.resolvedOptions = makeNative(function() {
+          const res = origResolved.apply(this, arguments);
+          if (!res) return res;
+          const tz = bsTargetTz();
+          if (tz) { try { new Intl.DateTimeFormat('en-US', { timeZone: tz }); res.timeZone = tz; } catch (_) {} }
+          const loc = bsSpoofLocale();
+          if (loc) res.locale = loc;
+          return res;
+        }, 'resolvedOptions', 0);
+      }
+
+      // Date.prototype.toString — render in target zone incl. GMT suffix & tz name
+      const origToString = Date.prototype.toString;
+      Date.prototype.toString = makeNative(function() {
+        const tz = bsTargetTz();
+        if (!tz) return origToString.apply(this, arguments);
+        try {
+          const d = this;
+          if (isNaN(d.getTime())) return origToString.apply(this, arguments);
+          const fmt = new Intl.DateTimeFormat('en-US', {
+            timeZone: tz, hour12: false,
+            weekday: 'short', month: 'short', day: '2-digit', year: 'numeric',
+            hour: '2-digit', minute: '2-digit', second: '2-digit',
+            timeZoneName: 'long'
+          });
+          const p = {};
+          for (const part of fmt.formatToParts(d)) p[part.type] = part.value;
+          const off = bsOffsetMinutes(tz);
+          const sign = off <= 0 ? '+' : '-';
+          const abs = Math.abs(off);
+          const gh = String(Math.floor(abs / 60)).padStart(2, '0');
+          const gm = String(abs % 60).padStart(2, '0');
+          const hh = String(Number(p.hour) % 24).padStart(2, '0');
+          const mm = String(p.minute).padStart(2, '0');
+          const ss = String(p.second).padStart(2, '0');
+          return `${p.weekday} ${p.month} ${p.day} ${p.year} ${hh}:${mm}:${ss} GMT${sign}${gh}${gm} (${p.timeZoneName || tz})`;
+        } catch (_) {
+          return origToString.apply(this, arguments);
+        }
+      }, 'toString', 0);
+
+      // Date.prototype.toLocaleString inherits the target zone automatically
+      const origToLocaleString = Date.prototype.toLocaleString;
+      Date.prototype.toLocaleString = makeNative(function(loc, opts) {
+        const tz = bsTargetTz();
+        if (!tz) return origToLocaleString.apply(this, arguments);
+        const merged = Object.assign({}, opts || {});
+        if (!merged.timeZone) merged.timeZone = tz;
+        return origToLocaleString.call(this, loc, merged);
+      }, 'toLocaleString', 0);
+
+      // navigator.language / languages follow the spoofed locale
+      const origLanguageDesc = Object.getOwnPropertyDescriptor(Navigator.prototype, 'language');
+      const origLanguagesDesc = Object.getOwnPropertyDescriptor(Navigator.prototype, 'languages');
+      if (origLanguageDesc && origLanguagesDesc) {
+        const languageGetter = function() {
+          const loc = bsSpoofLocale();
+          if (loc) return loc.split('-')[0].length === 2 ? loc : origLanguageDesc.get.call(this);
+          return origLanguageDesc.get.call(this);
+        };
+        const languagesGetter = function() {
+          const loc = bsSpoofLocale();
+          if (loc) return Object.freeze([loc]);
+          return origLanguagesDesc.get.call(this);
+        };
+        Object.defineProperty(Navigator.prototype, 'language', { get: makeNative(languageGetter, 'get language', 0), configurable: true, enumerable: true });
+        Object.defineProperty(navigator, 'language', { get: makeNative(languageGetter, 'get language', 0), configurable: true, enumerable: true });
+        Object.defineProperty(Navigator.prototype, 'languages', { get: makeNative(languagesGetter, 'get languages', 0), configurable: true, enumerable: true });
+        Object.defineProperty(navigator, 'languages', { get: makeNative(languagesGetter, 'get languages', 0), configurable: true, enumerable: true });
+      }
+    } catch (_) {}
+  })();
+
+  // ─────────────────────────────────────────────────────────────────────────────
   // Module 2: Feature A — Instant URL Unshortener & Direct Link Resolvers
   // (LIVE-GATED: sweep checks config every pass, so toggles apply instantly)
   // ─────────────────────────────────────────────────────────────────────────────

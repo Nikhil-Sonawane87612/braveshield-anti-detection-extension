@@ -11,11 +11,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   const shieldStatusSub = document.getElementById('shield-status-sub');
   const profileSelect = document.getElementById('device-profile-select');
 
-  // Threat Metrics (2x2 Grid)
-  const metricCanvas = document.getElementById('metric-canvas');
-  const metricAudio = document.getElementById('metric-audio');
-  const metricWebgl = document.getElementById('metric-webgl');
-  const metricWebrtc = document.getElementById('metric-webrtc');
+  // Threat Metrics (2x2 Grid — real counters only)
+  const metricTimeSaved = document.getElementById('metric-timesaved');
+  const metricTraps = document.getElementById('metric-traps');
+  const metricLinks = document.getElementById('metric-links');
+  const metricModules = document.getElementById('metric-modules');
 
   // Hardware & Fingerprint Armor Switches
   const toggleCanvas = document.getElementById('toggle-canvas');
@@ -209,20 +209,18 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (profileSelect) profileSelect.value = selectedProfileId;
     }
 
-    // Telemetry Threat Counter Values
-    const canvasCount = res.canvasProbesCount || res.trapsNeutralized || 42;
-    const audioCount = res.audioQueriesCount || Math.floor((res.trapsNeutralized || 12) * 1.5);
-    const webglCount = res.webglInquiriesCount || (res.trapsNeutralized || 18) + 24;
-    const webrtcCount = res.webrtcThwartedCount || res.directLinksUnlocked || 7;
+    // Telemetry counters — real stored values only, never fabricated.
+    animateValue(metricTimeSaved, 0, Math.floor(res.timeSavedSeconds || 0));
+    animateValue(metricTraps, 0, Math.floor(res.trapsNeutralized || 0));
+    animateValue(metricLinks, 0, Math.floor(res.directLinksUnlocked || 0));
 
-    animateValue(metricCanvas, 0, canvasCount);
-    animateValue(metricAudio, 0, audioCount);
-    animateValue(metricWebgl, 0, webglCount);
-    animateValue(metricWebrtc, 0, webrtcCount);
-
-    // Whitelist Check
+    // Whitelist Check — suffix matching, identical to content.js bridge logic
     const whitelist = Array.isArray(res.whitelist) ? res.whitelist : [];
-    isCurrentWhitelisted = currentHostname && whitelist.includes(currentHostname);
+    isCurrentWhitelisted = !!(currentHostname && whitelist.some(d =>
+      typeof bsDomainMatches === 'function' ? bsDomainMatches(currentHostname, d)
+        : (currentHostname === d || currentHostname.endsWith('.' + d))));
+
+    updateModuleCount(res);
 
     if (updateBadge && res.updateAvailable) {
       updateBadge.classList.remove('hidden');
@@ -230,6 +228,26 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     updateHUDVisuals();
   });
+
+  // Count how many stealth modules are currently armed and reflect it in the UI
+  const BS_MODULE_KEYS = [
+    'canvasNoiseEnabled', 'audioNoiseEnabled', 'webglSpoofingEnabled', 'clientHintsEnabled',
+    'timerCoarseningEnabled', 'domJitterEnabled', 'webrtcShieldEnabled', 'maskBraveApi',
+    'unshortenerEnabled', 'paywallDefuserEnabled', 'autoBypassTimers',
+    'youtubeAds', 'spotifyUnlocked', 'twitchShieldEnabled'
+  ];
+  function countActiveModules(source) {
+    if (source.masterEnabled === false) return 0;
+    return BS_MODULE_KEYS.reduce((n, k) => n + (source[k] !== false ? 1 : 0), 0);
+  }
+  function updateModuleCount(source) {
+    const count = countActiveModules(source);
+    if (metricModules) animateValue(metricModules, 0, count);
+    const total = BS_MODULE_KEYS.length;
+    if (masterSubtitle && source.masterEnabled !== false && !isCurrentWhitelisted) {
+      masterSubtitle.textContent = `${count}/${total} Stealth Modules Armed`;
+    }
+  }
 
   // 6. Real-Time Storage Change Listener
   chrome.storage.onChanged.addListener((changes, area) => {
@@ -250,7 +268,28 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     if (changes.whitelist !== undefined) {
       const list = changes.whitelist.newValue || [];
-      isCurrentWhitelisted = currentHostname && list.includes(currentHostname);
+      isCurrentWhitelisted = !!(currentHostname && list.some(d =>
+        typeof bsDomainMatches === 'function' ? bsDomainMatches(currentHostname, d)
+          : (currentHostname === d || currentHostname.endsWith('.' + d))));
+      updateHUDVisuals();
+    }
+
+    // Keep live counters + module count in sync while popup is open
+    let touchedTelemetry = false;
+    const latest = {};
+    for (const [k, v] of Object.entries(changes)) {
+      latest[k] = v.newValue;
+      if (k === 'timeSavedSeconds' || k === 'trapsNeutralized' || k === 'directLinksUnlocked') touchedTelemetry = true;
+    }
+    if (touchedTelemetry) {
+      chrome.storage.local.get(['timeSavedSeconds', 'trapsNeutralized', 'directLinksUnlocked'], (res) => {
+        animateValue(metricTimeSaved, Number(metricTimeSaved.textContent.replace(/,/g, '')) || 0, Math.floor(res.timeSavedSeconds || 0));
+        animateValue(metricTraps, Number(metricTraps.textContent.replace(/,/g, '')) || 0, Math.floor(res.trapsNeutralized || 0));
+        animateValue(metricLinks, Number(metricLinks.textContent.replace(/,/g, '')) || 0, Math.floor(res.directLinksUnlocked || 0));
+      });
+    }
+    if (BS_MODULE_KEYS.some(k => changes[k] !== undefined)) {
+      chrome.storage.local.get(BS_MODULE_KEYS.concat(['masterEnabled']), (res) => updateModuleCount(res));
     }
 
     if (changes.updateAvailable !== undefined && updateBadge) {
@@ -323,12 +362,24 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (btnSync) {
     btnSync.addEventListener('click', () => {
       if (syncIcon) syncIcon.style.transform = 'rotate(360deg)';
-      chrome.runtime.sendMessage({ action: 'check_updates' }, (resp) => {
+      // Must match background.js onMessage contract: { type: 'TRIGGER_SYNC' }
+      chrome.runtime.sendMessage({ type: 'TRIGGER_SYNC' }, (resp) => {
         setTimeout(() => {
           if (syncIcon) syncIcon.style.transform = 'rotate(0deg)';
+          if (chrome.runtime.lastError) {
+            btnSync.title = 'Sync failed — service worker unavailable';
+          } else if (resp && resp.success) {
+            btnSync.title = `Last sync: ${new Date(resp.lastSyncTime || Date.now()).toLocaleTimeString()}`;
+          }
         }, 800);
       });
     });
+  }
+
+  // Dynamic version from manifest — single source of truth
+  const verTag = document.getElementById('ver-tag');
+  if (verTag) {
+    try { verTag.textContent = 'v' + chrome.runtime.getManifest().version; } catch (_) { verTag.textContent = ''; }
   }
 
   if (updateBadge) {

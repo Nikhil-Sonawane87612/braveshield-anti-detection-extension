@@ -21,6 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const optBrave = document.getElementById('opt-brave');
   const optHints = document.getElementById('opt-hints');
+  const optUa = document.getElementById('opt-ua');
   const optUnshortener = document.getElementById('opt-unshortener');
   const optTimers = document.getElementById('opt-timers');
   const optPaywall = document.getElementById('opt-paywall');
@@ -135,6 +136,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // 2. Load Saved Options
   chrome.storage.local.get([
     'masterEnabled', 'deviceProfile', 'customHardwareProfile', 'maskBraveApi', 'maskClientHints',
+    'uaSpoofingEnabled',
     'unshortenerEnabled', 'autoBypassTimers', 'paywallDefuserEnabled',
     'bypassAdblockDetection', 'spotifyUnlocked', 'youtubeAds', 'twitchShieldEnabled',
     'audioNoiseEnabled', 'canvasNoiseEnabled', 'webrtcShieldEnabled', 'batteryMaskEnabled',
@@ -166,6 +168,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     optBrave.checked = res.maskBraveApi !== false;
     optHints.checked = res.maskClientHints !== false;
+    if (optUa) optUa.checked = res.uaSpoofingEnabled !== false;
     optUnshortener.checked = res.unshortenerEnabled !== false;
     optTimers.checked = res.autoBypassTimers !== false;
     optPaywall.checked = res.paywallDefuserEnabled !== false;
@@ -285,6 +288,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Settings Toggles
   optBrave.addEventListener('change', () => chrome.storage.local.set({ maskBraveApi: optBrave.checked }));
   optHints.addEventListener('change', () => chrome.storage.local.set({ maskClientHints: optHints.checked }));
+  if (optUa) optUa.addEventListener('change', () => chrome.storage.local.set({ uaSpoofingEnabled: optUa.checked }));
   optUnshortener.addEventListener('change', () => chrome.storage.local.set({ unshortenerEnabled: optUnshortener.checked }));
   optTimers.addEventListener('change', () => chrome.storage.local.set({ autoBypassTimers: optTimers.checked }));
   optPaywall.addEventListener('change', () => chrome.storage.local.set({ paywallDefuserEnabled: optPaywall.checked }));

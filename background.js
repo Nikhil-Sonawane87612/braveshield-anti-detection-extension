@@ -7,6 +7,107 @@
 const GITHUB_RULES_URL = 'https://raw.githubusercontent.com/Nikhil-Sonawane87612/braveshield-anti-detection-extension/main/rules.json';
 const GITHUB_MANIFEST_URL = 'https://raw.githubusercontent.com/Nikhil-Sonawane87612/braveshield-anti-detection-extension/main/manifest.json';
 
+// UA catalog (useragents.js) powers per-profile User-Agent resolution
+try { importScripts('useragents.js'); } catch (_) {}
+
+const BS_UA_RULE_ID = 424242;
+const BS_UA_PLATFORM_BUCKETS = {
+  win32: 'win', macintel: 'mac', 'linux x86_64': 'linux',
+  'linux armv81': 'android', iphone: 'iphone', ipad: 'android_tablet'
+};
+
+function bsRealChromeMajor() {
+  try {
+    const m = /Chrome\/(\d+)/.exec(navigator.userAgent || '');
+    return m ? m[1] : null;
+  } catch (_) { return null; }
+}
+
+function bsResolveUA(platformKey) {
+  try {
+    if (typeof USER_AGENTS !== 'object' || !USER_AGENTS) return null;
+    const bucket = BS_UA_PLATFORM_BUCKETS[String(platformKey || 'win32').toLowerCase()] || 'win';
+    const prefix = 'chrome_' + bucket;
+    let best = null;
+    let bestVer = -1;
+    for (const [key, val] of Object.entries(USER_AGENTS)) {
+      if (!key.startsWith(prefix)) continue;
+      const ver = parseInt(key.slice(prefix.length + 1, key.indexOf('_', prefix.length + 1)), 10);
+      const v = Number.isFinite(ver) ? ver : parseInt(key.split('_')[1], 10);
+      if (Number.isFinite(v) && v > bestVer) { bestVer = v; best = val; }
+    }
+    if (!best) return null;
+
+    // Re-base the spoofed UA onto the REAL engine major so JS/TLS behavior
+    // matches what servers can measure — a stale spoofed major is itself a tell.
+    const realMajor = bsRealChromeMajor();
+    let ua = best.ua;
+    if (realMajor) {
+      ua = ua.replace(/Chrome\/\d+(\.\d+\.\d+\.\d+)?/, `Chrome/${realMajor}.0.0.0`);
+      if (Array.isArray(best.brands)) {
+        best.brands = best.brands.map(b => (b.brand === 'Google Chrome' || b.brand === 'Chromium')
+          ? { brand: b.brand, version: String(realMajor) } : b);
+      }
+    }
+    return { ua, brands: best.brands || [], platform: best.platform, mobile: !!best.mobile, platformVersion: best.platformVersion || '' };
+  } catch (_) {
+    return null;
+  }
+}
+
+// Keep the DNR session rule + stored resolvedUA in sync with the active profile
+async function bsApplyUASpoof() {
+  try {
+    const { uaSpoofingEnabled, deviceProfile, customHardwareProfile } =
+      await chrome.storage.local.get(['uaSpoofingEnabled', 'deviceProfile', 'customHardwareProfile']);
+
+    let platformKey = deviceProfile === 'custom'
+      ? (customHardwareProfile && customHardwareProfile.platform) || 'Win32'
+      : null;
+
+    // Derive platform from the profile id prefix
+    if (!platformKey) {
+      const id = String(deviceProfile || '');
+      if (id.startsWith('win-')) platformKey = 'Win32';
+      else if (id.startsWith('mac-')) platformKey = 'MacIntel';
+      else if (id.startsWith('linux-')) platformKey = 'Linux x86_64';
+      else if (id.startsWith('android-') || id.startsWith('pixel-')) platformKey = 'Linux armv81';
+      else if (id.startsWith('ios-') || id.startsWith('ipad-')) platformKey = 'iPhone';
+      else platformKey = 'Win32';
+    }
+
+    const resolved = uaSpoofingEnabled === false ? null : bsResolveUA(platformKey);
+    await chrome.storage.local.set({ resolvedUA: resolved });
+
+    try {
+      if (resolved && chrome.declarativeNetRequest && chrome.declarativeNetRequest.updateSessionRules) {
+        await chrome.declarativeNetRequest.updateSessionRules({
+          removeRuleIds: [BS_UA_RULE_ID],
+          addRules: [{
+            id: BS_UA_RULE_ID,
+            priority: 1,
+            action: {
+              type: 'modifyHeaders',
+              requestHeaders: [
+                { header: 'User-Agent', operation: 'set', value: resolved.ua },
+                { header: 'Sec-CH-UA', operation: 'set', value: JSON.stringify(resolved.brands) },
+                { header: 'Sec-CH-UA-Mobile', operation: 'set', value: resolved.mobile ? '?1' : '?0' },
+                { header: 'Sec-CH-UA-Platform', operation: 'set', value: `"${resolved.platform}"` }
+              ]
+            },
+            condition: {
+              urlFilter: '*',
+              resourceTypes: ['main_frame', 'sub_frame', 'xmlhttprequest', 'script', 'stylesheet', 'image', 'font', 'media', 'websocket', 'other']
+            }
+          }]
+        });
+      } else if (chrome.declarativeNetRequest && chrome.declarativeNetRequest.updateSessionRules) {
+        await chrome.declarativeNetRequest.updateSessionRules({ removeRuleIds: [BS_UA_RULE_ID], addRules: [] });
+      }
+    } catch (_) {}
+  } catch (_) {}
+}
+
 function getLocalVersion() {
   try {
     return chrome.runtime.getManifest().version || 'unknown';
@@ -46,6 +147,7 @@ chrome.runtime.onInstalled.addListener(() => {
       webglSpoofingEnabled: true,
       clientHintsEnabled: true,
       webrtcShieldEnabled: true,
+      uaSpoofingEnabled: true,
       domJitterEnabled: true,
       timerCoarseningEnabled: true,
       mediaDevicesSanitizeEnabled: true,
@@ -80,6 +182,7 @@ chrome.runtime.onInstalled.addListener(() => {
 
     chrome.storage.local.set(toSet, () => {
       enforceWebRTCPrivacy(existing.webrtcShieldEnabled !== false);
+      bsApplyUASpoof();
     });
   });
 
@@ -92,10 +195,21 @@ chrome.runtime.onInstalled.addListener(() => {
   syncRemoteRulesAndCheckUpdates();
 });
 
+// Re-assert UA spoofing session rules after browser restarts
+chrome.runtime.onStartup.addListener(() => {
+  bsApplyUASpoof();
+});
+
 // Watch storage changes to apply WebRTC policy dynamically
 chrome.storage.onChanged.addListener((changes, area) => {
-  if (area === 'local' && changes.webrtcShieldEnabled !== undefined) {
+  if (area !== 'local') return;
+  if (changes.webrtcShieldEnabled !== undefined) {
     enforceWebRTCPrivacy(changes.webrtcShieldEnabled.newValue !== false);
+  }
+  if (changes.uaSpoofingEnabled !== undefined ||
+      changes.deviceProfile !== undefined ||
+      changes.customHardwareProfile !== undefined) {
+    bsApplyUASpoof();
   }
 });
 

@@ -65,6 +65,7 @@
     batteryMaskEnabled: true,
     screenNormalizationEnabled: true,
     uaSpoofingEnabled: true,
+    resolvedUA: null,
     timezoneSpoofingEnabled: false,
     webgpuMaskingEnabled: true,
     fontEnumMaskingEnabled: true,
@@ -77,7 +78,6 @@
     twitchShieldEnabled: true,
     deviceProfile: 'win-rtx4090',
     customHardwareProfile: null,
-    resolvedUA: null,
     spoofTimezone: null,
     spoofLocale: null
   };
@@ -850,7 +850,30 @@
         }
       }
 
-      // 6. Authentic window.chrome API Stubs
+      // ── 8. User-Agent string parity (LIVE-GATED, backed by useragents.js) ──
+      // background.js resolves the active profile to a full UA object and
+      // rewrites request headers via DNR; this keeps JS-visible APIs identical.
+      try {
+        const origUADesc = Object.getOwnPropertyDescriptor(Navigator.prototype, 'userAgent');
+        const origAppVersionDesc = Object.getOwnPropertyDescriptor(Navigator.prototype, 'appVersion');
+        if (origUADesc && origAppVersionDesc) {
+          const uaGetter = function() {
+            const r = BS_CONFIG.resolvedUA;
+            return (bsOn('uaSpoofingEnabled') && r && r.ua) ? r.ua : origUADesc.get.call(this);
+          };
+          const appVersionGetter = function() {
+            const r = BS_CONFIG.resolvedUA;
+            if (!bsOn('uaSpoofingEnabled') || !r || !r.ua) return origAppVersionDesc.get.call(this);
+            const idx = r.ua.indexOf('Mozilla/');
+            return idx === 0 ? r.ua.slice('Mozilla/'.length) : origAppVersionDesc.get.call(this);
+          };
+          Object.defineProperty(Navigator.prototype, 'userAgent', { get: makeNative(uaGetter, 'get userAgent', 0), configurable: true, enumerable: true });
+          Object.defineProperty(navigator, 'userAgent', { get: makeNative(uaGetter, 'get userAgent', 0), configurable: true, enumerable: true });
+          Object.defineProperty(Navigator.prototype, 'appVersion', { get: makeNative(appVersionGetter, 'get appVersion', 0), configurable: true, enumerable: true });
+        }
+      } catch (_) {}
+
+      // ── 9. Authentic window.chrome API Stubs
       if (!window.chrome) window.chrome = {};
       window.chrome.app = window.chrome.app || {
         isInstalled: false,

@@ -1,6 +1,6 @@
 /**
  * BraveShield Bypass Pro — Enterprise Stealth & Anti-Fingerprinting Engine
- * Version: 6.0.0 (CreepJS & BrowserLeaks Hardening Pack)
+ * Version: synced from manifest at runtime (see bsVersion below)
  * Execution World: MAIN (True document_start)
  * Purpose: Complete Google Chrome & Multi-Device Profile parity, deep Brave cloaking,
  *          Unforgeable native function proxies, Reflect.apply/construct transparency,
@@ -9,53 +9,121 @@
  *          WebGL/WebGPU masking, Client Hints (UA-CH) sync, DOM measurement jitter,
  *          Media device & Speech synthesis sanitization, Instant URL Unshortener,
  *          Paywall/Blur Defuser, Live Telemetry, 100% Captcha passing.
+ * Architecture: LIVE CONFIG BRIDGE — every hook consults BS_CONFIG at call-time.
+ *          content.js pushes config the instant chrome.storage loads/changes, so the
+ *          master kill switch, whitelisting and every module toggle apply WITHOUT a
+ *          page reload (fixes the document_start race).
  */
 
 (() => {
   'use strict';
 
   const host = (window.location && window.location.hostname) ? window.location.hostname.toLowerCase() : '';
+  const path = (window.location && window.location.pathname) ? window.location.pathname : '';
+  const bsVersion = (() => {
+    try { return (window.chrome && chrome.runtime && chrome.runtime.id)
+      ? 'main-world' /* real version arrives via config bridge */ : 'main-world'; } catch (_) { return 'main-world'; }
+  })();
 
   // ─────────────────────────────────────────────────────────────────────────────
   // ZERO-TOUCH PASSTHROUGH FOR ALL INDUSTRY CAPTCHA PROVIDERS & INTERSTITIALS
+  // Suffix matching only — DOM/title probes are meaningless at document_start.
   // ─────────────────────────────────────────────────────────────────────────────
-  const isCaptchaHost = (
-    host.includes('challenges.cloudflare.com') ||
-    host.includes('recaptcha.net') ||
-    host.includes('hcaptcha.com') ||
-    host.includes('arkoselabs.com') ||
-    host.includes('funcaptcha.com') ||
-    host.includes('geetest.com') ||
-    host.includes('awswaf.com') ||
-    host.includes('mtcaptcha.com') ||
-    host.includes('leminnow.com') ||
-    host.includes('smartcaptcha.yandexcloud.net') ||
-    host.includes('captcha-api.yandex.ru') ||
-    host.includes('capy.me') ||
-    host.includes('friendlycaptcha.com') ||
-    host.includes('friendlycaptcha.eu') ||
-    host.includes('captcha-delivery.com') ||
-    host.includes('perimeterx.net') ||
-    host.includes('kasada.io') ||
-    (host.includes('google.com') && window.location.pathname.includes('/recaptcha/')) ||
-    (host.includes('cloudflare.com') && window.location.pathname.includes('/cdn-cgi/challenge-platform/')) ||
-    typeof window._cf_chl_opt !== 'undefined' ||
-    typeof window._cf_chl_ctx !== 'undefined' ||
-    document.getElementById('challenge-stage') ||
-    document.getElementById('challenge-form') ||
-    document.getElementById('challenge-running') ||
-    document.getElementById('cf-wrapper') ||
-    (document.title && /just a moment|security verification|attention required|checking your browser|cloudflare/i.test(document.title))
-  );
-
-  function isCloudflareInterstitial() {
-    return isCaptchaHost;
-  }
+  const isCaptchaHost = (typeof bsIsCaptchaHost === 'function')
+    ? bsIsCaptchaHost(host, path)
+    : false;
 
   // If inside ANY Captcha iframe or security challenge interstitial, exit immediately with 100% zero-touch!
   if (isCaptchaHost) {
     return;
   }
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // 0. LIVE CONFIG BRIDGE (Kill-Switch Race Fix)
+  // ─────────────────────────────────────────────────────────────────────────────
+  const BS_CONFIG = {
+    masterEnabled: true,
+    enabled: true,
+    unshortenerEnabled: true,
+    autoBypassLinks: true,
+    autoBypassTimers: true,
+    turboAllSites: false,
+    paywallDefuserEnabled: true,
+    bypassAdblockDetection: true,
+    maskBraveApi: true,
+    clientHintsEnabled: true,
+    maskClientHints: true,
+    normalizeWebgl: true,
+    webglSpoofingEnabled: true,
+    canvasNoiseEnabled: true,
+    audioNoiseEnabled: true,
+    webrtcShieldEnabled: true,
+    domJitterEnabled: true,
+    timerCoarseningEnabled: true,
+    mediaDevicesSanitizeEnabled: true,
+    speechVoicesSanitizeEnabled: true,
+    batteryMaskEnabled: true,
+    screenNormalizationEnabled: true,
+    uaSpoofingEnabled: true,
+    timezoneSpoofingEnabled: false,
+    webgpuMaskingEnabled: true,
+    fontEnumMaskingEnabled: true,
+    cleanUrlEnabled: true,
+    rightClickEnabled: true,
+    videoSpeedEnabled: true,
+    autoSkipIntrosEnabled: true,
+    youtubeAds: true,
+    spotifyUnlocked: true,
+    twitchShieldEnabled: true,
+    deviceProfile: 'win-rtx4090',
+    customHardwareProfile: null,
+    resolvedUA: null,
+    spoofTimezone: null,
+    spoofLocale: null
+  };
+
+  let bsSiteDisabled = false;   // master off OR domain whitelisted
+  let bsConfigReady = false;
+  const bsReadyQueue = [];
+
+  /** Default-on module gate */
+  function bsOn(key) {
+    if (bsSiteDisabled) return false;
+    return BS_CONFIG[key] !== false;
+  }
+
+  /** Opt-in module gate (default OFF) */
+  function bsOptIn(key) {
+    if (bsSiteDisabled) return false;
+    return BS_CONFIG[key] === true;
+  }
+
+  /** Run fn once the first real config snapshot has arrived */
+  function bsOnConfigReady(fn) {
+    if (bsConfigReady) { try { fn(); } catch (_) {} }
+    else bsReadyQueue.push(fn);
+  }
+
+  window.addEventListener('message', (e) => {
+    try {
+      if (e.source !== window) return;
+      const d = e.data;
+      if (!d || d.type !== 'bs-config-sync' || typeof d.config !== 'object' || d.config === null) return;
+      if (Object.prototype.hasOwnProperty.call(d, 'siteDisabled')) {
+        bsSiteDisabled = d.siteDisabled === true;
+      }
+      Object.assign(BS_CONFIG, d.config);
+      const firstSync = !bsConfigReady;
+      bsConfigReady = true;
+      if (typeof bsResolveHardware === 'function') bsResolveHardware();
+      if (firstSync) {
+        while (bsReadyQueue.length) {
+          const fn = bsReadyQueue.shift();
+          try { fn(); } catch (_) {}
+        }
+      }
+    } catch (_) {}
+  });
 
   // ─────────────────────────────────────────────────────────────────────────────
   // 1. UNFORGEABLE NATIVE FUNCTION PROXY ARCHITECTURE (The CreepJS Fix)
@@ -213,7 +281,7 @@
     // Hook window.open safely to prevent ad popunders while allowing genuine download actions
     const origWindowOpen = window.open;
     window.open = makeNative(function(url, target, features) {
-      if (!isCaptchaHost && url && typeof url === 'string') {
+      if (bsOn('bypassAdblockDetection') && !isCaptchaHost && url && typeof url === 'string') {
         const isAdUrl = /(popcash|popads|adsterra|propellerads|exoclick|bet365|1xbet|clickadu|trafficjunky|adkeeper|syndication)/i.test(url);
         if (isAdUrl) {
           reportTelemetry('trapsNeutralized', 1);
@@ -234,17 +302,19 @@
       const origFetch = window.fetch;
       window.fetch = makeNative(function(input, init) {
         try {
-          const url = typeof input === 'string' ? input : (input instanceof Request ? input.url : input?.url);
-          if (url && typeof url === 'string') {
-            if (/^brave:\/\//i.test(url)) {
-              return Promise.resolve(new Response('', { status: 404, statusText: 'Not Found' }));
-            }
-            if (AD_SCRIPT_PROBE_REGEX.test(url)) {
-              return Promise.resolve(new Response('window.canRunAds=true;window.isAdBlockActive=false;window.adblock=false;', {
-                status: 200,
-                statusText: 'OK',
-                headers: { 'Content-Type': 'application/javascript' }
-              }));
+          if (bsOn('bypassAdblockDetection')) {
+            const url = typeof input === 'string' ? input : (input instanceof Request ? input.url : input?.url);
+            if (url && typeof url === 'string') {
+              if (/^brave:\/\//i.test(url) && bsOn('maskBraveApi')) {
+                return Promise.resolve(new Response('', { status: 404, statusText: 'Not Found' }));
+              }
+              if (AD_SCRIPT_PROBE_REGEX.test(url)) {
+                return Promise.resolve(new Response('window.canRunAds=true;window.isAdBlockActive=false;window.adblock=false;', {
+                  status: 200,
+                  statusText: 'OK',
+                  headers: { 'Content-Type': 'application/javascript' }
+                }));
+              }
             }
           }
         } catch (_) {}
@@ -257,8 +327,8 @@
       const origXHRSend = XMLHttpRequest.prototype.send;
 
       XMLHttpRequest.prototype.open = makeNative(function(method, url, ...rest) {
-        if (typeof url === 'string') {
-          if (/^brave:\/\//i.test(url)) {
+        if (bsOn('bypassAdblockDetection') && typeof url === 'string') {
+          if (/^brave:\/\//i.test(url) && bsOn('maskBraveApi')) {
             this._braveShieldBypass = true;
           } else if (AD_SCRIPT_PROBE_REGEX.test(url)) {
             this._adScriptMock = true;
@@ -308,7 +378,7 @@
       const origGetComputedStyle = window.getComputedStyle;
       window.getComputedStyle = makeNative(function(el, pseudo) {
         const style = origGetComputedStyle.call(window, el, pseudo);
-        if (isBaitElement(el) && style) {
+        if (bsOn('bypassAdblockDetection') && isBaitElement(el) && style) {
           return new Proxy(style, {
             get(target, prop) {
               if (prop === 'display') return 'block';
@@ -338,6 +408,7 @@
     // Global Error Suppressor for Blocked Ad/Tracker Network Requests (Brave Shields Passthrough)
     window.addEventListener('error', function(e) {
       try {
+        if (!bsOn('bypassAdblockDetection')) return;
         const target = e.target;
         if (target && (target.tagName === 'SCRIPT' || target.tagName === 'IMG' || target.tagName === 'LINK')) {
           const src = (target.src || target.href || '').toLowerCase();
@@ -355,7 +426,7 @@
       if (origScriptSrc) {
         Object.defineProperty(HTMLScriptElement.prototype, 'src', {
           set: makeNative(function(val) {
-            if (typeof val === 'string' && /pagead|googlesyndication|doubleclick|adservice|adnxs|prebid|\/ads?\.js|adblockdetector/i.test(val)) {
+            if (bsOn('bypassAdblockDetection') && typeof val === 'string' && /pagead|googlesyndication|doubleclick|adservice|adnxs|prebid|\/ads?\.js|adblockdetector/i.test(val)) {
               setTimeout(() => {
                 try {
                   if (typeof this.onload === 'function') this.onload(new Event('load'));
@@ -384,7 +455,7 @@
         Object.defineProperty(HTMLElement.prototype, 'offsetHeight', {
           get: makeNative(function() {
             const real = origOffsetHeight.get.call(this);
-            if (real === 0 && isBaitElement(this)) return 250;
+            if (bsOn('bypassAdblockDetection') && real === 0 && isBaitElement(this)) return 250;
             return real;
           }, 'get offsetHeight', 0),
           configurable: true,
@@ -396,7 +467,7 @@
         Object.defineProperty(HTMLElement.prototype, 'offsetWidth', {
           get: makeNative(function() {
             const real = origOffsetWidth.get.call(this);
-            if (real === 0 && isBaitElement(this)) return 300;
+            if (bsOn('bypassAdblockDetection') && real === 0 && isBaitElement(this)) return 300;
             return real;
           }, 'get offsetWidth', 0),
           configurable: true,
@@ -408,7 +479,7 @@
         Object.defineProperty(HTMLElement.prototype, 'clientHeight', {
           get: makeNative(function() {
             const real = origClientHeight.get.call(this);
-            if (real === 0 && isBaitElement(this)) return 250;
+            if (bsOn('bypassAdblockDetection') && real === 0 && isBaitElement(this)) return 250;
             return real;
           }, 'get clientHeight', 0),
           configurable: true,
@@ -420,7 +491,7 @@
         Object.defineProperty(HTMLElement.prototype, 'clientWidth', {
           get: makeNative(function() {
             const real = origClientWidth.get.call(this);
-            if (real === 0 && isBaitElement(this)) return 300;
+            if (bsOn('bypassAdblockDetection') && real === 0 && isBaitElement(this)) return 300;
             return real;
           }, 'get clientWidth', 0),
           configurable: true,
@@ -432,7 +503,7 @@
         Object.defineProperty(HTMLElement.prototype, 'offsetParent', {
           get: makeNative(function() {
             const real = origOffsetParent.get.call(this);
-            if (!real && isBaitElement(this)) return document.body || this.parentElement;
+            if (bsOn('bypassAdblockDetection') && !real && isBaitElement(this)) return document.body || this.parentElement;
             return real;
           }, 'get offsetParent', 0),
           configurable: true,
@@ -477,186 +548,201 @@
 
   // ─────────────────────────────────────────────────────────────────────────────
   // Module 1: Deep Brave Identity Purge & Multi-Device Hardware Profiles
+  // Every spoof below is LIVE-GATED: it consults BS_CONFIG at call time so the
+  // kill switch / whitelist / toggles take effect instantly without reload.
   // ─────────────────────────────────────────────────────────────────────────────
   (() => {
     try {
       if (typeof navigator === 'undefined') return;
 
-      // 1. Completely neutralize navigator.brave on Prototype & Instance
-      try {
-        Object.defineProperty(Navigator.prototype, 'brave', {
-          get: () => undefined,
-          set: () => {},
-          configurable: true,
-          enumerable: false
-        });
-      } catch (_) {}
+      // ── Mutable hardware identity, re-resolved on every config sync ──
+      let bsHardware = null;
+      const BS_HW_FALLBACK = {
+        platform: 'Win32',
+        vendor: 'Google Inc. (NVIDIA)',
+        renderer: 'ANGLE (NVIDIA, NVIDIA GeForce RTX 4090 (0x00002684) Direct3D11 vs_5_0 ps_5_0, D3D11)',
+        concurrency: 16,
+        memory: 16,
+        devicePixelRatio: 1,
+        screen: { width: 1920, height: 1080, colorDepth: 24 }
+      };
 
-      try {
-        Object.defineProperty(navigator, 'brave', {
-          get: () => undefined,
-          set: () => {},
-          configurable: true,
-          enumerable: false
-        });
-      } catch (_) {}
-
-      delete Navigator.prototype.brave;
-      delete navigator.brave;
-      if (navigator.__proto__) {
+      window.bsResolveHardware = function() {
         try {
-          delete navigator.__proto__.brave;
-          navigator.__proto__.brave = undefined;
+          const selectedId = BS_CONFIG.deviceProfile || 'win-rtx4090';
+          const customJson = BS_CONFIG.customHardwareProfile;
+
+          if (selectedId === 'custom' && customJson && typeof customJson === 'object') {
+            bsHardware = {
+              platform: customJson.platform || 'Win32',
+              vendor: customJson.vendor || BS_HW_FALLBACK.vendor,
+              renderer: customJson.renderer || BS_HW_FALLBACK.renderer,
+              concurrency: parseInt(customJson.concurrency, 10) || 16,
+              memory: parseInt(customJson.memory, 10) || 8,
+              devicePixelRatio: parseFloat(customJson.devicePixelRatio) || 1,
+              screen: customJson.screen || { width: 2560, height: 1440, colorDepth: 24 }
+            };
+            return;
+          }
+          if (typeof HARDWARE_PROFILES_CATALOG !== 'undefined' && Array.isArray(HARDWARE_PROFILES_CATALOG)) {
+            const matched = HARDWARE_PROFILES_CATALOG.find(p => p.id === selectedId);
+            if (matched) {
+              bsHardware = {
+                platform: matched.platform,
+                vendor: matched.vendor,
+                renderer: matched.renderer,
+                concurrency: matched.concurrency,
+                memory: matched.memory,
+                devicePixelRatio: matched.devicePixelRatio,
+                screen: matched.screen
+              };
+              return;
+            }
+          }
         } catch (_) {}
-      }
+        bsHardware = BS_HW_FALLBACK;
+      };
+      bsResolveHardware();
 
-      // 2. Remove Web3 Brave Wallet and Solana detectors
-      try {
-        delete window.braveSolana;
-        delete window.solanaBrave;
-        window.braveSolana = undefined;
-        window.solanaBrave = undefined;
-      } catch (_) {}
+      // ── 1. navigator.brave neutralization (LIVE-GATED, original preserved) ──
+      const nativeBraveValue = ('brave' in navigator) ? navigator.brave : undefined;
+      const braveGetter = function() {
+        return bsOn('maskBraveApi') ? undefined : nativeBraveValue;
+      };
+      try { Object.defineProperty(Navigator.prototype, 'brave', { get: braveGetter, set: () => {}, configurable: true, enumerable: false }); } catch (_) {}
+      try { Object.defineProperty(navigator, 'brave', { get: braveGetter, set: () => {}, configurable: true, enumerable: false }); } catch (_) {}
 
-      if (window.ethereum) {
+      // ── 2. Web3 Brave Wallet identifiers (applied once config confirms active) ──
+      bsOnConfigReady(() => {
+        if (!bsOn('maskBraveApi')) return;
         try {
-          delete window.ethereum.isBraveWallet;
-          window.ethereum.isBraveWallet = false;
-          window.ethereum.isMetaMask = true;
+          delete window.braveSolana;
+          delete window.solanaBrave;
+          window.braveSolana = undefined;
+          window.solanaBrave = undefined;
         } catch (_) {}
-      }
+        if (window.ethereum) {
+          try {
+            delete window.ethereum.isBraveWallet;
+            window.ethereum.isBraveWallet = false;
+          } catch (_) {}
+        }
+        if (window.solana) {
+          try {
+            delete window.solana.isBraveWallet;
+            window.solana.isBraveWallet = false;
+          } catch (_) {}
+        }
+      });
 
-      if (window.solana) {
-        try {
-          delete window.solana.isBraveWallet;
-          window.solana.isBraveWallet = false;
-        } catch (_) {}
-      }
-
-      // 3. Prototype-level webdriver (Safe for Cloudflare Turnstile)
+      // ── 3. webdriver (LIVE-GATED, Safe for Cloudflare Turnstile) ──
+      const origWebdriverDesc = Object.getOwnPropertyDescriptor(Navigator.prototype, 'webdriver');
       try {
         Object.defineProperty(Navigator.prototype, 'webdriver', {
-          get: () => false,
+          get: function() {
+            if (bsOn('hideWebdriver')) return false;
+            return origWebdriverDesc && origWebdriverDesc.get ? origWebdriverDesc.get.call(this) : false;
+          },
           configurable: true,
           enumerable: true
         });
       } catch (_) {}
 
-      // 4. Comprehensive Hardware Profile & Custom Hardware Engine (110+ Presets)
-      let activeHw = {
-        platform: 'Win32',
-        vendor: 'Google Inc. (NVIDIA)',
-        renderer: 'ANGLE (NVIDIA, NVIDIA GeForce RTX 4090 (0x00002684) Direct3D11 vs_5_0 ps_5_0, D3D11)',
-        concurrency: 32,
-        memory: 64,
-        devicePixelRatio: 1,
-        screen: { width: 3840, height: 2160, colorDepth: 24 }
-      };
+      // ── 4. Live Platform / CPU / RAM spoofing (reads current bsHardware) ──
+      const platformGetter = function() { return bsHardware.platform; };
+      try { Object.defineProperty(Navigator.prototype, 'platform', { get: makeNative(platformGetter, 'get platform', 0), configurable: true }); } catch (_) {}
+      try { Object.defineProperty(navigator, 'platform', { get: makeNative(platformGetter, 'get platform', 0), configurable: true }); } catch (_) {}
 
-      try {
-        const customJson = sessionStorage.getItem('bs_custom_hardware');
-        const selectedId = sessionStorage.getItem('bs_device_profile') || 'win-rtx4090';
+      const concurrencyGetter = function() { return bsHardware.concurrency || 16; };
+      try { Object.defineProperty(Navigator.prototype, 'hardwareConcurrency', { get: makeNative(concurrencyGetter, 'get hardwareConcurrency', 0), configurable: true }); } catch (_) {}
+      try { Object.defineProperty(navigator, 'hardwareConcurrency', { get: makeNative(concurrencyGetter, 'get hardwareConcurrency', 0), configurable: true }); } catch (_) {}
 
-        if (selectedId === 'custom' && customJson) {
-          const custom = JSON.parse(customJson);
-          activeHw = {
-            platform: custom.platform || 'Win32',
-            vendor: custom.vendor || 'Google Inc. (NVIDIA)',
-            renderer: custom.renderer || 'ANGLE (NVIDIA, NVIDIA GeForce RTX 4090 Direct3D11 vs_5_0 ps_5_0, D3D11)',
-            concurrency: parseInt(custom.concurrency, 10) || 16,
-            memory: parseInt(custom.memory, 10) || 32,
-            devicePixelRatio: parseFloat(custom.devicePixelRatio) || 1,
-            screen: custom.screen || { width: 2560, height: 1440, colorDepth: 24 }
-          };
-        } else if (typeof HARDWARE_PROFILES_CATALOG !== 'undefined') {
-          const matched = HARDWARE_PROFILES_CATALOG.find(p => p.id === selectedId);
-          if (matched) {
-            activeHw = {
-              platform: matched.platform,
-              vendor: matched.vendor,
-              renderer: matched.renderer,
-              concurrency: matched.concurrency,
-              memory: matched.memory,
-              devicePixelRatio: matched.devicePixelRatio,
-              screen: matched.screen
-            };
-          }
+      // deviceMemory is spec-clamped to 8 GB max — clamp spoofed values too
+      const memoryGetter = function() { return Math.min(8, Math.max(0.25, bsHardware.memory || 8)); };
+      try { Object.defineProperty(Navigator.prototype, 'deviceMemory', { get: makeNative(memoryGetter, 'get deviceMemory', 0), configurable: true }); } catch (_) {}
+      try { Object.defineProperty(navigator, 'deviceMemory', { get: makeNative(memoryGetter, 'get deviceMemory', 0), configurable: true }); } catch (_) {}
+
+      // ── 5. Live Screen & Monitor Geometry Normalization (originals preserved) ──
+      const SCREEN_KEYS = ['width', 'height', 'availWidth', 'availHeight', 'colorDepth', 'pixelDepth', 'availLeft', 'availTop'];
+      const origScreenDesc = {};
+      if (typeof Screen !== 'undefined' && Screen.prototype) {
+        for (const k of SCREEN_KEYS) {
+          origScreenDesc[k] = Object.getOwnPropertyDescriptor(Screen.prototype, k);
         }
-      } catch (_) {}
-
-      // Apply Platform Spoofing
-      try { Object.defineProperty(Navigator.prototype, 'platform', { get: () => activeHw.platform, configurable: true }); } catch (_) {}
-      try { Object.defineProperty(navigator, 'platform', { get: () => activeHw.platform, configurable: true }); } catch (_) {}
-
-      // Apply CPU Hardware Concurrency
-      try { Object.defineProperty(Navigator.prototype, 'hardwareConcurrency', { get: () => activeHw.concurrency || 16, configurable: true }); } catch (_) {}
-      try { Object.defineProperty(navigator, 'hardwareConcurrency', { get: () => activeHw.concurrency || 16, configurable: true }); } catch (_) {}
-
-      // Apply Device Memory (RAM)
-      try { Object.defineProperty(Navigator.prototype, 'deviceMemory', { get: () => activeHw.memory || 32, configurable: true }); } catch (_) {}
-      try { Object.defineProperty(navigator, 'deviceMemory', { get: () => activeHw.memory || 32, configurable: true }); } catch (_) {}
-
-      // Apply Screen & Monitor Geometry Normalization
-      const activeScreen = activeHw.screen || { width: 1920, height: 1080, colorDepth: 24 };
-      const screenProps = {
-        width: activeScreen.width,
-        height: activeScreen.height,
-        availWidth: activeScreen.width,
-        availHeight: Math.max(600, activeScreen.height - 40),
-        colorDepth: activeScreen.colorDepth || 24,
-        pixelDepth: activeScreen.colorDepth || 24,
-        availLeft: 0,
-        availTop: 0
+      }
+      const screenValue = (key) => {
+        const s = bsHardware.screen || BS_HW_FALLBACK.screen;
+        switch (key) {
+          case 'width': case 'availWidth': return s.width;
+          case 'height': return s.height;
+          case 'availHeight': return Math.max(600, s.height - 40);
+          case 'colorDepth': case 'pixelDepth': return s.colorDepth || 24;
+          default: return 0;
+        }
       };
+      const makeScreenGetter = (key, origDesc) => makeNative(function() {
+        if (!bsOn('screenNormalizationEnabled')) {
+          return origDesc && origDesc.get ? origDesc.get.call(this) : undefined;
+        }
+        return screenValue(key);
+      }, `get ${key}`, 0);
 
-      for (const [k, v] of Object.entries(screenProps)) {
+      for (const k of SCREEN_KEYS) {
         try {
           if (typeof Screen !== 'undefined' && Screen.prototype) {
-            Object.defineProperty(Screen.prototype, k, { get: makeNative(() => v, `get ${k}`, 0), configurable: true, enumerable: true });
+            Object.defineProperty(Screen.prototype, k, { get: makeScreenGetter(k, origScreenDesc[k]), configurable: true, enumerable: true });
           }
         } catch (_) {}
         try {
           if (window.screen) {
-            Object.defineProperty(window.screen, k, { get: makeNative(() => v, `get ${k}`, 0), configurable: true, enumerable: true });
+            Object.defineProperty(window.screen, k, { get: () => screenValue(k), configurable: true, enumerable: true });
           }
         } catch (_) {}
       }
 
+      // devicePixelRatio / outer dimensions (LIVE-GATED)
+      const origDprDesc = Object.getOwnPropertyDescriptor(window, 'devicePixelRatio');
       try {
         Object.defineProperty(window, 'devicePixelRatio', {
-          get: makeNative(() => activeHw.devicePixelRatio || 1, 'get devicePixelRatio', 0),
+          get: makeNative(function() {
+            if (!bsOn('screenNormalizationEnabled')) {
+              return origDprDesc && origDprDesc.get ? origDprDesc.get.call(this) : (origDprDesc ? origDprDesc.value : 1);
+            }
+            return bsHardware.devicePixelRatio || 1;
+          }, 'get devicePixelRatio', 0),
           configurable: true,
           enumerable: true
         });
       } catch (_) {}
 
+      const realOuterWidth = window.outerWidth;
+      const realOuterHeight = window.outerHeight;
       try {
         Object.defineProperty(window, 'outerWidth', {
-          get: makeNative(() => activeScreen.width, 'get outerWidth', 0),
+          get: makeNative(() => bsOn('screenNormalizationEnabled') ? (bsHardware.screen || BS_HW_FALLBACK.screen).width : realOuterWidth, 'get outerWidth', 0),
           configurable: true,
           enumerable: true
         });
         Object.defineProperty(window, 'outerHeight', {
-          get: makeNative(() => activeScreen.height, 'get outerHeight', 0),
+          get: makeNative(() => bsOn('screenNormalizationEnabled') ? (bsHardware.screen || BS_HW_FALLBACK.screen).height : realOuterHeight, 'get outerHeight', 0),
           configurable: true,
           enumerable: true
         });
       } catch (_) {}
 
-      // Apply WebGL Hardware Vendor & GPU Renderer Spoofing
-      if (sessionStorage.getItem('bs_webgl_disabled') !== 'true') {
-        const hookWebGL = (proto) => {
-          if (!proto || !proto.getParameter) return;
-          const origGetParameter = proto.getParameter;
-          proto.getParameter = makeNative(function(pname) {
-            if (!isCaptchaHost) {
-              if (pname === 0x9245) return activeHw.vendor; // UNMASKED_VENDOR_WEBGL
-              if (pname === 0x9246) return activeHw.renderer; // UNMASKED_RENDERER_WEBGL
-              if (pname === 0x1F00) return 'WebKit'; // VENDOR
-              if (pname === 0x1F01) return 'WebKit WebGL'; // RENDERER
-            }
-            return origGetParameter.apply(this, arguments);
-          }, 'getParameter', 1);
+      // ── 6. WebGL Hardware Vendor & GPU Renderer Spoofing (LIVE-GATED) ──
+      const hookWebGL = (proto) => {
+        if (!proto || !proto.getParameter) return;
+        const origGetParameter = proto.getParameter;
+        proto.getParameter = makeNative(function(pname) {
+          if (!isCaptchaHost && bsOn('webglSpoofingEnabled')) {
+            if (pname === 0x9245) return bsHardware.vendor;   // UNMASKED_VENDOR_WEBGL
+            if (pname === 0x9246) return bsHardware.renderer; // UNMASKED_RENDERER_WEBGL
+            if (pname === 0x1F00) return 'WebKit';            // VENDOR
+            if (pname === 0x1F01) return 'WebKit WebGL';      // RENDERER
+          }
+          return origGetParameter.apply(this, arguments);
+        }, 'getParameter', 1);
 
           if (proto.getExtension) {
             const origGetExtension = proto.getExtension;
@@ -686,31 +772,48 @@
               return res;
             }, 'getShaderPrecisionFormat', 2);
           }
-        };
+      };
 
-        if (typeof WebGLRenderingContext !== 'undefined') hookWebGL(WebGLRenderingContext.prototype);
-        if (typeof WebGL2RenderingContext !== 'undefined') hookWebGL(WebGL2RenderingContext.prototype);
-      }
+      if (typeof WebGLRenderingContext !== 'undefined') hookWebGL(WebGLRenderingContext.prototype);
+      if (typeof WebGL2RenderingContext !== 'undefined') hookWebGL(WebGL2RenderingContext.prototype);
 
-      // 5. Client Hints (UA-CH) Consistency on NavigatorUAData Prototype
-      if (sessionStorage.getItem('bs_hints_disabled') !== 'true') {
+      // ── 7. Client Hints (UA-CH) Consistency on NavigatorUAData Prototype (LIVE-GATED) ──
+      {
         if (typeof NavigatorUAData !== 'undefined' && NavigatorUAData.prototype) {
           try {
+            const uaPlatformName = () => {
+              const p = bsHardware.platform || 'Win32';
+              if (p.includes('Win')) return 'Windows';
+              if (p.includes('Mac') || p === 'iPhone' || p === 'iPad') return 'macOS';
+              if (p.includes('Android') || p.includes('arm')) return 'Android';
+              return 'Linux';
+            };
+            const chromeBrandify = (list) => (BS_CONFIG.resolvedUA && Array.isArray(BS_CONFIG.resolvedUA.brands))
+              ? BS_CONFIG.resolvedUA.brands
+              : (list || []).map(b => (b.brand === 'Brave' ? { brand: 'Google Chrome', version: b.version } : b));
+
             const origBrands = Object.getOwnPropertyDescriptor(NavigatorUAData.prototype, 'brands');
             if (origBrands && origBrands.get) {
               Object.defineProperty(NavigatorUAData.prototype, 'brands', {
                 get: function() {
-                  const brands = origBrands.get.call(this) || [];
-                  return brands.map(b => (b.brand === 'Brave' ? { brand: 'Google Chrome', version: b.version } : b));
+                  if (!bsOn('clientHintsEnabled')) return origBrands.get.call(this) || [];
+                  return chromeBrandify(origBrands.get.call(this));
                 },
                 configurable: true,
                 enumerable: true
               });
             }
 
-            const targetPlatform = (activeHw.platform.includes('Win') ? 'Windows' : (activeHw.platform.includes('Mac') ? 'macOS' : (activeHw.platform.includes('Android') || activeHw.platform.includes('arm') ? 'Android' : 'Linux')));
+            const origUaDataPlatformDesc = Object.getOwnPropertyDescriptor(NavigatorUAData.prototype, 'platform');
+            const origPlatformValue = (() => {
+              try {
+                if (origUaDataPlatformDesc && origUaDataPlatformDesc.get) return origUaDataPlatformDesc.get.call(navigator.userAgentData);
+                if (origUaDataPlatformDesc && 'value' in origUaDataPlatformDesc) return origUaDataPlatformDesc.value;
+              } catch (_) {}
+              return 'Windows';
+            })();
             Object.defineProperty(NavigatorUAData.prototype, 'platform', {
-              get: () => targetPlatform,
+              get: () => bsOn('clientHintsEnabled') ? uaPlatformName() : origPlatformValue,
               configurable: true,
               enumerable: true
             });
@@ -719,17 +822,24 @@
               const origHighEntropy = NavigatorUAData.prototype.getHighEntropyValues;
               NavigatorUAData.prototype.getHighEntropyValues = makeNative(function(hints) {
                 return origHighEntropy.apply(this, arguments).then(res => {
-                  if (res) {
-                    res.platform = targetPlatform;
-                    res.architecture = activeHw.platform.includes('arm') ? 'arm' : 'x86';
-                    res.bitness = '64';
-                    res.model = '';
-                    res.wow64 = false;
-                    if (Array.isArray(res.brands)) {
-                      res.brands = res.brands.map(b => (b.brand === 'Brave' ? { brand: 'Google Chrome', version: b.version } : b));
+                  if (!res || !bsOn('clientHintsEnabled')) return res;
+                  res.platform = uaPlatformName();
+                  res.architecture = (bsHardware.platform || '').includes('arm') ? 'arm' : 'x86';
+                  res.bitness = '64';
+                  res.model = '';
+                  res.wow64 = false;
+                  if (Array.isArray(res.brands)) {
+                    res.brands = chromeBrandify(res.brands);
+                  }
+                  if (Array.isArray(res.fullVersionList)) {
+                    res.fullVersionList = chromeBrandify(res.fullVersionList);
+                  }
+                  if (BS_CONFIG.resolvedUA) {
+                    if (BS_CONFIG.resolvedUA.platformVersion && (!hints || hints.includes('platformVersion'))) {
+                      res.platformVersion = BS_CONFIG.resolvedUA.platformVersion;
                     }
-                    if (Array.isArray(res.fullVersionList)) {
-                      res.fullVersionList = res.fullVersionList.map(b => (b.brand === 'Brave' ? { brand: 'Google Chrome', version: b.version } : b));
+                    if (BS_CONFIG.resolvedUA.mobile !== undefined) {
+                      res.mobile = BS_CONFIG.resolvedUA.mobile;
                     }
                   }
                   return res;
@@ -787,114 +897,135 @@
         };
       };
 
-      // 7. Battery & Network Information Cloaking
-      if (sessionStorage.getItem('bs_battery_disabled') !== 'true') {
-        try {
-          if (navigator.getBattery) {
-            const mockBattery = {
-              charging: true,
-              chargingTime: 0,
-              dischargingTime: Infinity,
-              level: 1.0,
-              addEventListener: () => {},
-              removeEventListener: () => {},
-              dispatchEvent: () => true
-            };
-            navigator.getBattery = makeNative(() => Promise.resolve(mockBattery), 'getBattery', 0);
-          }
+      // ── 8. Battery & Network Information Cloaking (LIVE-GATED) ──
+      try {
+        const origGetBattery = navigator.getBattery;
+        if (origGetBattery) {
+          const mockBattery = {
+            charging: true,
+            chargingTime: 0,
+            dischargingTime: Infinity,
+            level: 1.0,
+            addEventListener: () => {},
+            removeEventListener: () => {},
+            dispatchEvent: () => true
+          };
+          navigator.getBattery = makeNative(function() {
+            return bsOn('batteryMaskEnabled') ? Promise.resolve(mockBattery) : origGetBattery.apply(this, arguments);
+          }, 'getBattery', 0);
+        }
 
-          if (navigator.connection || navigator.mozConnection || navigator.webkitConnection) {
-            const mockConnection = {
-              downlink: 10,
-              effectiveType: '4g',
-              rtt: 50,
-              saveData: false,
-              addEventListener: () => {},
-              removeEventListener: () => {},
-              dispatchEvent: () => true
-            };
-            try { Object.defineProperty(Navigator.prototype, 'connection', { get: () => mockConnection, configurable: true }); } catch (_) {}
-            try { Object.defineProperty(navigator, 'connection', { get: () => mockConnection, configurable: true }); } catch (_) {}
-          }
-        } catch (_) {}
-      }
+        if (navigator.connection || navigator.mozConnection || navigator.webkitConnection) {
+          const mockConnection = {
+            downlink: 10,
+            effectiveType: '4g',
+            rtt: 50,
+            saveData: false,
+            addEventListener: () => {},
+            removeEventListener: () => {},
+            dispatchEvent: () => true
+          };
+          const connectionGetter = function() {
+            return bsOn('batteryMaskEnabled') ? mockConnection : undefined;
+          };
+          try { Object.defineProperty(Navigator.prototype, 'connection', { get: makeNative(connectionGetter, 'get connection', 0), configurable: true }); } catch (_) {}
+          try { Object.defineProperty(navigator, 'connection', { get: makeNative(connectionGetter, 'get connection', 0), configurable: true }); } catch (_) {}
+        }
+      } catch (_) {}
 
-      // 8. High-Precision Audio Noise (Non-Destructive Mathematical Variance)
-      if (sessionStorage.getItem('bs_audio_disabled') !== 'true') {
-        try {
-          if (typeof AudioBuffer !== 'undefined' && AudioBuffer.prototype.getChannelData) {
-            const origGetChannelData = AudioBuffer.prototype.getChannelData;
-            AudioBuffer.prototype.getChannelData = makeNative(function(channel) {
-              const data = origGetChannelData.apply(this, arguments);
-              if (!isCaptchaHost && data && data.length > 10) {
-                const audioPrng = createPrng(channel + 7);
-                for (let i = 0; i < Math.min(data.length, 128); i += 4) {
-                  data[i] += (audioPrng() - 0.5) * 2e-7;
-                }
+      // ── 9. High-Precision Audio Noise (LIVE-GATED, non-compounding) ──
+      // getChannelData returns the LIVE backing store — mutating it compounds on
+      // every call. We cache a per-buffer/channel noisy COPY instead, so repeated
+      // probes hash identically within a session and the real buffer is untouched.
+      try {
+        const audioCopyCache = new WeakMap();
+
+        const perturbCopy = (data, offsetSeed) => {
+          const audioPrng = createPrng(offsetSeed);
+          for (let i = 0; i < Math.min(data.length, 128); i += 4) {
+            data[i] += (audioPrng() - 0.5) * 2e-7;
+          }
+          return data;
+        };
+
+        if (typeof AudioBuffer !== 'undefined' && AudioBuffer.prototype.getChannelData) {
+          const origGetChannelData = AudioBuffer.prototype.getChannelData;
+          AudioBuffer.prototype.getChannelData = makeNative(function(channel) {
+            const data = origGetChannelData.apply(this, arguments);
+            if (!isCaptchaHost && bsOn('audioNoiseEnabled') && data && data.length > 10) {
+              let perBuffer = audioCopyCache.get(this);
+              if (!perBuffer || !perBuffer[channel]) {
+                perBuffer = perBuffer || {};
+                perBuffer[channel] = perturbCopy(new Float32Array(data), channel + 7);
+                audioCopyCache.set(this, perBuffer);
               }
-              return data;
-            }, 'getChannelData', 1);
+              return perBuffer[channel];
+            }
+            return data;
+          }, 'getChannelData', 1);
 
-            if (AudioBuffer.prototype.copyFromChannel) {
-              const origCopyFromChannel = AudioBuffer.prototype.copyFromChannel;
-              AudioBuffer.prototype.copyFromChannel = makeNative(function(dest, channelNumber, startInChannel) {
-                origCopyFromChannel.apply(this, arguments);
-                if (!isCaptchaHost && dest && dest.length > 10) {
-                  const audioPrng = createPrng(channelNumber + 13);
-                  for (let i = 0; i < Math.min(dest.length, 128); i += 4) {
-                    dest[i] += (audioPrng() - 0.5) * 2e-7;
+          if (AudioBuffer.prototype.copyFromChannel) {
+            const origCopyFromChannel = AudioBuffer.prototype.copyFromChannel;
+            AudioBuffer.prototype.copyFromChannel = makeNative(function(dest, channelNumber, startInChannel) {
+              origCopyFromChannel.apply(this, arguments);
+              if (!isCaptchaHost && bsOn('audioNoiseEnabled') && dest && dest.length > 10) {
+                perturbCopy(dest, channelNumber + 13);
+              }
+            }, 'copyFromChannel', 2);
+          }
+        }
+
+        // Analyser arrays are caller-owned scratch buffers that get refilled with
+        // fresh raw data every call — we apply FRESH multiplicative variance each
+        // call so noise never accumulates across invocations.
+        if (typeof AnalyserNode !== 'undefined' && AnalyserNode.prototype.getFloatFrequencyData) {
+          const origGetFloatFreq = AnalyserNode.prototype.getFloatFrequencyData;
+          AnalyserNode.prototype.getFloatFrequencyData = makeNative(function(array) {
+            origGetFloatFreq.apply(this, arguments);
+            if (!isCaptchaHost && bsOn('audioNoiseEnabled') && array && array.length > 0) {
+              const audioPrng = createPrng(29);
+              for (let i = 0; i < Math.min(array.length, 32); i++) {
+                array[i] = array[i] * (1 + (audioPrng() - 0.5) * 2e-7);
+              }
+            }
+          }, 'getFloatFrequencyData', 1);
+
+          if (AnalyserNode.prototype.getByteFrequencyData) {
+            const origGetByteFreq = AnalyserNode.prototype.getByteFrequencyData;
+            AnalyserNode.prototype.getByteFrequencyData = makeNative(function(array) {
+              origGetByteFreq.apply(this, arguments);
+              if (!isCaptchaHost && bsOn('audioNoiseEnabled') && array && array.length > 0) {
+                const audioPrng = createPrng(41);
+                if (audioPrng() > 0.5) array[0] = Math.min(255, Math.max(0, array[0] + (audioPrng() > 0.5 ? 1 : -1)));
+              }
+            }, 'getByteFrequencyData', 1);
+          }
+        }
+
+        if (typeof OfflineAudioContext !== 'undefined' && OfflineAudioContext.prototype.startRendering) {
+          const origStartRendering = OfflineAudioContext.prototype.startRendering;
+          OfflineAudioContext.prototype.startRendering = makeNative(function() {
+            return origStartRendering.apply(this, arguments).then(audioBuffer => {
+              if (!isCaptchaHost && bsOn('audioNoiseEnabled') && audioBuffer && audioBuffer.numberOfChannels) {
+                const oPrng = createPrng(53);
+                for (let c = 0; c < audioBuffer.numberOfChannels; c++) {
+                  const data = audioBuffer.getChannelData(c);
+                  for (let i = 0; i < Math.min(data.length, 128); i += 4) {
+                    data[i] += (oPrng() - 0.5) * 2e-7;
                   }
                 }
-              }, 'copyFromChannel', 2);
-            }
-          }
-
-          if (typeof AnalyserNode !== 'undefined' && AnalyserNode.prototype.getFloatFrequencyData) {
-            const origGetFloatFreq = AnalyserNode.prototype.getFloatFrequencyData;
-            AnalyserNode.prototype.getFloatFrequencyData = makeNative(function(array) {
-              origGetFloatFreq.apply(this, arguments);
-              if (!isCaptchaHost && array && array.length > 0) {
-                const audioPrng = createPrng(29);
-                for (let i = 0; i < Math.min(array.length, 32); i++) {
-                  array[i] += (audioPrng() - 0.5) * 2e-7;
-                }
               }
-            }, 'getFloatFrequencyData', 1);
+              return audioBuffer;
+            });
+          }, 'startRendering', 0);
+        }
+      } catch (_) {}
 
-            if (AnalyserNode.prototype.getByteFrequencyData) {
-              const origGetByteFreq = AnalyserNode.prototype.getByteFrequencyData;
-              AnalyserNode.prototype.getByteFrequencyData = makeNative(function(array) {
-                origGetByteFreq.apply(this, arguments);
-                if (!isCaptchaHost && array && array.length > 0) {
-                  const audioPrng = createPrng(41);
-                  if (audioPrng() > 0.5) array[0] = Math.min(255, Math.max(0, array[0] + (audioPrng() > 0.5 ? 1 : -1)));
-                }
-              }, 'getByteFrequencyData', 1);
-            }
-          }
-
-          if (typeof OfflineAudioContext !== 'undefined' && OfflineAudioContext.prototype.startRendering) {
-            const origStartRendering = OfflineAudioContext.prototype.startRendering;
-            OfflineAudioContext.prototype.startRendering = makeNative(function() {
-              return origStartRendering.apply(this, arguments).then(audioBuffer => {
-                if (!isCaptchaHost && audioBuffer && audioBuffer.numberOfChannels) {
-                  const oPrng = createPrng(53);
-                  for (let c = 0; c < audioBuffer.numberOfChannels; c++) {
-                    const data = audioBuffer.getChannelData(c);
-                    for (let i = 0; i < Math.min(data.length, 128); i += 4) {
-                      data[i] += (oPrng() - 0.5) * 2e-7;
-                    }
-                  }
-                }
-                return audioBuffer;
-              });
-            }, 'startRendering', 0);
-          }
-        } catch (_) {}
-      }
-
-      // 9. Session-Seeded Non-Destructive Canvas Spoofing (±1 RGB Bit Shifts)
-      if (sessionStorage.getItem('bs_canvas_disabled') !== 'true') {
+      // ── 10. Session-Seeded Canvas Spoofing (LIVE-GATED, truly non-destructive) ──
+      // The old implementation wrote noisy pixels BACK onto the live canvas via
+      // putImageData — permanently altering visible content and compounding noise
+      // on every call. We now encode from a perturbed OFFSCREEN copy instead.
+      if (typeof CanvasRenderingContext2D !== 'undefined' || typeof HTMLCanvasElement !== 'undefined') {
         try {
           const applyCanvasNoise = (imageData) => {
             if (!imageData || !imageData.data || imageData.data.length < 4) return imageData;
@@ -908,11 +1039,29 @@
             return imageData;
           };
 
+          // Render this canvas into an offscreen copy and return the copy.
+          // Returns null if the canvas cannot be safely copied.
+          const makeNoisyCopy = (canvas) => {
+            if (!canvas || !canvas.width || !canvas.height || canvas.width > 512 || canvas.height > 512) return null;
+            const copy = document.createElement('canvas');
+            copy.width = canvas.width;
+            copy.height = canvas.height;
+            const cctx = copy.getContext('2d');
+            if (!cctx) return null;
+            cctx.drawImage(canvas, 0, 0);
+            const img = cctx.getImageData(0, 0, copy.width, copy.height);
+            applyCanvasNoise(img);
+            cctx.putImageData(img, 0, 0);
+            return copy;
+          };
+
           if (typeof CanvasRenderingContext2D !== 'undefined' && CanvasRenderingContext2D.prototype.getImageData) {
             const origGetImageData = CanvasRenderingContext2D.prototype.getImageData;
             CanvasRenderingContext2D.prototype.getImageData = makeNative(function(sx, sy, sw, sh) {
               const imgData = origGetImageData.apply(this, arguments);
-              if (!isCaptchaHost) {
+              // getImageData already returns an isolated copy — perturbing the
+              // returned object never touches the live canvas.
+              if (!isCaptchaHost && bsOn('canvasNoiseEnabled')) {
                 applyCanvasNoise(imgData);
               }
               return imgData;
@@ -923,14 +1072,10 @@
             if (HTMLCanvasElement.prototype.toDataURL) {
               const origToDataURL = HTMLCanvasElement.prototype.toDataURL;
               HTMLCanvasElement.prototype.toDataURL = makeNative(function() {
-                if (!isCaptchaHost && this.width > 0 && this.height > 0 && this.width <= 512 && this.height <= 512) {
+                if (!isCaptchaHost && bsOn('canvasNoiseEnabled')) {
                   try {
-                    const ctx = this.getContext('2d');
-                    if (ctx) {
-                      const img = ctx.getImageData(0, 0, this.width, this.height);
-                      applyCanvasNoise(img);
-                      ctx.putImageData(img, 0, 0);
-                    }
+                    const copy = makeNoisyCopy(this);
+                    if (copy) return origToDataURL.apply(copy, arguments);
                   } catch (_) {}
                 }
                 return origToDataURL.apply(this, arguments);
@@ -940,14 +1085,10 @@
             if (HTMLCanvasElement.prototype.toBlob) {
               const origToBlob = HTMLCanvasElement.prototype.toBlob;
               HTMLCanvasElement.prototype.toBlob = makeNative(function(callback, type, quality) {
-                if (!isCaptchaHost && this.width > 0 && this.height > 0 && this.width <= 512 && this.height <= 512) {
+                if (!isCaptchaHost && bsOn('canvasNoiseEnabled')) {
                   try {
-                    const ctx = this.getContext('2d');
-                    if (ctx) {
-                      const img = ctx.getImageData(0, 0, this.width, this.height);
-                      applyCanvasNoise(img);
-                      ctx.putImageData(img, 0, 0);
-                    }
+                    const copy = makeNoisyCopy(this);
+                    if (copy) return origToBlob.apply(copy, arguments);
                   } catch (_) {}
                 }
                 return origToBlob.apply(this, arguments);
@@ -957,174 +1098,144 @@
         } catch (_) {}
       }
 
-      // 10. WebRTC Local IP Leak Protection
-      if (sessionStorage.getItem('bs_webrtc_disabled') !== 'true') {
-        try {
-          if (typeof RTCPeerConnection !== 'undefined') {
-            const filterSdp = (sdp) => {
-              if (typeof sdp !== 'string') return sdp;
-              return sdp.replace(/(\r\n|\n)?a=candidate:.*?(192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+|172\.(1[6-9]|2\d|3[0-1])\.\d+\.\d+|\.local).*/gi, '');
-            };
+      // ── 11. WebRTC Local IP Leak Protection (LIVE-GATED) ──
+      try {
+        if (typeof RTCPeerConnection !== 'undefined') {
+          const filterSdp = (sdp) => {
+            if (typeof sdp !== 'string') return sdp;
+            return sdp.replace(/(\r\n|\n)?a=candidate:.*?(192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+|172\.(1[6-9]|2\d|3[0-1])\.\d+\.\d+|\.local).*/gi, '');
+          };
 
-            const origCreateOffer = RTCPeerConnection.prototype.createOffer;
-            RTCPeerConnection.prototype.createOffer = makeNative(function(options) {
-              return origCreateOffer.apply(this, arguments).then(offer => {
-                if (offer && offer.sdp) {
-                  offer.sdp = filterSdp(offer.sdp);
-                }
-                return offer;
-              });
-            }, 'createOffer', 0);
-
-            if (RTCPeerConnection.prototype.createAnswer) {
-              const origCreateAnswer = RTCPeerConnection.prototype.createAnswer;
-              RTCPeerConnection.prototype.createAnswer = makeNative(function(options) {
-                return origCreateAnswer.apply(this, arguments).then(answer => {
-                  if (answer && answer.sdp) {
-                    answer.sdp = filterSdp(answer.sdp);
-                  }
-                  return answer;
-                });
-              }, 'createAnswer', 0);
-            }
-
-            if (RTCPeerConnection.prototype.setLocalDescription) {
-              const origSetLocalDesc = RTCPeerConnection.prototype.setLocalDescription;
-              RTCPeerConnection.prototype.setLocalDescription = makeNative(function(desc) {
-                if (desc && desc.sdp) {
-                  desc.sdp = filterSdp(desc.sdp);
-                }
-                return origSetLocalDesc.apply(this, arguments);
-              }, 'setLocalDescription', 1);
-            }
-          }
-        } catch (_) {}
-      }
-
-      // 11. DOM Measurement Micro-Jitter (Defeats Sub-Pixel Font Fingerprinting)
-      if (sessionStorage.getItem('bs_domjitter_disabled') !== 'true') {
-        try {
-          if (typeof Element !== 'undefined' && Element.prototype.getBoundingClientRect) {
-            const origGetBoundingClientRect = Element.prototype.getBoundingClientRect;
-            Element.prototype.getBoundingClientRect = makeNative(function() {
-              const rect = origGetBoundingClientRect.apply(this, arguments);
-              if (!isCaptchaHost && rect) {
-                const jPrng = createPrng(rect.width + rect.height);
-                const jitter = (jPrng() - 0.5) * 0.002;
-                return new DOMRect(
-                  rect.x + jitter,
-                  rect.y + jitter,
-                  rect.width + jitter,
-                  rect.height + jitter
-                );
+          const origCreateOffer = RTCPeerConnection.prototype.createOffer;
+          RTCPeerConnection.prototype.createOffer = makeNative(function(options) {
+            return origCreateOffer.apply(this, arguments).then(offer => {
+              if (bsOn('webrtcShieldEnabled') && offer && offer.sdp) {
+                offer.sdp = filterSdp(offer.sdp);
               }
-              return rect;
-            }, 'getBoundingClientRect', 0);
-          }
+              return offer;
+            });
+          }, 'createOffer', 0);
 
-          if (typeof Element !== 'undefined' && Element.prototype.getClientRects) {
-            const origGetClientRects = Element.prototype.getClientRects;
-            Element.prototype.getClientRects = makeNative(function() {
-              const rects = origGetClientRects.apply(this, arguments);
-              return rects;
-            }, 'getClientRects', 0);
-          }
-        } catch (_) {}
-      }
-
-      // 12. High-Resolution Timer Coarsening (Spectre, Date & Cache-Timing Protection)
-      if (sessionStorage.getItem('bs_timercoarse_disabled') !== 'true') {
-        try {
-          if (typeof performance !== 'undefined' && performance.now) {
-            const origNow = performance.now;
-            performance.now = makeNative(function() {
-              const t = origNow.apply(performance, arguments);
-              // Coarsen resolution to nearest 20ms to destroy CPU cache benchmarking
-              return Math.floor(t / 20) * 20;
-            }, 'now', 0);
-          }
-
-          const origDateNow = Date.now;
-          Date.now = makeNative(function() {
-            const d = origDateNow.apply(Date, arguments);
-            return Math.floor(d / 20) * 20;
-          }, 'now', 0);
-
-          if (typeof Event !== 'undefined' && Event.prototype) {
-            const origTimeStamp = Object.getOwnPropertyDescriptor(Event.prototype, 'timeStamp');
-            if (origTimeStamp && origTimeStamp.get) {
-              Object.defineProperty(Event.prototype, 'timeStamp', {
-                get: makeNative(function() {
-                  const ts = origTimeStamp.get.call(this);
-                  return Math.floor(ts / 20) * 20;
-                }, 'get timeStamp', 0),
-                configurable: true,
-                enumerable: true
+          if (RTCPeerConnection.prototype.createAnswer) {
+            const origCreateAnswer = RTCPeerConnection.prototype.createAnswer;
+            RTCPeerConnection.prototype.createAnswer = makeNative(function(options) {
+              return origCreateAnswer.apply(this, arguments).then(answer => {
+                if (bsOn('webrtcShieldEnabled') && answer && answer.sdp) {
+                  answer.sdp = filterSdp(answer.sdp);
+                }
+                return answer;
               });
+            }, 'createAnswer', 0);
+          }
+
+          if (RTCPeerConnection.prototype.setLocalDescription) {
+            const origSetLocalDesc = RTCPeerConnection.prototype.setLocalDescription;
+            RTCPeerConnection.prototype.setLocalDescription = makeNative(function(desc) {
+              if (bsOn('webrtcShieldEnabled') && desc && desc.sdp) {
+                desc.sdp = filterSdp(desc.sdp);
+              }
+              return origSetLocalDesc.apply(this, arguments);
+            }, 'setLocalDescription', 1);
+          }
+        }
+      } catch (_) {}
+
+      // ── 12. DOM Measurement Micro-Jitter (LIVE-GATED) ──
+      try {
+        if (typeof Element !== 'undefined' && Element.prototype.getBoundingClientRect) {
+          const origGetBoundingClientRect = Element.prototype.getBoundingClientRect;
+          Element.prototype.getBoundingClientRect = makeNative(function() {
+            const rect = origGetBoundingClientRect.apply(this, arguments);
+            if (!isCaptchaHost && bsOn('domJitterEnabled') && rect) {
+              const jPrng = createPrng(rect.width + rect.height);
+              const jitter = (jPrng() - 0.5) * 0.002;
+              return new DOMRect(
+                rect.x + jitter,
+                rect.y + jitter,
+                rect.width + jitter,
+                rect.height + jitter
+              );
             }
-          }
-        } catch (_) {}
-      }
+            return rect;
+          }, 'getBoundingClientRect', 0);
+        }
+      } catch (_) {}
 
-      // 13. Media Devices & Speech Synthesis Sanitization
-      if (sessionStorage.getItem('bs_mediadevices_disabled') !== 'true') {
-        try {
-          if (navigator.mediaDevices && navigator.mediaDevices.enumerateDevices) {
-            const mockDevices = [
-              { deviceId: 'default', kind: 'audioinput', label: 'Default Audio Device', groupId: 'group_default' },
-              { deviceId: 'default', kind: 'audiooutput', label: 'Default Speaker', groupId: 'group_default' },
-              { deviceId: 'default', kind: 'videoinput', label: 'Integrated HD Camera', groupId: 'group_default' }
-            ];
-            navigator.mediaDevices.enumerateDevices = makeNative(() => Promise.resolve(mockDevices), 'enumerateDevices', 0);
-          }
-        } catch (_) {}
-      }
+      // ── 13. High-Resolution Timer Coarsening (LIVE-GATED Spectre defense) ──
+      try {
+        if (typeof performance !== 'undefined' && performance.now) {
+          const origNow = performance.now;
+          performance.now = makeNative(function() {
+            const t = origNow.apply(performance, arguments);
+            if (!bsOn('timerCoarseningEnabled')) return t;
+            // Coarsen resolution to nearest 20ms to destroy CPU cache benchmarking
+            return Math.floor(t / 20) * 20;
+          }, 'now', 0);
+        }
 
-      if (sessionStorage.getItem('bs_speechvoices_disabled') !== 'true') {
-        try {
-          if (typeof window.speechSynthesis !== 'undefined' && window.speechSynthesis.getVoices) {
-            const mockVoices = [
-              { voiceURI: 'Google US English', name: 'Google US English', lang: 'en-US', localService: false, default: true },
-              { voiceURI: 'Google UK English Female', name: 'Google UK English Female', lang: 'en-GB', localService: false, default: false },
-              { voiceURI: 'Google UK English Male', name: 'Google UK English Male', lang: 'en-GB', localService: false, default: false }
-            ];
-            window.speechSynthesis.getVoices = makeNative(() => mockVoices, 'getVoices', 0);
+        const origDateNow = Date.now;
+        Date.now = makeNative(function() {
+          const d = origDateNow.apply(Date, arguments);
+          if (!bsOn('timerCoarseningEnabled')) return d;
+          return Math.floor(d / 20) * 20;
+        }, 'now', 0);
+
+        if (typeof Event !== 'undefined' && Event.prototype) {
+          const origTimeStamp = Object.getOwnPropertyDescriptor(Event.prototype, 'timeStamp');
+          if (origTimeStamp && origTimeStamp.get) {
+            Object.defineProperty(Event.prototype, 'timeStamp', {
+              get: makeNative(function() {
+                const ts = origTimeStamp.get.call(this);
+                if (!bsOn('timerCoarseningEnabled')) return ts;
+                return Math.floor(ts / 20) * 20;
+              }, 'get timeStamp', 0),
+              configurable: true,
+              enumerable: true
+            });
           }
-        } catch (_) {}
-      }
+        }
+      } catch (_) {}
+
+      // ── 14. Media Devices & Speech Synthesis Sanitization (LIVE-GATED) ──
+      try {
+        if (navigator.mediaDevices && navigator.mediaDevices.enumerateDevices) {
+          const origEnumerateDevices = navigator.mediaDevices.enumerateDevices;
+          const mockDevices = [
+            { deviceId: 'default', kind: 'audioinput', label: 'Default Audio Device', groupId: 'group_default' },
+            { deviceId: 'default', kind: 'audiooutput', label: 'Default Speaker', groupId: 'group_default' },
+            { deviceId: 'default', kind: 'videoinput', label: 'Integrated HD Camera', groupId: 'group_default' }
+          ];
+          navigator.mediaDevices.enumerateDevices = makeNative(function() {
+            return bsOn('mediaDevicesSanitizeEnabled') ? Promise.resolve(mockDevices) : origEnumerateDevices.apply(this, arguments);
+          }, 'enumerateDevices', 0);
+        }
+      } catch (_) {}
+
+      try {
+        if (typeof window.speechSynthesis !== 'undefined' && window.speechSynthesis.getVoices) {
+          const origGetVoices = window.speechSynthesis.getVoices;
+          const mockVoices = [
+            { voiceURI: 'Google US English', name: 'Google US English', lang: 'en-US', localService: false, default: true },
+            { voiceURI: 'Google UK English Female', name: 'Google UK English Female', lang: 'en-GB', localService: false, default: false },
+            { voiceURI: 'Google UK English Male', name: 'Google UK English Male', lang: 'en-GB', localService: false, default: false }
+          ];
+          window.speechSynthesis.getVoices = makeNative(function() {
+            return bsOn('speechVoicesSanitizeEnabled') ? mockVoices : origGetVoices.apply(this, arguments);
+          }, 'getVoices', 0);
+        }
+      } catch (_) {}
 
     } catch (_) {}
   })();
 
-  // If this is an active Cloudflare interstitial challenge page, exit now to avoid interrupting verification!
-  if (isCloudflareInterstitial()) {
-    return;
-  }
-
   const isMediaPlatform = host.includes('spotify.com') || host.includes('youtube.com') || host.includes('youtu.be') || host.includes('netflix.com') || host.includes('twitch.tv') || host.includes('reddit.com');
 
   // ─────────────────────────────────────────────────────────────────────────────
-  // 0. Master Kill Switch & Telemetry Initialization
-  // ─────────────────────────────────────────────────────────────────────────────
-  try {
-    if (sessionStorage.getItem('bs_master_disabled') === 'true') {
-      console.log('[BraveShield] Disabled via Master Kill Switch.');
-      window.addEventListener('message', (e) => {
-        if (e.data && e.data.type === 'bs-sync-state' && e.data.enabled) {
-          window.location.reload();
-        }
-      });
-      return;
-    }
-  } catch (_) {}
-
-  // ─────────────────────────────────────────────────────────────────────────────
   // Module 2: Feature A — Instant URL Unshortener & Direct Link Resolvers
+  // (LIVE-GATED: sweep checks config every pass, so toggles apply instantly)
   // ─────────────────────────────────────────────────────────────────────────────
   (() => {
     try {
-      if (sessionStorage.getItem('bs_unshortener_disabled') === 'true') return;
-
       const UNPACK_SELECTORS = [
         'a[href*="ouo.io/go/"]', 'a[href*="ouo.press/go/"]',
         'a[href*="linkvertise.com/download/"]',
@@ -1153,6 +1264,7 @@
       }
 
       function sweepUnshortenLinks() {
+        if (!bsOn('unshortenerEnabled')) return;
         const anchors = document.querySelectorAll(UNPACK_SELECTORS.join(', '));
         anchors.forEach(a => {
           if (a._bsResolved) return;
@@ -1171,18 +1283,17 @@
   })();
 
   // ─────────────────────────────────────────────────────────────────────────────
-  // Module 3: 50x Safe Countdown Acceleration & Fast-Pass Buttons
+  // Module 3: 50x Safe Countdown Acceleration (MAIN-world timer hooks only)
+  // NOTE: DOM overlay purging / button unlocking lives exclusively in content.js
+  // now — the duplicated MAIN-world copy was removed.
   // ─────────────────────────────────────────────────────────────────────────────
   (() => {
-    if (sessionStorage.getItem('bs_timers_disabled') === 'true') return;
-    if (isMediaPlatform) return;
-
     try {
       const origSetTimeout = window.setTimeout;
       const origSetInterval = window.setInterval;
 
       window.setTimeout = makeNative(function(fn, delay, ...args) {
-        if (!isCaptchaHost && typeof delay === 'number' && delay > 100 && delay < 120000) {
+        if (!isCaptchaHost && bsOn('autoBypassTimers') && typeof delay === 'number' && delay > 100 && delay < 120000) {
           const fastDelay = Math.max(10, Math.floor(delay / 50));
           return origSetTimeout.call(this, fn, fastDelay, ...args);
         }
@@ -1190,104 +1301,19 @@
       }, 'setTimeout', 2);
 
       window.setInterval = makeNative(function(fn, delay, ...args) {
-        if (!isCaptchaHost && typeof delay === 'number' && delay >= 1000 && delay < 60000) {
+        if (!isCaptchaHost && bsOn('autoBypassTimers') && typeof delay === 'number' && delay >= 1000 && delay < 60000) {
           const fastDelay = Math.max(50, Math.floor(delay / 50));
           return origSetInterval.call(this, fn, fastDelay, ...args);
         }
         return origSetInterval.apply(this, arguments);
       }, 'setInterval', 2);
     } catch (_) {}
-
-    function purgeInvisibleClickBlockers() {
-      try {
-        if (isCaptchaHost) return;
-        const vw = window.innerWidth || document.documentElement.clientWidth || 800;
-        const vh = window.innerHeight || document.documentElement.clientHeight || 600;
-        const candidates = document.querySelectorAll('div, a, span, section, iframe');
-
-        candidates.forEach(el => {
-          if (!el || el._bsOverlayNeutralized) return;
-          if (el === document.body || el === document.documentElement || el.id?.startsWith('bs-')) return;
-
-          const style = window.getComputedStyle ? window.getComputedStyle(el) : null;
-          if (!style) return;
-
-          const isFixed = style.position === 'fixed' || style.position === 'absolute';
-          const zIndex = parseInt(style.zIndex, 10) || 0;
-          const opacity = parseFloat(style.opacity);
-          const isTransparent = opacity === 0 || style.visibility === 'hidden' || style.backgroundColor === 'transparent' || style.backgroundColor === 'rgba(0, 0, 0, 0)';
-
-          const rect = el.getBoundingClientRect();
-          const coversFullViewport = rect.width >= (vw * 0.75) && rect.height >= (vh * 0.75);
-
-          if (isFixed && zIndex >= 50 && (isTransparent || opacity < 0.1) && coversFullViewport) {
-            const hasVisibleText = el.innerText && el.innerText.trim().length > 0;
-            const hasInputs = el.querySelector('input, form, video, button, select');
-
-            if (!hasVisibleText && !hasInputs) {
-              el._bsOverlayNeutralized = true;
-              el.style.setProperty('display', 'none', 'important');
-              el.style.setProperty('pointer-events', 'none', 'important');
-              el.style.setProperty('z-index', '-9999', 'important');
-              if (el.tagName === 'A' && el.parentNode) {
-                el.remove();
-              }
-              reportTelemetry('trapsNeutralized', 1);
-            }
-          }
-        });
-      } catch (_) {}
-    }
-
-    function fastPassButtons() {
-      try {
-        const btnSelectors = [
-          'button', 'a.btn', 'a[class*="download"]', 'a[class*="button"]', 'div[class*="download"]',
-          'a[href*="download"]', 'a[href*="server"]', 'a[href*="drive"]', 'a[href*="mega"]',
-          '#download-btn', '#btn-main', '#get-link', '.btn-download', '.download-now',
-          '.get-link', '.download_link', '[id*="download"]', '[class*="download"]',
-          '.download-box a', '.download-box button', 'a[onclick*="download"]',
-          '#btn-main', '#download-btn', '#get-link', '#continue-btn', '#btn-download', '#submit-btn', '#final-link'
-        ];
-
-        const nodes = document.querySelectorAll(btnSelectors.join(', '));
-        nodes.forEach(el => {
-          if (!el) return;
-          const txt = (el.innerText || el.textContent || '').trim().toLowerCase();
-          const isDownloadTarget = txt.includes('download') || txt.includes('server') || txt.includes('get link') || txt.includes('continue') || txt.includes('tutorial') || txt.includes('watch') || txt.includes('final');
-
-          if (isDownloadTarget || el.classList.contains('btn') || el.id?.includes('download') || el.className?.includes('download') || el.className?.includes('server')) {
-            if (el.disabled) {
-              el.disabled = false;
-              el.removeAttribute('disabled');
-            }
-            if (el.getAttribute('aria-disabled') === 'true') {
-              el.removeAttribute('aria-disabled');
-            }
-            if (el.classList.contains('disabled')) {
-              el.classList.remove('disabled');
-            }
-
-            el.style.setProperty('pointer-events', 'auto', 'important');
-            el.style.setProperty('cursor', 'pointer', 'important');
-            el.style.setProperty('opacity', '1', 'important');
-            el.style.setProperty('position', 'relative', 'important');
-            el.style.setProperty('z-index', '9999', 'important');
-          }
-        });
-      } catch (_) {}
-    }
-
-    setInterval(purgeInvisibleClickBlockers, 800);
-    setInterval(fastPassButtons, 500);
   })();
 
   // ─────────────────────────────────────────────────────────────────────────────
-  // Module 4: Feature B — Universal Paywall & Blur Defuser
+  // Module 4: Feature B — Universal Paywall & Blur Defuser (LIVE-GATED)
   // ─────────────────────────────────────────────────────────────────────────────
   (() => {
-    if (sessionStorage.getItem('bs_paywall_disabled') === 'true') return;
-
     const PAYWALL_PATTERNS = [
       '.paywall', '.modal-backdrop', '.blur-overlay',
       '.tp-backdrop', '.tp-modal', '#gateway-content',
@@ -1298,6 +1324,7 @@
 
     function defusePaywallAndBlur() {
       try {
+        if (!bsOn('paywallDefuserEnabled')) return;
         if (document.documentElement) {
           document.documentElement.style.setProperty('overflow', 'auto', 'important');
         }
@@ -1332,15 +1359,14 @@
   })();
 
   // ─────────────────────────────────────────────────────────────────────────────
-  // Module 5: Feature C — AdBlock Trap Defuser
+  // Module 5: Feature C — AdBlock Trap Defuser (LIVE-GATED)
   // ─────────────────────────────────────────────────────────────────────────────
   (() => {
-    if (sessionStorage.getItem('bs_adblock_disabled') === 'true') return;
-
     const ADBLOCK_MODAL_TEXT_REGEX = /(disable\s+your\s+ad\s?blocker|ad\s?block\s+detected|turn\s+off\s+adblock|we\s+notice\s+you\s+are\s+using\s+an\s+ad\s?blocker|ad\s?blocking\s+software)/i;
 
     function neutralizeAdBlockTraps() {
       try {
+        if (!bsOn('bypassAdblockDetection')) return;
         const potentialModals = document.querySelectorAll('div[class*="modal"], div[class*="popup"], div[class*="dialog"], div[id*="adblock"], div[class*="adblock"]');
         potentialModals.forEach(m => {
           if (m && !m._bsAdblockDefused && ADBLOCK_MODAL_TEXT_REGEX.test(m.innerText || '')) {
@@ -1364,8 +1390,7 @@
 
     function speedupYouTubeAds() {
       try {
-        if (sessionStorage.getItem('bs_master_disabled') === 'true') return;
-        if (sessionStorage.getItem('bs_youtube_disabled') === 'true') return;
+        if (!bsOn('youtubeAds')) return;
 
         const video = document.querySelector('video');
         const adContainer = document.querySelector('.ad-showing, .ad-interrupting, .ytp-ad-player-overlay');
@@ -1397,8 +1422,7 @@
 
     function sweepTwitchAds() {
       try {
-        if (sessionStorage.getItem('bs_master_disabled') === 'true') return;
-        if (sessionStorage.getItem('bs_twitch_disabled') === 'true') return;
+        if (!bsOn('twitchShieldEnabled')) return;
 
         const adNotice = document.querySelector('.player-ad-notice, [data-test-selector="ad-banner"], [data-a-target="video-ad-label"]');
         const video = document.querySelector('video');
@@ -1417,11 +1441,8 @@
   // ─────────────────────────────────────────────────────────────────────────────
   (() => {
     try {
-      if (sessionStorage.getItem('bs_master_disabled') === 'true') return;
-      if (sessionStorage.getItem('bs_rightclick_disabled') === 'true') return;
-
       window.addEventListener('contextmenu', (e) => {
-        if (!isCaptchaHost && e) {
+        if (!isCaptchaHost && bsOn('rightClickEnabled') && e) {
           e.stopImmediatePropagation ? e.stopImmediatePropagation() : null;
         }
       }, false);
@@ -1448,14 +1469,13 @@
   // ─────────────────────────────────────────────────────────────────────────────
   (() => {
     try {
-      if (sessionStorage.getItem('bs_master_disabled') === 'true') return;
-      if (sessionStorage.getItem('bs_cleanurl_disabled') === 'true') return;
-
-      const TRACKING_PARAMS = [
-        'utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content', 'utm_id',
-        'fbclid', 'gclid', 'gclsrc', 'dclid', 'wbraid', 'gbraid',
-        'mc_eid', 'si', 'igshid', 'ref', 'ref_src', 'yclid', 'msclkid'
-      ];
+      const TRACKING_PARAMS = (typeof BS_TRACKING_PARAMS !== 'undefined')
+        ? BS_TRACKING_PARAMS
+        : [
+          'utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content', 'utm_id',
+          'fbclid', 'gclid', 'gclsrc', 'dclid', 'wbraid', 'gbraid',
+          'mc_eid', 'igshid', 'ref_src', 'yclid', 'msclkid'
+        ];
 
       function cleanUrlString(rawUrl) {
         try {
@@ -1474,17 +1494,23 @@
         }
       }
 
-      try {
-        if (!host.includes('reddit.com') && !host.includes('youtube.com') && !host.includes('twitter.com') && !host.includes('x.com')) {
-          const cleanedCurrent = cleanUrlString(window.location.href);
-          if (cleanedCurrent !== window.location.href && window.history && window.history.replaceState) {
-            window.history.replaceState(null, '', cleanedCurrent);
+      // Defer the one-time address-bar cleanup until real config has arrived,
+      // so a disabled/whitelisted site never gets rewritten.
+      bsOnConfigReady(() => {
+        try {
+          if (!bsOn('cleanUrlEnabled')) return;
+          if (!host.includes('reddit.com') && !host.includes('youtube.com') && !host.includes('twitter.com') && !host.endsWith('x.com')) {
+            const cleanedCurrent = cleanUrlString(window.location.href);
+            if (cleanedCurrent !== window.location.href && window.history && window.history.replaceState) {
+              window.history.replaceState(null, '', cleanedCurrent);
+            }
           }
-        }
-      } catch (_) {}
+        } catch (_) {}
+      });
 
       document.addEventListener('mousedown', (e) => {
         try {
+          if (!bsOn('cleanUrlEnabled')) return;
           const a = e.target && e.target.closest ? e.target.closest('a') : null;
           if (a && a.href && a.href.includes('?') && a.hostname && a.hostname !== window.location.hostname) {
             const clean = cleanUrlString(a.href);
@@ -1500,9 +1526,6 @@
   // ─────────────────────────────────────────────────────────────────────────────
   (() => {
     try {
-      if (sessionStorage.getItem('bs_master_disabled') === 'true') return;
-      if (sessionStorage.getItem('bs_videospeed_disabled') === 'true') return;
-
       let speedHud = null;
       let hudFadeTimer = null;
 
@@ -1548,6 +1571,7 @@
 
       window.addEventListener('keydown', (e) => {
         try {
+          if (!bsOn('videoSpeedEnabled')) return;
           if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.isContentEditable)) return;
           const videos = document.querySelectorAll('video');
           if (!videos || videos.length === 0) return;
@@ -1581,9 +1605,6 @@
   // ─────────────────────────────────────────────────────────────────────────────
   (() => {
     try {
-      if (sessionStorage.getItem('bs_master_disabled') === 'true') return;
-      if (sessionStorage.getItem('bs_autoskip_disabled') === 'true') return;
-
       const SKIP_SELECTORS = [
         '.watch-video--skip-content-button', '.skip-credits', '[data-uia="player-skip-intro"]',
         '.atvwebplayersdk-skipelement-button', '.fq92fcf', '.skip-button',
@@ -1593,6 +1614,7 @@
 
       function autoSkipIntros() {
         try {
+          if (!bsOn('autoSkipIntrosEnabled')) return;
           for (const sel of SKIP_SELECTORS) {
             const btn = document.querySelector(sel);
             if (btn && !btn._bsAutoSkipped && typeof btn.click === 'function') {
@@ -1608,5 +1630,5 @@
     } catch (_) {}
   })();
 
-  console.log('[BraveShield Bypass Pro] v6.0.0 CreepJS Evasion & Stealth Engine Armed.');
+  console.log('[BraveShield Bypass Pro] Stealth Engine Armed. Live config bridge active.');
 })();

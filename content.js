@@ -1,148 +1,90 @@
-/**
- * BraveShield Bypass Pro — Content Script Bridge & HUD Controller
- * Version: 5.4.0
+﻿/**
+ * BraveShield Bypass Pro â€” Content Script Bridge & HUD Controller
+ * Version: synced from manifest at runtime
  * Execution World: ISOLATED (document_start)
- * Purpose: Fast DOM modal annihilation, button unlocking, storage synchronization,
- *          direct-link floating HUD bar, live telemetry tracking, and popup bridge.
+ * Purpose: LIVE CONFIG BRIDGE to the MAIN world (instant kill-switch/toggle
+ *          application without reload), fast DOM modal annihilation, button
+ *          unlocking, direct-link floating HUD bar, live telemetry tracking,
+ *          and popup bridge.
  */
 
 (() => {
   'use strict';
 
   const host = (window.location && window.location.hostname) ? window.location.hostname.toLowerCase() : '';
+  const path = (window.location && window.location.pathname) ? window.location.pathname : '';
+
   if (
-    host.includes('challenges.cloudflare.com') ||
-    host.includes('recaptcha.net') ||
-    host.includes('hcaptcha.com') ||
-    host.includes('arkoselabs.com') ||
-    host.includes('funcaptcha.com') ||
-    host.includes('geetest.com') ||
-    host.includes('awswaf.com') ||
-    host.includes('mtcaptcha.com') ||
-    host.includes('leminnow.com') ||
-    host.includes('smartcaptcha.yandexcloud.net') ||
-    host.includes('captcha-api.yandex.ru') ||
-    host.includes('capy.me') ||
-    host.includes('friendlycaptcha.com') ||
-    host.includes('friendlycaptcha.eu') ||
-    host.includes('captcha-delivery.com') ||
-    host.includes('perimeterx.net') ||
-    host.includes('kasada.io') ||
-    (host.includes('google.com') && window.location.pathname.includes('/recaptcha/')) ||
-    (host.includes('cloudflare.com') && window.location.pathname.includes('/cdn-cgi/challenge-platform/')) ||
+    (typeof bsIsCaptchaHost === 'function' && bsIsCaptchaHost(host, path)) ||
     typeof window._cf_chl_opt !== 'undefined' ||
-    typeof window._cf_chl_ctx !== 'undefined' ||
-    document.getElementById('challenge-stage') ||
-    document.getElementById('challenge-form') ||
-    document.getElementById('challenge-running') ||
-    document.getElementById('cf-wrapper') ||
-    (document.title && /just a moment|security verification|attention required|checking your browser|cloudflare/i.test(document.title))
+    typeof window._cf_chl_ctx !== 'undefined'
   ) {
     return;
   }
 
-  // 1. Sync Settings & Device Profile into sessionStorage for MAIN world inject.js
-  function syncSettingsToSession(res) {
-    if (!res) return;
+  // Domain whitelist uses suffix matching (example.com covers sub.example.com)
+  function bsIsWhitelisted(hostname, whitelist) {
+    if (!Array.isArray(whitelist) || !hostname) return false;
+    return whitelist.some(d => d && typeof bsDomainMatches === 'function'
+      ? bsDomainMatches(hostname, d)
+      : (hostname === d || hostname.endsWith('.' + d)));
+  }
+
+  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // 1. LIVE CONFIG BRIDGE â€” push effective per-site config into the MAIN world.
+  // Replaces the old one-way sessionStorage mirror which raced document_start
+  // and required a page reload before any toggle took effect.
+  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  const BS_SYNC_KEYS = [
+    'masterEnabled', 'enabled',
+    'unshortenerEnabled', 'autoBypassLinks', 'autoBypassTimers', 'turboAllSites',
+    'paywallDefuserEnabled', 'bypassAdblockDetection',
+    'maskBraveApi', 'clientHintsEnabled', 'maskClientHints', 'normalizeWebgl',
+    'webglSpoofingEnabled', 'canvasNoiseEnabled', 'audioNoiseEnabled',
+    'webrtcShieldEnabled', 'domJitterEnabled', 'timerCoarseningEnabled',
+    'mediaDevicesSanitizeEnabled', 'speechVoicesSanitizeEnabled',
+    'batteryMaskEnabled', 'screenNormalizationEnabled',
+    'uaSpoofingEnabled', 'timezoneSpoofingEnabled', 'webgpuMaskingEnabled', 'fontEnumMaskingEnabled',
+    'cleanUrlEnabled', 'rightClickEnabled', 'videoSpeedEnabled', 'autoSkipIntrosEnabled',
+    'youtubeAds', 'spotifyUnlocked', 'twitchShieldEnabled',
+    'deviceProfile', 'customHardwareProfile', 'resolvedUA', 'spoofTimezone', 'spoofLocale'
+  ];
+
+  let lastPushedJson = '';
+  function pushConfigToMainWorld() {
     try {
-      const whitelist = Array.isArray(res.whitelist) ? res.whitelist : [];
-      const isWhitelisted = whitelist.some(d => d && (host === d.toLowerCase() || host.endsWith('.' + d.toLowerCase())));
+      chrome.storage.local.get(null, (res) => {
+        if (!res || chrome.runtime.lastError) return;
+        try {
+          const siteDisabled = res.masterEnabled === false ||
+                               res.enabled === false ||
+                               bsIsWhitelisted(host, res.whitelist);
 
-      if (res.masterEnabled === false || isWhitelisted) {
-        sessionStorage.setItem('bs_master_disabled', 'true');
-      } else {
-        sessionStorage.removeItem('bs_master_disabled');
-      }
+          const config = {};
+          for (const k of BS_SYNC_KEYS) {
+            if (res[k] !== undefined) config[k] = res[k];
+          }
+          config.masterEnabled = res.masterEnabled !== false;
 
-      if (res.unshortenerEnabled === false) sessionStorage.setItem('bs_unshortener_disabled', 'true');
-      else sessionStorage.removeItem('bs_unshortener_disabled');
-
-      if (res.paywallDefuserEnabled === false) sessionStorage.setItem('bs_paywall_disabled', 'true');
-      else sessionStorage.removeItem('bs_paywall_disabled');
-
-      if (res.autoBypassTimers === false) sessionStorage.setItem('bs_timers_disabled', 'true');
-      else sessionStorage.removeItem('bs_timers_disabled');
-
-      if (res.bypassAdblockDetection === false) sessionStorage.setItem('bs_adblock_disabled', 'true');
-      else sessionStorage.removeItem('bs_adblock_disabled');
-
-      if (res.maskBraveApi === false) sessionStorage.setItem('bs_brave_disabled', 'true');
-      else sessionStorage.removeItem('bs_brave_disabled');
-
-      if (res.maskClientHints === false || res.clientHintsEnabled === false) sessionStorage.setItem('bs_hints_disabled', 'true');
-      else sessionStorage.removeItem('bs_hints_disabled');
-
-      if (res.webglSpoofingEnabled === false) sessionStorage.setItem('bs_webgl_disabled', 'true');
-      else sessionStorage.removeItem('bs_webgl_disabled');
-
-      if (res.domJitterEnabled === false) sessionStorage.setItem('bs_domjitter_disabled', 'true');
-      else sessionStorage.removeItem('bs_domjitter_disabled');
-
-      if (res.timerCoarseningEnabled === false) sessionStorage.setItem('bs_timercoarse_disabled', 'true');
-      else sessionStorage.removeItem('bs_timercoarse_disabled');
-
-      if (res.mediaDevicesSanitizeEnabled === false) sessionStorage.setItem('bs_mediadevices_disabled', 'true');
-      else sessionStorage.removeItem('bs_mediadevices_disabled');
-
-      if (res.speechVoicesSanitizeEnabled === false) sessionStorage.setItem('bs_speechvoices_disabled', 'true');
-      else sessionStorage.removeItem('bs_speechvoices_disabled');
-
-      if (res.spotifyUnlocked === false) sessionStorage.setItem('bs_spotify_disabled', 'true');
-      else sessionStorage.removeItem('bs_spotify_disabled');
-
-      if (res.youtubeAds === false) sessionStorage.setItem('bs_youtube_disabled', 'true');
-      else sessionStorage.removeItem('bs_youtube_disabled');
-
-      if (res.twitchShieldEnabled === false) sessionStorage.setItem('bs_twitch_disabled', 'true');
-      else sessionStorage.removeItem('bs_twitch_disabled');
-
-      if (res.audioNoiseEnabled === false) sessionStorage.setItem('bs_audio_disabled', 'true');
-      else sessionStorage.removeItem('bs_audio_disabled');
-
-      if (res.canvasNoiseEnabled === false) sessionStorage.setItem('bs_canvas_disabled', 'true');
-      else sessionStorage.removeItem('bs_canvas_disabled');
-
-      if (res.webrtcShieldEnabled === false) sessionStorage.setItem('bs_webrtc_disabled', 'true');
-      else sessionStorage.removeItem('bs_webrtc_disabled');
-
-      if (res.batteryMaskEnabled === false) sessionStorage.setItem('bs_battery_disabled', 'true');
-      else sessionStorage.removeItem('bs_battery_disabled');
-
-      if (res.rightClickEnabled === false) sessionStorage.setItem('bs_rightclick_disabled', 'true');
-      else sessionStorage.removeItem('bs_rightclick_disabled');
-
-      if (res.cleanUrlEnabled === false) sessionStorage.setItem('bs_cleanurl_disabled', 'true');
-      else sessionStorage.removeItem('bs_cleanurl_disabled');
-
-      if (res.videoSpeedEnabled === false) sessionStorage.setItem('bs_videospeed_disabled', 'true');
-      else sessionStorage.removeItem('bs_videospeed_disabled');
-
-      if (res.autoSkipIntrosEnabled === false) sessionStorage.setItem('bs_autoskip_disabled', 'true');
-      else sessionStorage.removeItem('bs_autoskip_disabled');
-
-      if (res.deviceProfile) sessionStorage.setItem('bs_device_profile', res.deviceProfile);
-      if (res.customHardwareProfile) sessionStorage.setItem('bs_custom_hardware', JSON.stringify(res.customHardwareProfile));
-      if (res.webglVendor) sessionStorage.setItem('bs_webgl_vendor', res.webglVendor);
-      if (res.webglRenderer) sessionStorage.setItem('bs_webgl_renderer', res.webglRenderer);
+          // Serialize only for change-detection; post the OBJECT so the MAIN
+          // world receives e.data.config directly.
+          const fingerprint = JSON.stringify({ s: siteDisabled, c: config });
+          if (fingerprint !== lastPushedJson) {
+            lastPushedJson = fingerprint;
+            window.postMessage({ type: 'bs-config-sync', siteDisabled, config }, '*');
+          }
+        } catch (_) {}
+      });
     } catch (_) {}
   }
 
+  pushConfigToMainWorld();
   try {
-    chrome.storage.local.get(null, (all) => {
-      syncSettingsToSession(all);
+    chrome.storage.onChanged.addListener((changes, area) => {
+      if (area === 'local') pushConfigToMainWorld();
     });
   } catch (_) {}
 
-  // Live storage change listener for instant cross-world sync
-  try {
-    chrome.storage.onChanged.addListener((changes, area) => {
-      if (area === 'local') {
-        chrome.storage.local.get(null, (all) => {
-          syncSettingsToSession(all);
-        });
-      }
-    });
-  } catch (_) {}
 
   // 2. Feature D: Live Telemetry Event Listener & Incrementor
   window.addEventListener('message', (e) => {
@@ -178,14 +120,14 @@
         bar.id = 'bs-direct-link-bar';
         bar.innerHTML = `
           <div style="display:flex; align-items:center; gap:10px;">
-            <span style="font-size:16px;">⚡</span>
+            <span style="font-size:16px;">âš¡</span>
             <span style="font-weight:700; color:#00ffcc; letter-spacing:0.5px;">Direct Link Detected:</span>
             <span style="max-width:240px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:#a0aec0; font-size:12px;">${targetUrl}</span>
           </div>
           <div style="display:flex; align-items:center; gap:8px;">
-            <button id="bs-copy-hud" style="background:rgba(255,255,255,0.1); color:#00ffcc; border:1px solid rgba(0,255,204,0.3); font-weight:700; font-size:11px; padding:6px 10px; border-radius:6px; cursor:pointer; transition:all 0.2s ease;">📋 Copy</button>
-            <a href="${targetUrl}" target="_blank" rel="noopener noreferrer" style="background:linear-gradient(135deg, #00ffcc, #0077ff); color:#000; font-weight:800; font-size:12px; padding:6px 14px; border-radius:6px; text-decoration:none; text-transform:uppercase; letter-spacing:0.5px; box-shadow:0 0 12px rgba(0,255,204,0.4); cursor:pointer;">Jump Directly ↗</a>
-            <button id="bs-close-hud" style="background:transparent; border:none; color:#718096; font-size:16px; cursor:pointer; padding:2px 6px;">✕</button>
+            <button id="bs-copy-hud" style="background:rgba(255,255,255,0.1); color:#00ffcc; border:1px solid rgba(0,255,204,0.3); font-weight:700; font-size:11px; padding:6px 10px; border-radius:6px; cursor:pointer; transition:all 0.2s ease;">ðŸ“‹ Copy</button>
+            <a href="${targetUrl}" target="_blank" rel="noopener noreferrer" style="background:linear-gradient(135deg, #00ffcc, #0077ff); color:#000; font-weight:800; font-size:12px; padding:6px 14px; border-radius:6px; text-decoration:none; text-transform:uppercase; letter-spacing:0.5px; box-shadow:0 0 12px rgba(0,255,204,0.4); cursor:pointer;">Jump Directly â†—</a>
+            <button id="bs-close-hud" style="background:transparent; border:none; color:#718096; font-size:16px; cursor:pointer; padding:2px 6px;">âœ•</button>
           </div>
         `;
         bar.style.cssText = `
@@ -220,8 +162,8 @@
             navigator.clipboard.writeText(targetUrl);
             const btn = document.getElementById('bs-copy-hud');
             if (btn) {
-              btn.textContent = '✅ Copied!';
-              setTimeout(() => { btn.textContent = '📋 Copy'; }, 2000);
+              btn.textContent = 'âœ… Copied!';
+              setTimeout(() => { btn.textContent = 'ðŸ“‹ Copy'; }, 2000);
             }
           } catch (_) {}
         });

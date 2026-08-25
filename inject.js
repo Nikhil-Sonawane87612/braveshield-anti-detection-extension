@@ -773,6 +773,45 @@
               return res;
             }, 'getShaderPrecisionFormat', 2);
           }
+
+          // Pixel-readback farbling: GPU scene hashes are a primary CreepJS
+          // vector. Deterministic +/-1 on sampled bytes, cached per buffer so
+          // repeated reads of an unchanged framebuffer stay stable instead of
+          // compounding.
+          if (proto.readPixels) {
+            const rpCache = new WeakMap();
+            const origReadPixels = proto.readPixels;
+            proto.readPixels = makeNative(function(x, y, width, height, format, type, pixels) {
+              origReadPixels.apply(this, arguments);
+              try {
+                if (!isCaptchaHost && bsOn('webglSpoofingEnabled') && pixels && pixels.length > 64) {
+                  const len = pixels.length;
+                  const stride = Math.max(16, Math.floor(len / 48));
+                  let prev = rpCache.get(pixels);
+                  if (!prev || prev.raw.length !== Math.floor(len / stride)) {
+                    prev = null;
+                  }
+                  const rPrng = createPrng(113);
+                  const samples = Math.floor(len / stride);
+                  const raw = new Uint8Array(samples);
+                  for (let s = 0; s < samples; s++) {
+                    const i = s * stride;
+                    raw[s] = pixels[i];
+                    const shift = rPrng() > 0.5 ? 1 : -1;
+                    if (prev && prev.raw[s] === raw[s]) {
+                      pixels[i] = prev.out[s];
+                    } else {
+                      pixels[i] = Math.min(255, Math.max(0, raw[s] + shift));
+                      if (!prev) prev = { raw: new Uint8Array(samples), out: new Uint8Array(samples) };
+                      prev.raw[s] = raw[s];
+                      prev.out[s] = pixels[i];
+                    }
+                  }
+                  rpCache.set(pixels, prev);
+                }
+              } catch (_) {}
+            }, 'readPixels', 7);
+          }
       };
 
       if (typeof WebGLRenderingContext !== 'undefined') hookWebGL(WebGLRenderingContext.prototype);

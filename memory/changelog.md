@@ -1,5 +1,22 @@
 # 📦 Semantic Version Changelog
 
+## [v6.2.0] - 2026-08-25 (Stealth Consistency, Onboarding & Release Automation)
+
+### 🛡️ Fingerprint Consistency Closes
+- **Speech voices ↔ locale sync**: `speechSynthesis.getVoices()` now derives its primary voice from the spoofed locale instead of a hardcoded en-US trio.
+- **WebGL `readPixels` farbling**: GPU pixel-readback hashes get deterministic ±1 sampling with a per-buffer stability cache — repeated reads stay identical instead of compounding.
+- **AnalyserNode time-domain noise**: `getFloatTimeDomainData` / `getByteTimeDomainData` join their frequency siblings under fresh multiplicative variance.
+
+### 🧭 Onboarding & Studio UX
+- **First-run welcome wizard**: guided identity picker (5 curated hardware presets), module overview chips, master-switch confirmation; replayable via the Options "Tour" button.
+- **Settings search**: live filtering across all option rows from the nav rail with match count.
+
+### 🔧 Engineering & Release Automation
+- **GitHub Actions**: `ci.yml` validates syntax, manifests/rulesets, BOM hygiene and runs a node:test suite for shared helpers on every push/PR; `release.yml` builds the ZIP via `build.ps1` and publishes the GitHub Release automatically on `v*` tags.
+- 11-test suite covering `bsDomainMatches`/`bsIsCaptchaHost` edge cases (lookalike rejection, path specials).
+
+---
+
 ## [v6.1.0] - 2026-08-25 (Kill-Switch Architecture, Stealth Parity & Release Engineering)
 
 ### 🔧 Kill-Switch & Reliability Overhaul

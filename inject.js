@@ -1495,12 +1495,27 @@
   // now — the duplicated MAIN-world copy was removed.
   // ─────────────────────────────────────────────────────────────────────────────
   (() => {
+    // Acceleration now targets link-shortener/locker hosts only — accelerating
+    // every site's timeouts broke autosave, debounces and carousels site-wide.
+    // Users can opt into global acceleration via the Aggressive Turbo setting.
+    const isShortenerHost = (() => {
+      try {
+        if (typeof BS_SHORTENER_HOSTS === 'undefined') return false;
+        return BS_SHORTENER_HOSTS.some(h => host === h || host.endsWith('.' + h));
+      } catch (_) { return false; }
+    })();
+
+    function bsTurboAllowed() {
+      if (!bsOn('autoBypassTimers')) return false;
+      return isShortenerHost || BS_CONFIG.turboAllSites === true;
+    }
+
     try {
       const origSetTimeout = window.setTimeout;
       const origSetInterval = window.setInterval;
 
       window.setTimeout = makeNative(function(fn, delay, ...args) {
-        if (!isCaptchaHost && bsOn('autoBypassTimers') && typeof delay === 'number' && delay > 100 && delay < 120000) {
+        if (!isCaptchaHost && typeof delay === 'number' && delay > 100 && delay < 120000 && bsTurboAllowed()) {
           const fastDelay = Math.max(10, Math.floor(delay / 50));
           return origSetTimeout.call(this, fn, fastDelay, ...args);
         }
@@ -1508,7 +1523,7 @@
       }, 'setTimeout', 2);
 
       window.setInterval = makeNative(function(fn, delay, ...args) {
-        if (!isCaptchaHost && bsOn('autoBypassTimers') && typeof delay === 'number' && delay >= 1000 && delay < 60000) {
+        if (!isCaptchaHost && typeof delay === 'number' && delay >= 1000 && delay < 60000 && bsTurboAllowed()) {
           const fastDelay = Math.max(50, Math.floor(delay / 50));
           return origSetInterval.call(this, fn, fastDelay, ...args);
         }

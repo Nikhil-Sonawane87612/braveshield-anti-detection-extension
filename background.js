@@ -137,6 +137,7 @@ chrome.runtime.onInstalled.addListener(() => {
       autoBypassLinks: true,
       unshortenerEnabled: true,
       autoBypassTimers: true,
+      turboAllSites: false,
       paywallDefuserEnabled: true,
       bypassAdblockDetection: true,
       maskBraveApi: true,

@@ -24,6 +24,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const optUa = document.getElementById('opt-ua');
   const optUnshortener = document.getElementById('opt-unshortener');
   const optTimers = document.getElementById('opt-timers');
+  const optAggressiveTimers = document.getElementById('opt-aggressivetimers');
   const optPaywall = document.getElementById('opt-paywall');
   const optAdblock = document.getElementById('opt-adblock');
   const optYoutube = document.getElementById('opt-youtube');
@@ -140,7 +141,7 @@ document.addEventListener('DOMContentLoaded', () => {
   chrome.storage.local.get([
     'masterEnabled', 'deviceProfile', 'customHardwareProfile', 'maskBraveApi', 'maskClientHints',
     'uaSpoofingEnabled',
-    'unshortenerEnabled', 'autoBypassTimers', 'paywallDefuserEnabled',
+    'unshortenerEnabled', 'autoBypassTimers', 'turboAllSites', 'paywallDefuserEnabled',
     'bypassAdblockDetection', 'spotifyUnlocked', 'youtubeAds', 'twitchShieldEnabled',
     'audioNoiseEnabled', 'canvasNoiseEnabled', 'webrtcShieldEnabled', 'batteryMaskEnabled',
     'cleanUrlEnabled', 'rightClickEnabled', 'videoSpeedEnabled', 'autoSkipIntrosEnabled',
@@ -174,6 +175,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (optUa) optUa.checked = res.uaSpoofingEnabled !== false;
     optUnshortener.checked = res.unshortenerEnabled !== false;
     optTimers.checked = res.autoBypassTimers !== false;
+    if (optAggressiveTimers) optAggressiveTimers.checked = res.turboAllSites === true;
     optPaywall.checked = res.paywallDefuserEnabled !== false;
     optAdblock.checked = res.bypassAdblockDetection !== false;
     optYoutube.checked = res.youtubeAds !== false;
@@ -297,6 +299,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (optUa) optUa.addEventListener('change', () => chrome.storage.local.set({ uaSpoofingEnabled: optUa.checked }));
   optUnshortener.addEventListener('change', () => chrome.storage.local.set({ unshortenerEnabled: optUnshortener.checked }));
   optTimers.addEventListener('change', () => chrome.storage.local.set({ autoBypassTimers: optTimers.checked }));
+  if (optAggressiveTimers) optAggressiveTimers.addEventListener('change', () => chrome.storage.local.set({ turboAllSites: optAggressiveTimers.checked }));
   optPaywall.addEventListener('change', () => chrome.storage.local.set({ paywallDefuserEnabled: optPaywall.checked }));
   optAdblock.addEventListener('change', () => chrome.storage.local.set({ bypassAdblockDetection: optAdblock.checked }));
   optYoutube.addEventListener('change', () => chrome.storage.local.set({ youtubeAds: optYoutube.checked }));

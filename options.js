@@ -489,9 +489,116 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
+  // ── Live Fingerprint Audit (runs real probes in the page's MAIN world) ──
+  function bsAuditInPage() {
+    const results = [];
+    const add = (name, pass, value) => results.push({ name, pass: !!pass, value: String(value == null ? '' : value) });
+    try { add('navigator.webdriver is false', navigator.webdriver === false, String(navigator.webdriver)); } catch (_) {}
+    try { add('navigator.brave hidden', typeof navigator.brave === 'undefined', typeof navigator.brave); } catch (_) {}
+    try {
+      const ua = navigator.userAgent;
+      add('UA claims Chrome, no Brave token', /Chrome\//.test(ua) && !/Brave/i.test(ua), ua.slice(0, 90));
+    } catch (_) {}
+    try {
+      const chPlat = navigator.userAgentData ? navigator.userAgentData.platform : '';
+      if (chPlat) {
+        const expected = ({ Win32: 'Windows', MacIntel: 'macOS' })[navigator.platform] || null;
+        add('platform <-> UA-CH parity', !expected || expected === chPlat, `${navigator.platform} vs ${chPlat}`);
+      }
+    } catch (_) {}
+    try {
+      if (typeof navigator.deviceMemory === 'number') {
+        add('deviceMemory within spec (0.25-8 GB)', navigator.deviceMemory <= 8 && navigator.deviceMemory >= 0.25, String(navigator.deviceMemory));
+      }
+    } catch (_) {}
+    try {
+      const c = document.createElement('canvas');
+      const gl = c.getContext('webgl');
+      if (gl) {
+        const ext = gl.getExtension('WEBGL_debug_renderer_info');
+        const renderer = ext ? gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) : '';
+        add('WebGL renderer string present', !!renderer, String(renderer).slice(0, 80));
+      }
+    } catch (_) {}
+    try {
+      const mk = () => {
+        const q = document.createElement('canvas');
+        q.width = 120; q.height = 60;
+        const x = q.getContext('2d');
+        x.fillStyle = '#3a7'; x.fillRect(0, 0, 120, 60);
+        x.fillStyle = '#111'; x.font = '16px Arial'; x.fillText('fp', 4, 30);
+        return q;
+      };
+      const snap = (cv) => cv.getContext('2d').getImageData(0, 0, cv.width, cv.height).data.join(',');
+      const a = snap(mk()), b = snap(mk());
+      add('Canvas farbling deterministic', a === b, a === b ? 'stable across renders' : 'UNSTABLE');
+    } catch (_) {}
+    try {
+      let start = performance.now(), minPos = Infinity;
+      for (let guard = 0; guard < 500000; guard++) {
+        const cur = performance.now();
+        const d = cur - start;
+        if (d > 0) { minPos = d; break; }
+      }
+      add('Timer coarsening active (>=10ms quanta)', minPos === Infinity || minPos >= 10,
+        minPos === Infinity ? 'n/a' : ('minDelta ~' + Math.round(minPos) + 'ms'));
+    } catch (_) {}
+    try {
+      const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      add('Timezone reported consistently', !!tz, tz + ' / offset ' + new Date().getTimezoneOffset());
+    } catch (_) {}
+    return { results };
+  }
+
+  const btnRunAudit = document.getElementById('btn-run-audit');
+  if (btnRunAudit) {
+    btnRunAudit.addEventListener('click', async () => {
+      btnRunAudit.disabled = true;
+      btnRunAudit.textContent = '⏳ Probing…';
+      const resultsBox = document.getElementById('audit-results');
+      try {
+        const tabs = await chrome.tabs.query({ url: ['http://*/*', 'https://*/*'] });
+        const targetTab = tabs.find(t => t.active && t.lastAccessed !== undefined) ||
+                          tabs.find(t => t.active) || tabs.sort((x, y) => (y.id || 0) - (x.id || 0))[0];
+        if (!targetTab) throw new Error('no website tab');
+        const [injection] = await chrome.scripting.executeScript({
+          target: { tabId: targetTab.id },
+          world: 'MAIN',
+          func: bsAuditInPage
+        });
+        const payload = injection && injection.result;
+        if (!payload || !Array.isArray(payload.results)) throw new Error('no result');
+        resultsBox.textContent = '';
+        for (const r of payload.results) {
+          const row = document.createElement('div');
+          row.className = 'audit-row ' + (r.pass ? 'pass' : 'fail');
+          const status = document.createElement('span');
+          status.className = 'audit-status';
+          status.textContent = r.pass ? '✓' : '✕';
+          const name = document.createElement('span');
+          name.className = 'audit-name';
+          name.textContent = r.name;
+          const val = document.createElement('span');
+          val.className = 'audit-value';
+          val.textContent = r.value;
+          val.title = r.value;
+          row.append(status, name, val);
+          resultsBox.appendChild(row);
+        }
+      } catch (err) {
+        resultsBox.textContent = '';
+        const row = document.createElement('div');
+        row.className = 'audit-row fail';
+        row.textContent = '✕ Audit failed: open any normal website tab first (' + (err && err.message ? err.message : 'unknown error') + ')';
+        resultsBox.appendChild(row);
+      }
+      btnRunAudit.disabled = false;
+      btnRunAudit.textContent = '🩺 Run Audit';
+    });
+  }
+
   // Manual Sync Button
-  btnSync.addEventListener('click', async () => {
-    btnSync.textContent = 'Syncing...';
+  btnSync.addEventListener('click', async () => {    btnSync.textContent = 'Syncing...';
     btnSync.disabled = true;
     try {
       const res = await chrome.runtime.sendMessage({ type: 'TRIGGER_SYNC' });

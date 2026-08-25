@@ -1,5 +1,5 @@
-﻿/**
- * BraveShield Bypass Pro â€” Content Script Bridge & HUD Controller
+/**
+ * BraveShield Bypass Pro — Content Script Bridge & HUD Controller
  * Version: synced from manifest at runtime
  * Execution World: ISOLATED (document_start)
  * Purpose: LIVE CONFIG BRIDGE to the MAIN world (instant kill-switch/toggle
@@ -30,11 +30,11 @@
       : (hostname === d || hostname.endsWith('.' + d)));
   }
 
-  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  // 1. LIVE CONFIG BRIDGE â€” push effective per-site config into the MAIN world.
+  // ─────────────────────────────────────────────────────────────────────────────
+  // 1. LIVE CONFIG BRIDGE — push effective per-site config into the MAIN world.
   // Replaces the old one-way sessionStorage mirror which raced document_start
   // and required a page reload before any toggle took effect.
-  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─────────────────────────────────────────────────────────────────────────────
   const BS_SYNC_KEYS = [
     'masterEnabled', 'enabled',
     'unshortenerEnabled', 'autoBypassLinks', 'autoBypassTimers', 'turboAllSites',

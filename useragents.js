@@ -1,4 +1,4 @@
-﻿const USER_AGENTS = {
+const USER_AGENTS = {
 
   // ============================================================
   // DESKTOP - CHROME (Windows) - Chrome 120-131

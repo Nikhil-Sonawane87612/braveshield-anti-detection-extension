@@ -125,7 +125,14 @@ function enforceWebRTCPrivacy(enabled) {
   } catch (_) {}
 }
 
-chrome.runtime.onInstalled.addListener(() => {
+chrome.runtime.onInstalled.addListener((details) => {
+  // First-run onboarding wizard
+  try {
+    if (details && details.reason === 'install') {
+      chrome.tabs.create({ url: chrome.runtime.getURL('welcome.html') });
+    }
+  } catch (_) {}
+
   const currentVer = getLocalVersion();
   console.log(`[BraveShield] Service Worker initialized. Version: ${currentVer}`);
   

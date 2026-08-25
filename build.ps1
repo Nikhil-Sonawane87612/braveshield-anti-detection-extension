@@ -42,7 +42,8 @@ try {
     'useragents.js',
     'rules.json',
     'popup.html', 'popup.css', 'popup.js',
-    'options.html', 'options.css', 'options.js'
+    'options.html', 'options.css', 'options.js',
+    'welcome.html', 'welcome.css', 'welcome.js'
   )
   $includeDirs = @('shared', 'icons')
 

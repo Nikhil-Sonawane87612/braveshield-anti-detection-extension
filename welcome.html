@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>BraveShield Bypass Pro — Setup</title>
+<link rel="stylesheet" href="welcome.css">
+</head>
+<body>
+<main class="wizard">
+
+  <div class="hero">
+    <div class="hero-shield">
+      <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+    </div>
+    <h1>WELCOME TO BRAVESHIELD <span>PRO</span></h1>
+    <p class="tagline">Enterprise anti-fingerprinting is armed by default.<br>Pick the hardware identity you want to present to the web — you can change it any time.</p>
+  </div>
+
+  <section class="step">
+    <div class="step-title"><span class="step-num">1</span> Choose your cloaked identity</div>
+    <p class="step-sub">Your GPU, CPU, RAM, screen, timezone clock and User-Agent will all agree with this profile.</p>
+    <div class="profile-grid" id="profile-grid"><!-- populated --></div>
+  </section>
+
+  <section class="step">
+    <div class="step-title"><span class="step-num">2</span> What's shielding you right now</div>
+    <div class="chips" id="feature-chips"><!-- populated --></div>
+    <label class="master-line">
+      <input type="checkbox" id="master-on" checked>
+      Arm all shields immediately (master switch)
+    </label>
+  </section>
+
+  <div class="actions">
+    <button class="ghost" id="btn-open-studio">Open Full Studio Later</button>
+    <button class="primary" id="btn-finish">🛡️ Arm My Shields</button>
+  </div>
+
+</main>
+
+<script src="shared/constants.js"></script>
+<script src="hardware-profiles.js"></script>
+<script src="welcome.js"></script>
+</body>
+</html>

@@ -425,6 +425,15 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // Replay onboarding wizard
+  const btnReplayTour = document.getElementById('btn-replay-tour');
+  if (btnReplayTour) {
+    btnReplayTour.addEventListener('click', () => {
+      try { chrome.tabs.create({ url: chrome.runtime.getURL('welcome.html') }); }
+      catch (_) { window.open(chrome.runtime.getURL('welcome.html')); }
+    });
+  }
+
   // Factory Reset — wipe everything back to safe defaults
   const btnResetDefaults = document.getElementById('btn-reset-defaults');
   if (btnResetDefaults) {

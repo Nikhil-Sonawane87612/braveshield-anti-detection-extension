@@ -603,6 +603,7 @@
         bsHardware = BS_HW_FALLBACK;
       };
       bsResolveHardware();
+      window.bsGetHardware = function() { return bsHardware; };
 
       // ── 1. navigator.brave neutralization (LIVE-GATED, original preserved) ──
       const nativeBraveValue = ('brave' in navigator) ? navigator.brave : undefined;
@@ -1219,23 +1220,81 @@
         }
       } catch (_) {}
 
-      // ── 14. Media Devices & Speech Synthesis Sanitization (LIVE-GATED) ──
-      try {
-        if (navigator.mediaDevices && navigator.mediaDevices.enumerateDevices) {
-          const origEnumerateDevices = navigator.mediaDevices.enumerateDevices;
-          const mockDevices = [
-            { deviceId: 'default', kind: 'audioinput', label: 'Default Audio Device', groupId: 'group_default' },
-            { deviceId: 'default', kind: 'audiooutput', label: 'Default Speaker', groupId: 'group_default' },
-            { deviceId: 'default', kind: 'videoinput', label: 'Integrated HD Camera', groupId: 'group_default' }
-          ];
-          navigator.mediaDevices.enumerateDevices = makeNative(function() {
-            return bsOn('mediaDevicesSanitizeEnabled') ? Promise.resolve(mockDevices) : origEnumerateDevices.apply(this, arguments);
-          }, 'enumerateDevices', 0);
-        }
-      } catch (_) {}
+    } catch (_) {}
+  })();
 
-      try {
-        if (typeof window.speechSynthesis !== 'undefined' && window.speechSynthesis.getVoices) {
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Module 1.6: WebGPU Adapter Masking & Canvas Text-Metric Farbling (LIVE-GATED)
+  // README promised WebGPU masking — here it is: adapter.info vendor/architecture/
+  // device/description are normalized to the active hardware profile. Font
+  // enumeration via canvas measureText width comparisons gets deterministic
+  // per-session farbling (invisible, stable within a session).
+  // ─────────────────────────────────────────────────────────────────────────────
+  (() => {
+    try {
+      if (typeof navigator !== 'undefined' && navigator.gpu && typeof navigator.gpu.requestAdapter === 'function') {
+        const origRequestAdapter = navigator.gpu.requestAdapter;
+        navigator.gpu.requestAdapter = makeNative(function(options) {
+          return origRequestAdapter.apply(this, arguments).then(adapter => {
+            try {
+              if (adapter && bsOn('webgpuMaskingEnabled') && adapter.info && !adapter.__bsMasked) {
+                Object.defineProperty(adapter, '__bsMasked', { value: true });
+                const hw = (typeof window.bsGetHardware === 'function') ? window.bsGetHardware() : null;
+                let vendor = '';
+                if (hw && hw.vendor) {
+                  const v = String(hw.vendor).toLowerCase();
+                  for (const key of ['nvidia', 'amd', 'intel', 'apple', 'qualcomm', 'arm']) {
+                    if (v.includes(key)) { vendor = key; break; }
+                  }
+                }
+                for (const k of ['architecture', 'device', 'description']) {
+                  try { Object.defineProperty(adapter.info, k, { value: '', configurable: true }); } catch (_) {}
+                }
+                try { Object.defineProperty(adapter.info, 'vendor', { value: vendor, configurable: true }); } catch (_) {}
+              }
+            } catch (_) {}
+            return adapter;
+          });
+        }, 'requestAdapter', 0);
+      }
+
+      if (typeof CanvasRenderingContext2D !== 'undefined' && CanvasRenderingContext2D.prototype.measureText) {
+        const origMeasureText = CanvasRenderingContext2D.prototype.measureText;
+        CanvasRenderingContext2D.prototype.measureText = makeNative(function(text) {
+          const metrics = origMeasureText.apply(this, arguments);
+          if (!isCaptchaHost && bsOn('fontEnumMaskingEnabled') && metrics && typeof metrics.width === 'number' && metrics.width > 0) {
+            try {
+              const mPrng = createPrng(97 + String(text == null ? '' : text).length);
+              const factor = 1 + (mPrng() - 0.5) * 0.0008;
+              Object.defineProperty(metrics, 'width', { value: metrics.width * factor, configurable: true });
+            } catch (_) {}
+          }
+          return metrics;
+        }, 'measureText', 1);
+      }
+    } catch (_) {}
+  })();
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Module 1.7: Media Devices & Speech Synthesis Sanitization (LIVE-GATED)
+  // ─────────────────────────────────────────────────────────────────────────────
+  (() => {
+    try {
+      if (navigator.mediaDevices && navigator.mediaDevices.enumerateDevices) {
+        const origEnumerateDevices = navigator.mediaDevices.enumerateDevices;
+        const mockDevices = [
+          { deviceId: 'default', kind: 'audioinput', label: 'Default Audio Device', groupId: 'group_default' },
+          { deviceId: 'default', kind: 'audiooutput', label: 'Default Speaker', groupId: 'group_default' },
+          { deviceId: 'default', kind: 'videoinput', label: 'Integrated HD Camera', groupId: 'group_default' }
+        ];
+        navigator.mediaDevices.enumerateDevices = makeNative(function() {
+          return bsOn('mediaDevicesSanitizeEnabled') ? Promise.resolve(mockDevices) : origEnumerateDevices.apply(this, arguments);
+        }, 'enumerateDevices', 0);
+      }
+    } catch (_) {}
+
+    try {
+      if (typeof window.speechSynthesis !== 'undefined' && window.speechSynthesis.getVoices) {
           const origGetVoices = window.speechSynthesis.getVoices;
           const mockVoices = [
             { voiceURI: 'Google US English', name: 'Google US English', lang: 'en-US', localService: false, default: true },
@@ -1247,8 +1306,6 @@
           }, 'getVoices', 0);
         }
       } catch (_) {}
-
-    } catch (_) {}
   })();
 
   const isMediaPlatform = host.includes('spotify.com') || host.includes('youtube.com') || host.includes('youtu.be') || host.includes('netflix.com') || host.includes('twitch.tv') || host.includes('reddit.com');

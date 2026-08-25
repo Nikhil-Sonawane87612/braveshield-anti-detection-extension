@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "BraveShield Bypass Pro — Enterprise Stealth & Anti-Fingerprinting",
-  "version": "6.0.1",
+  "version": "6.1.0",
   "description": "Enterprise Manifest V3 anti-fingerprinting suite with unforgeable native wrappers, session-seeded canvas/audio noise, WebGL GPU cloaking, UA-CH client hints sync, and WebRTC leak protection.",
   "author": "Nikhil Sonawane",
   "icons": {

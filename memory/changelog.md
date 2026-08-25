@@ -1,5 +1,33 @@
 # 📦 Semantic Version Changelog
 
+## [v6.1.0] - 2026-08-25 (Kill-Switch Architecture, Stealth Parity & Release Engineering)
+
+### 🔧 Kill-Switch & Reliability Overhaul
+- **Live Config Bridge**: inject.js hooks now consult a mutable `BS_CONFIG` at call-time; content.js pushes effective per-site config through a validated postMessage channel the instant storage loads or changes. Master kill switch, whitelisting and every module toggle apply **without page reload**, and disabled sites are never spoofed even on first paint (previous race: sessionStorage mirror vs document_start).
+- **Hardware presets actually work now**: `hardware-profiles.js` added to MAIN-world content_scripts — the 110+ catalog was previously undefined in the page world, so only custom profiles ever applied.
+- Canvas noise re-encoded from perturbed offscreen copies (source canvas untouched; noise no longer compounds per call). AudioBuffer noise uses cached copies; analyser arrays use fresh multiplicative variance.
+- deviceMemory spoof clamped to the 8 GB spec maximum.
+
+### 🛡️ New Stealth Vectors
+- **User-Agent string spoofing** wired to hardware profiles via the previously-dead `useragents.js` (60 KB): background resolves profile → newest matching Chrome UA, re-based onto the REAL engine major, applied to both request headers (DNR session rules incl. Sec-CH-UA) and JS APIs.
+- **Timezone & locale parity** (opt-in): `getTimezoneOffset`, `Intl.resolvedOptions`, `Date.toString` GMT rendering and `navigator.languages` all align with the selected IANA zone.
+- **WebGPU adapter masking**: `adapter.info` vendor/architecture/device/description normalized.
+- **Canvas measureText farbling**: deterministic width variance defeats font enumeration.
+- **50x timer turbo scoped to shortener hosts** with explicit all-sites opt-in (was globally breaking site timers).
+
+### 🧹 Cleanup & Compliance
+- Removed dead `settings.js` (conflicting defaults), stale hardcoded version strings everywhere.
+- Local-first sync: runtime GitHub rule-fetching removed (CWS remote-hosted-code policy); update checker is notify-only.
+- Security: cross-world postMessage validation (`e.source`), stat allowlist + delta clamps, XSS-proof direct-link HUD (DOM API construction), schema-validated backup import, domain-validated whitelist rendering.
+
+### 🚀 Features & UX
+- Live fingerprint self-audit panel (real in-page probes with pass/fail).
+- Context menu (site whitelist toggle, copy cleaned URL), Alt+Shift+B master shortcut, per-tab badge states (armed/WL/OFF).
+- Popup: working sync button, honest counters only, armed-module counter, dynamic version pill. Options: sticky section nav, factory reset, reduced-motion support.
+- `build.ps1` release packager → root-level load-ready ZIPs (fixes nested-folder ZIP import failures); dev manifest drops `update_url`.
+
+---
+
 ## [v6.0.1] - 2026-08-18 (Stitch Cyber-Dark UI & Dual Auto-Updater Release)
 
 ### 🎨 Stitch Cyber-Dark Design System & HUD Overhaul

@@ -6,7 +6,7 @@
   - Overwrites prototypes on global `window`, `navigator`, `HTMLCanvasElement`, `AudioBuffer`, `AnalyserNode`, `Element`, and `Screen` before any third-party or page tracking scripts execute.
 - **`ISOLATED` World (`content.js`)**:
   - `run_at: "document_start"`, `all_frames: true`.
-  - Bridges `chrome.storage.local` settings to `sessionStorage` (`bs_canvas_disabled`, `bs_audio_disabled`, etc.) and handles HUD overlays.
+  - Bridges `chrome.storage.local` to the MAIN world via a validated live postMessage channel (`bs-config-sync`); hooks in `inject.js` consult `BS_CONFIG` at call-time so toggles/kill switch apply instantly without reload. Also handles HUD overlays (DOM-API constructed) and DOM defenses.
 - **Service Worker (`background.js`)**:
   - WebRTC policy manager (`disable_non_proxied_udp`).
   - Declarative Net Request (DNR) rule manager and GitHub auto-update sync coordinator.

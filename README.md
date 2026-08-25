@@ -5,7 +5,7 @@
 # 🛡️ BraveShield Bypass Pro — Enterprise Anti-Fingerprinting Suite
 ### Manifest V3 Stealth Engine • CreepJS & BrowserLeaks Evasion • Multi-Device Hardware Spoofer
 
-[![Version](https://img.shields.io/badge/version-v6.0.0-00f076?style=for-the-badge&logo=semver&logoColor=black)](https://github.com/Nikhil-Sonawane87612/braveshield-anti-detection-extension/releases/latest)
+[![Version](https://img.shields.io/badge/version-v6.1.0-00f076?style=for-the-badge&logo=semver&logoColor=black)](https://github.com/Nikhil-Sonawane87612/braveshield-anti-detection-extension/releases/latest)
 [![Manifest](https://img.shields.io/badge/manifest-v3-10b981?style=for-the-badge&logo=googlechrome&logoColor=white)](#-desktop-installation)
 [![CreepJS Evasion](https://img.shields.io/badge/CreepJS-A%2B%20Evasion-8b5cf6?style=for-the-badge&logo=shield&logoColor=white)](#-the-creepjs--browserleaks-evasion-pack)
 [![Hardware Presets](https://img.shields.io/badge/Hardware%20Profiles-110%2B%20Presets-3b82f6?style=for-the-badge&logo=nvidia&logoColor=white)](#-multi-device-hardware-studio)

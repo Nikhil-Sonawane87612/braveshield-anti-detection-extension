@@ -4,7 +4,6 @@
  * Purpose: Dynamic rule synchronization, auto-update checker, WebRTC privacy policy, and DNR routing.
  */
 
-const GITHUB_RULES_URL = 'https://raw.githubusercontent.com/Nikhil-Sonawane87612/braveshield-anti-detection-extension/main/rules.json';
 const GITHUB_MANIFEST_URL = 'https://raw.githubusercontent.com/Nikhil-Sonawane87612/braveshield-anti-detection-extension/main/manifest.json';
 
 // UA catalog (useragents.js) powers per-profile User-Agent resolution
@@ -234,47 +233,34 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   }
 });
 
-// Auto-Sync and Auto-Update Function
+// Notify-only update checker.
+// Chrome Web Store remote-hosted-code compliance: NO rules or code are ever
+// fetched at runtime. DNR rules ship statically via rules.json; this only
+// compares the published manifest version and badges the toolbar.
 async function syncRemoteRulesAndCheckUpdates() {
   try {
     const currentVer = getLocalVersion();
-    const [rulesRes, manifestRes] = await Promise.all([
-      fetch(GITHUB_RULES_URL, { cache: 'no-cache' }).catch(() => null),
-      fetch(GITHUB_MANIFEST_URL, { cache: 'no-cache' }).catch(() => null)
-    ]);
-
     let updateFound = false;
     let remoteVer = currentVer;
 
-    if (manifestRes && manifestRes.ok) {
-      const manifest = await manifestRes.json();
-      if (manifest.version) {
-        remoteVer = manifest.version;
-        if (isNewerVersion(remoteVer, currentVer)) {
-          updateFound = true;
-          try {
-            chrome.action.setBadgeText({ text: 'NEW' });
-            chrome.action.setBadgeBackgroundColor({ color: '#00f076' });
-          } catch (_) {}
-        } else {
-          try {
-            chrome.action.setBadgeText({ text: '' });
-          } catch (_) {}
+    try {
+      const manifestRes = await fetch(GITHUB_MANIFEST_URL, { cache: 'no-cache' });
+      if (manifestRes && manifestRes.ok) {
+        const manifest = await manifestRes.json();
+        if (manifest.version) {
+          remoteVer = manifest.version;
+          if (isNewerVersion(remoteVer, currentVer)) {
+            updateFound = true;
+            try {
+              chrome.action.setBadgeText({ text: 'NEW' });
+              chrome.action.setBadgeBackgroundColor({ color: '#00f076' });
+            } catch (_) {}
+          } else {
+            try { chrome.action.setBadgeText({ text: '' }); } catch (_) {}
+          }
         }
       }
-    }
-
-    if (rulesRes && rulesRes.ok) {
-      const rules = await rulesRes.json();
-      if (Array.isArray(rules) && rules.length > 0 && chrome.declarativeNetRequest) {
-        const oldRules = await chrome.declarativeNetRequest.getDynamicRules();
-        const removeRuleIds = oldRules.map(r => r.id);
-        await chrome.declarativeNetRequest.updateDynamicRules({
-          removeRuleIds,
-          addRules: rules
-        });
-      }
-    }
+    } catch (_) {}
 
     const syncData = {
       lastSyncTime: Date.now(),
@@ -286,7 +272,7 @@ async function syncRemoteRulesAndCheckUpdates() {
     await chrome.storage.local.set(syncData);
     return { success: true, ...syncData };
   } catch (err) {
-    console.warn('[BraveShield] Sync error:', err);
+    console.warn('[BraveShield] Update check error:', err);
     await chrome.storage.local.set({ remoteSyncStatus: 'offline' });
     return { success: false, error: err.message };
   }

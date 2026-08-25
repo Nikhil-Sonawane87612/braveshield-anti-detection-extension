@@ -289,3 +289,119 @@ function isNewerVersion(remote, local) {
   }
   return false;
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Context Menu, Keyboard Shortcut & Per-Tab Badge States
+// ─────────────────────────────────────────────────────────────────────────────
+const BS_MENU_PARENT = 'bs-root';
+
+chrome.runtime.onInstalled.addListener(() => {
+  try {
+    chrome.contextMenus.removeAll(() => {
+      chrome.contextMenus.create({
+        id: BS_MENU_PARENT,
+        title: 'BraveShield',
+        contexts: ['page', 'link', 'video']
+      });
+      chrome.contextMenus.create({
+        id: 'bs-toggle-whitelist',
+        parentId: BS_MENU_PARENT,
+        title: 'Toggle protection for this site',
+        contexts: ['page', 'link', 'video']
+      });
+      chrome.contextMenus.create({
+        id: 'bs-copy-clean-url',
+        parentId: BS_MENU_PARENT,
+        title: 'Copy cleaned URL (tracking params stripped)',
+        contexts: ['page', 'link', 'video']
+      });
+    });
+  } catch (_) {}
+});
+
+function bsStripTracking(urlStr) {
+  try {
+    const u = new URL(urlStr);
+    const params = [
+      'utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content', 'utm_id',
+      'fbclid', 'gclid', 'gclsrc', 'dclid', 'wbraid', 'gbraid',
+      'mc_eid', 'igshid', 'msclkid', 'yclid'
+    ];
+    let touched = false;
+    for (const p of params) {
+      if (u.searchParams.has(p)) { u.searchParams.delete(p); touched = true; }
+    }
+    return touched ? u.toString() : urlStr;
+  } catch (_) {
+    return urlStr;
+  }
+}
+
+chrome.contextMenus.onClicked.addListener(async (info, tab) => {
+  try {
+    if (!tab || !tab.url) return;
+    const hostname = new URL(tab.url).hostname;
+
+    if (info.menuItemId === 'bs-toggle-whitelist') {
+      const { whitelist } = await chrome.storage.local.get(['whitelist']);
+      const list = Array.isArray(whitelist) ? [...whitelist] : [];
+      const idx = list.indexOf(hostname);
+      if (idx >= 0) list.splice(idx, 1); else list.push(hostname);
+      await chrome.storage.local.set({ whitelist: list });
+      bsUpdateTabBadge(tab.id);
+    } else if (info.menuItemId === 'bs-copy-clean-url') {
+      const cleaned = bsStripTracking(tab.url);
+      await chrome.scripting.executeScript({
+        target: { tabId: tab.id },
+        func: (text) => navigator.clipboard.writeText(text),
+        args: [cleaned]
+      });
+      try { chrome.action.setBadgeText({ tabId: tab.id, text: 'COPIED' }); } catch (_) {}
+      setTimeout(() => { bsUpdateTabBadge(tab.id); }, 1200);
+    }
+  } catch (_) {}
+});
+
+chrome.commands.onCommand.addListener(async (command) => {
+  if (command !== 'toggle-master-shield') return;
+  try {
+    const { masterEnabled, enabled } = await chrome.storage.local.get(['masterEnabled', 'enabled']);
+    const next = !(masterEnabled !== false && enabled !== false);
+    await chrome.storage.local.set({ masterEnabled: next, enabled: next });
+    const tabs = await chrome.tabs.query({});
+    for (const t of tabs) bsUpdateTabBadge(t.id);
+  } catch (_) {}
+});
+
+async function bsUpdateTabBadge(tabId) {
+  if (typeof tabId !== 'number' || tabId < 0) return;
+  try {
+    const tab = await chrome.tabs.get(tabId);
+    if (!tab.url || !/^https?:/i.test(tab.url)) return;
+    const hostname = new URL(tab.url).hostname.toLowerCase();
+    const { masterEnabled, whitelist } = await chrome.storage.local.get(['masterEnabled', 'whitelist']);
+    const isWhitelisted = Array.isArray(whitelist) &&
+      whitelist.some(d => hostname === d || hostname.endsWith('.' + d));
+
+    if (masterEnabled === false) {
+      await chrome.action.setBadgeText({ tabId, text: 'OFF' });
+      await chrome.action.setBadgeBackgroundColor({ tabId, color: '#ef4444' });
+    } else if (isWhitelisted) {
+      await chrome.action.setBadgeText({ tabId, text: 'WL' });
+      await chrome.action.setBadgeBackgroundColor({ tabId, color: '#f59e0b' });
+    } else {
+      await chrome.action.setBadgeText({ tabId, text: '' });
+    }
+  } catch (_) {}
+}
+
+chrome.tabs.onActivated.addListener((info) => bsUpdateTabBadge(info.tabId));
+chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
+  if (changeInfo.status === 'loading' || changeInfo.url) bsUpdateTabBadge(tabId);
+});
+chrome.storage.onChanged.addListener((changes, area) => {
+  if (area !== 'local') return;
+  if (changes.masterEnabled !== undefined || changes.whitelist !== undefined) {
+    chrome.tabs.query({}, (tabs) => { for (const t of tabs) bsUpdateTabBadge(t.id); });
+  }
+});

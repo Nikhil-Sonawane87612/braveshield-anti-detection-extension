@@ -17,7 +17,8 @@
     "declarativeNetRequestFeedback",
     "tabs",
     "alarms",
-    "privacy"
+    "privacy",
+    "contextMenus"
   ],
   "host_permissions": [
     "<all_urls>"
@@ -56,6 +57,12 @@
     }
   },
   "options_page": "options.html",
+  "commands": {
+    "toggle-master-shield": {
+      "suggested_key": { "default": "Alt+Shift+B" },
+      "description": "Toggle the BraveShield master shield"
+    }
+  },
   "declarative_net_request": {
     "rule_resources": [
       {

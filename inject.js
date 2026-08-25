@@ -1295,17 +1295,29 @@
 
     try {
       if (typeof window.speechSynthesis !== 'undefined' && window.speechSynthesis.getVoices) {
-          const origGetVoices = window.speechSynthesis.getVoices;
-          const mockVoices = [
-            { voiceURI: 'Google US English', name: 'Google US English', lang: 'en-US', localService: false, default: true },
-            { voiceURI: 'Google UK English Female', name: 'Google UK English Female', lang: 'en-GB', localService: false, default: false },
-            { voiceURI: 'Google UK English Male', name: 'Google UK English Male', lang: 'en-GB', localService: false, default: false }
-          ];
-          window.speechSynthesis.getVoices = makeNative(function() {
-            return bsOn('speechVoicesSanitizeEnabled') ? mockVoices : origGetVoices.apply(this, arguments);
-          }, 'getVoices', 0);
+        const origGetVoices = window.speechSynthesis.getVoices;
+        const EN_VOICES = [
+          { voiceURI: 'Google US English', name: 'Google US English', lang: 'en-US', localService: false, default: true },
+          { voiceURI: 'Google UK English Female', name: 'Google UK English Female', lang: 'en-GB', localService: false, default: false },
+          { voiceURI: 'Google UK English Male', name: 'Google UK English Male', lang: 'en-GB', localService: false, default: false }
+        ];
+        // Voices must agree with the spoofed locale - an en-US-only voice list
+        // next to navigator.language ja-JP is a live consistency leak.
+        function buildVoices() {
+          const loc = BS_CONFIG.spoofLocale;
+          if (bsOptIn('timezoneSpoofingEnabled') && typeof loc === 'string' && /^[a-z]{2,3}(-[A-Za-z0-9]{2,8})*$/i.test(loc)) {
+            return [
+              { voiceURI: `Google ${loc}`, name: `Google ${loc}`, lang: loc, localService: false, default: true },
+              { voiceURI: 'Google US English', name: 'Google US English', lang: 'en-US', localService: false, default: false }
+            ];
+          }
+          return EN_VOICES;
         }
-      } catch (_) {}
+        window.speechSynthesis.getVoices = makeNative(function() {
+          return bsOn('speechVoicesSanitizeEnabled') ? buildVoices() : origGetVoices.apply(this, arguments);
+        }, 'getVoices', 0);
+      }
+    } catch (_) {}
   })();
 
   const isMediaPlatform = host.includes('spotify.com') || host.includes('youtube.com') || host.includes('youtu.be') || host.includes('netflix.com') || host.includes('twitch.tv') || host.includes('reddit.com');

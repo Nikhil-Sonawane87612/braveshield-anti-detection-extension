@@ -1063,6 +1063,35 @@
               }
             }, 'getByteFrequencyData', 1);
           }
+
+          // Time-domain siblings were previously left native - analyser
+          // waveforms are an equally valid audio fingerprint surface.
+          if (AnalyserNode.prototype.getFloatTimeDomainData) {
+            const origGetFloatTD = AnalyserNode.prototype.getFloatTimeDomainData;
+            AnalyserNode.prototype.getFloatTimeDomainData = makeNative(function(array) {
+              origGetFloatTD.apply(this, arguments);
+              if (!isCaptchaHost && bsOn('audioNoiseEnabled') && array && array.length > 0) {
+                const tdPrng = createPrng(61);
+                for (let i = 0; i < Math.min(array.length, 64); i++) {
+                  array[i] = array[i] * (1 + (tdPrng() - 0.5) * 2e-7);
+                }
+              }
+            }, 'getFloatTimeDomainData', 1);
+          }
+
+          if (AnalyserNode.prototype.getByteTimeDomainData) {
+            const origGetByteTD = AnalyserNode.prototype.getByteTimeDomainData;
+            AnalyserNode.prototype.getByteTimeDomainData = makeNative(function(array) {
+              origGetByteTD.apply(this, arguments);
+              if (!isCaptchaHost && bsOn('audioNoiseEnabled') && array && array.length > 0) {
+                const tdbPrng = createPrng(67);
+                if (tdbPrng() > 0.5) {
+                  const idx = Math.floor(tdbPrng() * Math.min(array.length, 128));
+                  array[idx] = Math.min(255, Math.max(0, array[idx] + (tdbPrng() > 0.5 ? 1 : -1)));
+                }
+              }
+            }, 'getByteTimeDomainData', 1);
+          }
         }
 
         if (typeof OfflineAudioContext !== 'undefined' && OfflineAudioContext.prototype.startRendering) {

@@ -1,0 +1,47 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Syntax-check all extension scripts
+        run: |
+          set -e
+          for f in background.js content.js inject.js shared/constants.js hardware-profiles.js useragents.js popup.js options.js; do
+            node --check "$f"
+          done
+
+      - name: Validate manifests & rules
+        run: |
+          set -e
+          node -e "JSON.parse(require('fs').readFileSync('manifest.json','utf8')); console.log('manifest.json OK')"
+          node -e "
+            const rules = JSON.parse(require('fs').readFileSync('rules.json','utf8'));
+            const ids = new Set(rules.map(r => r.id));
+            if (ids.size !== rules.length) throw new Error('Duplicate DNR rule ids');
+            for (const r of rules) {
+              if (!(r.priority >= 1)) throw new Error('Rule ' + r.id + ' missing priority');
+              if (!r.condition || !r.action) throw new Error('Rule ' + r.id + ' malformed');
+            }
+            console.log('rules.json OK (' + rules.length + ' rules)');
+          "
+
+      - name: Guard against BOM in shipped files
+        run: |
+          set -e
+          bad=0
+          for f in manifest.json rules.json popup.html options.html; do
+            head -c 3 "$f" | od -An -tx1 | grep -q "ef bb bf" && { echo "BOM found in $f"; bad=1; } || true
+          done
+          exit $bad

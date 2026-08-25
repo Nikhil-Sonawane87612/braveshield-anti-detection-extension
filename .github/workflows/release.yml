@@ -1,0 +1,43 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Syntax-check all extension scripts
+        shell: pwsh
+        run: |
+          $files = @('background.js','content.js','inject.js','shared\constants.js','hardware-profiles.js','useragents.js','popup.js','options.js')
+          foreach ($f in $files) { node --check $f }
+
+      - name: Read version from manifest
+        id: ver
+        shell: pwsh
+        run: |
+          $m = Get-Content -Raw manifest.json | ConvertFrom-Json
+          "version=$($m.version)" >> $env:GITHUB_OUTPUT
+
+      - name: Package distribution ZIP
+        shell: pwsh
+        run: powershell -ExecutionPolicy Bypass -File build.ps1
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: v${{ steps.ver.outputs.version }}
+          files: dist/BraveShield-v*.zip
+          generate_release_notes: true
+          fail_on_unmatched_files: true

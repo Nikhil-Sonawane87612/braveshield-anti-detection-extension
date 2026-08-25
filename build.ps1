@@ -80,6 +80,19 @@ try {
     throw 'DNR ruleset path mismatch'
   }
 
+  # ── Encoding guard: refuse to package double-encoded (mojibake) text ──
+  $node = Get-Command node -ErrorAction SilentlyContinue
+  if ($node) {
+    $checker = Join-Path $root 'scripts\check-mojibake.cjs'
+    if (Test-Path $checker) {
+      $stagedFiles = Get-ChildItem $stage -Recurse -File | ForEach-Object { $_.FullName }
+      & node $checker @stagedFiles
+      if ($LASTEXITCODE -ne 0) { throw 'Mojibake detected in staged files - aborting package' }
+    }
+  } else {
+    Write-Warning 'node not found - skipping mojibake guard'
+  }
+
   # ── Zip (root-level entries, no wrapper folder) ──
   if (-not (Test-Path $OutputDir)) { New-Item -ItemType Directory -Path $OutputDir | Out-Null }
   $zipName = Join-Path $OutputDir "BraveShield-v$version.zip"

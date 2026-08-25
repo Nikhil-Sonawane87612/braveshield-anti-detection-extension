@@ -40,6 +40,14 @@ jobs:
       - name: Unit tests (shared helpers)
         run: node --test tests/*.test.mjs
 
+      - name: Detect CP1252 mojibake and BOMs in shipped files
+        run: |
+          node scripts/check-mojibake.cjs \
+            background.js content.js inject.js shared/constants.js \
+            hardware-profiles.js useragents.js popup.js options.js welcome.js \
+            popup.html options.html welcome.html popup.css options.css welcome.css \
+            manifest.json rules.json
+
       - name: Guard against BOM in shipped files
         run: |
           set -e

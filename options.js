@@ -434,6 +434,49 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // Settings search — filters setting rows and hides empty panels
+  const studioSearch = document.getElementById('studio-search');
+  if (studioSearch) {
+    const panels = Array.from(document.querySelectorAll('.cyber-panel[id]'));
+    const applyFilter = () => {
+      const q = studioSearch.value.trim().toLowerCase();
+      if (!q) {
+        panels.forEach(p => {
+          p.style.display = '';
+          p.querySelectorAll('.setting-row').forEach(r => { r.style.display = ''; });
+        });
+        return;
+      }
+      let totalMatches = 0;
+      for (const panel of panels) {
+        const rows = panel.querySelectorAll('.setting-row');
+        let panelMatches = 0;
+        rows.forEach(row => {
+          const hay = (row.querySelector('.setting-title')?.textContent + ' ' +
+                       row.querySelector('.setting-desc')?.textContent || '').toLowerCase();
+          const hit = hay.includes(q);
+          row.style.display = hit ? '' : 'none';
+          if (hit) panelMatches++;
+        });
+        // Panels without searchable rows (hardware builder, audit, sync) stay
+        // visible only when the query is empty or their text matches.
+        if (rows.length === 0) {
+          const hay = panel.textContent.toLowerCase();
+          panel.style.display = hay.includes(q) ? '' : 'none';
+          if (hay.includes(q)) totalMatches++;
+        } else {
+          panel.style.display = panelMatches > 0 ? '' : 'none';
+          totalMatches += panelMatches;
+        }
+      }
+      studioSearch.title = `${totalMatches} matching setting${totalMatches === 1 ? '' : 's'}`;
+    };
+    studioSearch.addEventListener('input', applyFilter);
+    studioSearch.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') { studioSearch.value = ''; applyFilter(); }
+    });
+  }
+
   // Factory Reset — wipe everything back to safe defaults
   const btnResetDefaults = document.getElementById('btn-reset-defaults');
   if (btnResetDefaults) {

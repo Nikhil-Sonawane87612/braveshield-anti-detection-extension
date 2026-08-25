@@ -425,6 +425,18 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // Factory Reset — wipe everything back to safe defaults
+  const btnResetDefaults = document.getElementById('btn-reset-defaults');
+  if (btnResetDefaults) {
+    btnResetDefaults.addEventListener('click', () => {
+      if (!confirm('Factory reset ALL BraveShield settings, whitelist, stats and hardware profile? This cannot be undone.')) return;
+      chrome.storage.local.clear(() => {
+        btnResetDefaults.textContent = '✅ Reset Complete';
+        setTimeout(() => { window.location.reload(); }, 800);
+      });
+    });
+  }
+
   // Reset Telemetry
   if (btnResetTelemetry) {
     btnResetTelemetry.addEventListener('click', () => {

@@ -1,5 +1,14 @@
 # 📦 Semantic Version Changelog
 
+## [v6.2.1] - 2026-08-25 (Encoding Hotfix)
+
+### 🩹 Fixes
+- **Mojibake repair**: two PowerShell 5.1 text round-trips had double-encoded non-ASCII text in `options.html` (stat glyphs ⏱️🛡️⚡🔄, title, ± symbols, icons) and `content.js` comments; all restored byte-exact.
+- Stray UTF-8 BOMs stripped from `options.html`, `content.js`, `useragents.js`.
+- **Regression guard**: `scripts/check-mojibake.cjs` now fails CI and the packager on any double-encoded text or BOM, so corrupted files can never ship again.
+
+---
+
 ## [v6.2.0] - 2026-08-25 (Stealth Consistency, Onboarding & Release Automation)
 
 ### 🛡️ Fingerprint Consistency Closes

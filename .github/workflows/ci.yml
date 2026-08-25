@@ -37,6 +37,9 @@ jobs:
             console.log('rules.json OK (' + rules.length + ' rules)');
           "
 
+      - name: Unit tests (shared helpers)
+        run: node --test tests/*.test.mjs
+
       - name: Guard against BOM in shipped files
         run: |
           set -e

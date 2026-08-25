@@ -50,3 +50,8 @@ function bsIsCaptchaHost(hostname, pathname) {
   if (bsDomainMatches(host, 'cloudflare.com') && path.includes('/cdn-cgi/challenge-platform/')) return true;
   return false;
 }
+
+// Node test hook (browser-safe: `module` is undefined in content scripts/pages)
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = { BS_CAPTCHA_HOSTS, BS_SHORTENER_HOSTS, BS_TRACKING_PARAMS, bsDomainMatches, bsIsCaptchaHost };
+}

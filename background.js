@@ -1,107 +1,143 @@
 /**
  * BraveShield Bypass Pro — Service Worker & Auto-Sync Engine
- * Version: 6.0.1
- * Purpose: Dynamic rule synchronization, auto-update checker, WebRTC privacy policy, and DNR routing.
+ * Version: synced from manifest.json (single source of truth)
+ * Purpose: UA/session-rule synchronization, per-site identity overrides,
+ *          auto-update checker, WebRTC privacy policy, and DNR routing.
  */
 
 const GITHUB_MANIFEST_URL = 'https://raw.githubusercontent.com/Nikhil-Sonawane87612/braveshield-anti-detection-extension/main/manifest.json';
 
-// UA catalog (useragents.js) powers per-profile User-Agent resolution
+// UA catalog (useragents.js) + resolver (shared/ua-resolve.js, unit-tested
+// in tests/ua-resolve.test.mjs) power per-profile User-Agent resolution.
+// DNR rule builders live in shared/dnr-rules.js (unit-tested in
+// tests/dnr-rules.test.mjs): real Chrome / Firefox / Safari header parity,
+// captcha-exclusion merge invariant, rule-ID layout.
+try { importScripts('shared/ua-resolve.js'); } catch (_) {}
+try { importScripts('shared/dnr-rules.js'); } catch (_) {}
 try { importScripts('useragents.js'); } catch (_) {}
-
-const BS_UA_RULE_ID = 424242;
-const BS_UA_PLATFORM_BUCKETS = {
-  win32: 'win', macintel: 'mac', 'linux x86_64': 'linux',
-  'linux armv81': 'android', iphone: 'iphone', ipad: 'android_tablet'
-};
+// Hardware catalog powers Identity Rotation (DOM-free, importScripts-safe)
+try { importScripts('hardware-profiles.js'); } catch (_) {}
 
 function bsRealChromeMajor() {
   try {
-    const m = /Chrome\/(\d+)/.exec(navigator.userAgent || '');
+    const m = String(navigator.userAgent || '').match(/Chrome\/(\d+)/);
     return m ? m[1] : null;
   } catch (_) { return null; }
 }
 
-function bsResolveUA(platformKey) {
+function bsResolveIdentity(platformKey, browserType) {
   try {
     if (typeof USER_AGENTS !== 'object' || !USER_AGENTS) return null;
-    const bucket = BS_UA_PLATFORM_BUCKETS[String(platformKey || 'win32').toLowerCase()] || 'win';
-    const prefix = 'chrome_' + bucket;
-    let best = null;
-    let bestVer = -1;
-    for (const [key, val] of Object.entries(USER_AGENTS)) {
-      if (!key.startsWith(prefix)) continue;
-      const ver = parseInt(key.slice(prefix.length + 1, key.indexOf('_', prefix.length + 1)), 10);
-      const v = Number.isFinite(ver) ? ver : parseInt(key.split('_')[1], 10);
-      if (Number.isFinite(v) && v > bestVer) { bestVer = v; best = val; }
-    }
-    if (!best) return null;
-
-    // Re-base the spoofed UA onto the REAL engine major so JS/TLS behavior
-    // matches what servers can measure — a stale spoofed major is itself a tell.
     const realMajor = bsRealChromeMajor();
-    let ua = best.ua;
-    if (realMajor) {
-      ua = ua.replace(/Chrome\/\d+(\.\d+\.\d+\.\d+)?/, `Chrome/${realMajor}.0.0.0`);
-      if (Array.isArray(best.brands)) {
-        best.brands = best.brands.map(b => (b.brand === 'Google Chrome' || b.brand === 'Chromium')
-          ? { brand: b.brand, version: String(realMajor) } : b);
-      }
-    }
-    return { ua, brands: best.brands || [], platform: best.platform, mobile: !!best.mobile, platformVersion: best.platformVersion || '' };
+    const resolved = bsResolveUaFromCatalog(USER_AGENTS, platformKey, browserType, realMajor);
+    return resolved ? bsResolveBrowserIdentity(browserType || 'brave', resolved) : null;
   } catch (_) {
     return null;
   }
 }
 
-// Keep the DNR session rule + stored resolvedUA in sync with the active profile
+// ─────────────────────────────────────────────────────────────────────────────
+// Identity Rotation — deterministic per rotation window. The same window always
+// yields the same profile (no random churn across service-worker restarts), and
+// rotation stays WITHIN the same platform family (win/mac/linux/android/ios) so
+// the UA string, Sec-CH-UA headers, platform and hardware remain coherent.
+// ─────────────────────────────────────────────────────────────────────────────
+function bsStrSeed(str) {
+  try {
+    let h = 2166136261;
+    const s = String(str);
+    for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); }
+    return h >>> 0;
+  } catch (_) { return 0; }
+}
+
+function bsRotationPeriodIndex(periodHours) {
+  try {
+    const h = Math.max(1, Math.min(720, parseInt(periodHours, 10) || 24));
+    return Math.floor(Date.now() / (h * 3600000));
+  } catch (_) { return 0; }
+}
+
+function bsPickRotatedProfile(baseId, periodIndex) {
+  try {
+    if (typeof HARDWARE_PROFILES_CATALOG === 'undefined' || !Array.isArray(HARDWARE_PROFILES_CATALOG)) return null;
+    const fam = String(baseId || '').split('-')[0];
+    if (!fam) return null;
+    const pool = HARDWARE_PROFILES_CATALOG.filter(p => p && typeof p.id === 'string' && p.id.split('-')[0] === fam);
+    if (pool.length === 0) return null;
+    return pool[bsStrSeed(fam + ':' + periodIndex) % pool.length].id;
+  } catch (_) { return null; }
+}
+
+// Keep the DNR session rules + stored resolvedUA maps in sync with the
+// active profile and any per-site overrides.
 async function bsApplyUASpoof() {
   try {
-    const { uaSpoofingEnabled, deviceProfile, customHardwareProfile } =
-      await chrome.storage.local.get(['uaSpoofingEnabled', 'deviceProfile', 'customHardwareProfile']);
+    const { uaSpoofingEnabled, deviceProfile, customHardwareProfile, browserType, siteProfiles, spoofLocale,
+            identityRotationEnabled, identityRotationPeriodHours, rotatedPeriodIndex } =
+      await chrome.storage.local.get(['uaSpoofingEnabled', 'deviceProfile', 'customHardwareProfile', 'browserType', 'siteProfiles', 'spoofLocale',
+                                      'identityRotationEnabled', 'identityRotationPeriodHours', 'rotatedPeriodIndex']);
 
-    let platformKey = deviceProfile === 'custom'
-      ? (customHardwareProfile && customHardwareProfile.platform) || 'Win32'
-      : null;
+    const bt = browserType || 'brave';
 
-    // Derive platform from the profile id prefix
-    if (!platformKey) {
-      const id = String(deviceProfile || '');
-      if (id.startsWith('win-')) platformKey = 'Win32';
-      else if (id.startsWith('mac-')) platformKey = 'MacIntel';
-      else if (id.startsWith('linux-')) platformKey = 'Linux x86_64';
-      else if (id.startsWith('android-') || id.startsWith('pixel-')) platformKey = 'Linux armv81';
-      else if (id.startsWith('ios-') || id.startsWith('ipad-')) platformKey = 'iPhone';
-      else platformKey = 'Win32';
+    // Identity rotation: skipped for custom profiles; per-site overrides are
+    // PINNED identities and never rotate. Content picks the rotated profile up
+    // via rotatedDeviceProfile (no DNR change needed — same platform family).
+    let effectiveProfile = deviceProfile;
+    if (identityRotationEnabled === true && deviceProfile && deviceProfile !== 'custom') {
+      const pIdx = bsRotationPeriodIndex(identityRotationPeriodHours);
+      const rotated = bsPickRotatedProfile(deviceProfile, pIdx);
+      if (rotated) {
+        effectiveProfile = rotated;
+        if (rotatedPeriodIndex !== pIdx) {
+          try { await chrome.storage.local.set({ rotatedDeviceProfile: rotated, rotatedPeriodIndex: pIdx }); } catch (_) {}
+        }
+      }
     }
 
-    const resolved = uaSpoofingEnabled === false ? null : bsResolveUA(platformKey);
-    await chrome.storage.local.set({ resolvedUA: resolved });
+    const globalPlatform = bsPlatformKeyForProfile(effectiveProfile, customHardwareProfile);
+    const globalResolved = uaSpoofingEnabled === false ? null : bsResolveIdentity(globalPlatform, bt);
+
+    // Per-site overrides resolve their own identity from the override's
+    // profile/browserType, falling back to the global settings.
+    const bySite = {};
+    const overrideRules = [];
+    let ruleIdx = 1;
+    const overrides = (siteProfiles && typeof siteProfiles === 'object' && !Array.isArray(siteProfiles)) ? siteProfiles : {};
+    for (const [domain, prof] of Object.entries(overrides)) {
+      try {
+        if (domain === '__proto__' || domain === 'constructor' || domain === 'prototype') continue;
+        if (!Object.prototype.hasOwnProperty.call(overrides, domain)) continue;
+        if (!prof || typeof prof !== 'object') continue;
+        if (!/^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$/i.test(domain)) continue;
+        const siteBt = prof.browserType || bt;
+        const sitePlatform = prof.deviceProfile
+          ? bsPlatformKeyForProfile(prof.deviceProfile, customHardwareProfile)
+          : globalPlatform;
+        const resolved = uaSpoofingEnabled === false ? null : bsResolveIdentity(sitePlatform, siteBt);
+        if (!resolved) continue;
+        bySite[domain] = resolved;
+        overrideRules.push(bsBuildUaRule(BS_UA_RULE_ID + ruleIdx, 2, resolved, { initiatorDomains: [domain] }));
+        ruleIdx++;
+      } catch (_) {}
+    }
+
+    await chrome.storage.local.set({ resolvedUA: globalResolved, resolvedUABySite: bySite });
 
     try {
-      if (resolved && chrome.declarativeNetRequest && chrome.declarativeNetRequest.updateSessionRules) {
-        await chrome.declarativeNetRequest.updateSessionRules({
-          removeRuleIds: [BS_UA_RULE_ID],
-          addRules: [{
-            id: BS_UA_RULE_ID,
-            priority: 1,
-            action: {
-              type: 'modifyHeaders',
-              requestHeaders: [
-                { header: 'User-Agent', operation: 'set', value: resolved.ua },
-                { header: 'Sec-CH-UA', operation: 'set', value: JSON.stringify(resolved.brands) },
-                { header: 'Sec-CH-UA-Mobile', operation: 'set', value: resolved.mobile ? '?1' : '?0' },
-                { header: 'Sec-CH-UA-Platform', operation: 'set', value: `"${resolved.platform}"` }
-              ]
-            },
-            condition: {
-              urlFilter: '*',
-              resourceTypes: ['main_frame', 'sub_frame', 'xmlhttprequest', 'script', 'stylesheet', 'image', 'font', 'media', 'websocket', 'other']
-            }
-          }]
-        });
-      } else if (chrome.declarativeNetRequest && chrome.declarativeNetRequest.updateSessionRules) {
-        await chrome.declarativeNetRequest.updateSessionRules({ removeRuleIds: [BS_UA_RULE_ID], addRules: [] });
+      if (chrome.declarativeNetRequest && chrome.declarativeNetRequest.updateSessionRules) {
+        const existing = await chrome.declarativeNetRequest.getSessionRules();
+        const removeIds = existing
+          .map(r => r.id)
+          .filter(id => id >= BS_UA_RULE_ID && id < BS_UA_RULE_ID_MAX);
+        const addRules = globalResolved
+          ? [bsBuildUaRule(BS_UA_RULE_ID, 1, globalResolved)].concat(overrideRules)
+          : overrideRules;
+        const localeRule = spoofLocale && typeof spoofLocale === 'string'
+          ? bsBuildLocaleRule(BS_UA_LOCALE_RULE_ID, spoofLocale)
+          : null;
+        if (localeRule) addRules.push(localeRule);
+        await chrome.declarativeNetRequest.updateSessionRules({ removeRuleIds: removeIds, addRules });
       }
     } catch (_) {}
   } catch (_) {}
@@ -140,21 +176,33 @@ chrome.runtime.onInstalled.addListener((details) => {
     const defaults = {
       enabled: true,
       masterEnabled: true,
-      autoBypassLinks: true,
       unshortenerEnabled: true,
       autoBypassTimers: true,
+      gentleTurboEnabled: true,
       turboAllSites: false,
       paywallDefuserEnabled: true,
       bypassAdblockDetection: true,
+      domStructureDefuserEnabled: true,
       maskBraveApi: true,
       maskClientHints: true,
-      normalizeWebgl: true,
+      gpcCloakEnabled: true,
+      fontEnsembleEnabled: true,
+      identityRotationEnabled: false,
+      identityRotationPeriodHours: 24,
+      reelDwellSeconds: 1,
+      reelMaxAutoSeconds: 0,
+      customResolvers: [],
+      protectedSites: [],
+      rotatedDeviceProfile: '',
+      webglSpoofingEnabled: true,
       canvasNoiseEnabled: true,
       audioNoiseEnabled: true,
-      webglSpoofingEnabled: true,
       clientHintsEnabled: true,
       webrtcShieldEnabled: true,
       uaSpoofingEnabled: true,
+      browserType: 'brave',
+      siteProfiles: {},
+      resolvedUABySite: {},
       timezoneSpoofingEnabled: false,
       spoofTimezone: null,
       spoofLocale: null,
@@ -162,6 +210,7 @@ chrome.runtime.onInstalled.addListener((details) => {
       timerCoarseningEnabled: true,
       mediaDevicesSanitizeEnabled: true,
       speechVoicesSanitizeEnabled: true,
+      networkInfoMaskEnabled: true,
       cleanUrlEnabled: true,
       rightClickEnabled: true,
       videoSpeedEnabled: true,
@@ -169,12 +218,19 @@ chrome.runtime.onInstalled.addListener((details) => {
       youtubeAds: true,
       spotifyUnlocked: true,
       twitchShieldEnabled: true,
+      instagramReelsAdsEnabled: true,
+      instagramAutoScrollEnabled: false,
+      youtubeShortsEnabled: true,
+      youtubeShortsAutoScroll: false,
+      facebookReelsEnabled: true,
+      permissionAutoDenyEnabled: true,
+      workerParityEnabled: false,
+      moduleMatrixMode: 'global',
       deviceProfile: 'win-rtx4090',
       timeSavedSeconds: 0,
       trapsNeutralized: 0,
       directLinksUnlocked: 0,
       whitelist: [],
-      blacklist: [],
       version: currentVer,
       lastSyncTime: Date.now(),
       remoteSyncStatus: 'synced',
@@ -196,9 +252,35 @@ chrome.runtime.onInstalled.addListener((details) => {
     });
   });
 
-  // Setup periodic 6-hour auto-sync alarm
+  // Context menu tree — rebuilt on every install/update event (merged here;
+  // a second onInstalled listener duplicating this was removed).
+  try {
+    chrome.contextMenus.removeAll(() => {
+      chrome.contextMenus.create({
+        id: BS_MENU_PARENT,
+        title: 'BraveShield',
+        contexts: ['page', 'link', 'video']
+      });
+      chrome.contextMenus.create({
+        id: 'bs-toggle-whitelist',
+        parentId: BS_MENU_PARENT,
+        title: 'Toggle protection for this site',
+        contexts: ['page', 'link', 'video']
+      });
+      chrome.contextMenus.create({
+        id: 'bs-copy-clean-url',
+        parentId: BS_MENU_PARENT,
+        title: 'Copy cleaned URL (tracking params stripped)',
+        contexts: ['page', 'link', 'video']
+      });
+    });
+  } catch (_) {}
+
+  // Setup periodic 6-hour auto-sync alarm + identity-rotation window watcher
+  // (checks for a rotation-period rollover every 20 minutes)
   try {
     chrome.alarms.create('BRAVESHIELD_AUTO_SYNC', { periodInMinutes: 360 });
+    chrome.alarms.create('BRAVESHIELD_IDENTITY_ROTATE', { periodInMinutes: 20 });
   } catch (_) {}
 
   // Run initial sync and update check
@@ -218,7 +300,12 @@ chrome.storage.onChanged.addListener((changes, area) => {
   }
   if (changes.uaSpoofingEnabled !== undefined ||
       changes.deviceProfile !== undefined ||
-      changes.customHardwareProfile !== undefined) {
+      changes.customHardwareProfile !== undefined ||
+      changes.browserType !== undefined ||
+      changes.spoofLocale !== undefined ||
+      changes.identityRotationEnabled !== undefined ||
+      changes.identityRotationPeriodHours !== undefined ||
+      changes.siteProfiles !== undefined) {
     bsApplyUASpoof();
   }
 });
@@ -227,6 +314,13 @@ chrome.storage.onChanged.addListener((changes, area) => {
 chrome.alarms.onAlarm.addListener((alarm) => {
   if (alarm.name === 'BRAVESHIELD_AUTO_SYNC') {
     syncRemoteRulesAndCheckUpdates();
+  }
+  if (alarm.name === 'BRAVESHIELD_IDENTITY_ROTATE') {
+    // Rotation re-resolution is cheap and deterministic: the window index is
+    // recomputed; nothing churns unless the period actually rolled over.
+    chrome.storage.local.get(['identityRotationEnabled'], (r) => {
+      if (r && r.identityRotationEnabled === true) bsApplyUASpoof();
+    });
   }
 });
 
@@ -301,30 +395,6 @@ function isNewerVersion(remote, local) {
 // Context Menu, Keyboard Shortcut & Per-Tab Badge States
 // ─────────────────────────────────────────────────────────────────────────────
 const BS_MENU_PARENT = 'bs-root';
-
-chrome.runtime.onInstalled.addListener(() => {
-  try {
-    chrome.contextMenus.removeAll(() => {
-      chrome.contextMenus.create({
-        id: BS_MENU_PARENT,
-        title: 'BraveShield',
-        contexts: ['page', 'link', 'video']
-      });
-      chrome.contextMenus.create({
-        id: 'bs-toggle-whitelist',
-        parentId: BS_MENU_PARENT,
-        title: 'Toggle protection for this site',
-        contexts: ['page', 'link', 'video']
-      });
-      chrome.contextMenus.create({
-        id: 'bs-copy-clean-url',
-        parentId: BS_MENU_PARENT,
-        title: 'Copy cleaned URL (tracking params stripped)',
-        contexts: ['page', 'link', 'video']
-      });
-    });
-  } catch (_) {}
-});
 
 function bsStripTracking(urlStr) {
   try {

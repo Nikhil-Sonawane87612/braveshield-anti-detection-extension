@@ -38,3 +38,13 @@ package-lock.json
 MEMORY.md
 MEMORY_MAP.md
 FUTURE-PROJECTS.md
+
+# Local tool state & scanner artifacts (never shipped)
+.hermes/
+.mimosa/
+dist/
+
+# Local automation/session residue (never shipped)
+scripts/hermes-*
+scripts/tg-*
+braveshield-mobile.user.js.meta

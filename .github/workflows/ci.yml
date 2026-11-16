@@ -18,7 +18,7 @@ jobs:
       - name: Syntax-check all extension scripts
         run: |
           set -e
-          for f in background.js content.js inject.js shared/constants.js hardware-profiles.js useragents.js popup.js options.js; do
+          for f in background.js content.js inject.js shared/constants.js shared/ua-resolve.js hardware-profiles.js useragents.js popup.js options.js welcome.js; do
             node --check "$f"
           done
 
@@ -43,7 +43,7 @@ jobs:
       - name: Detect CP1252 mojibake and BOMs in shipped files
         run: |
           node scripts/check-mojibake.cjs \
-            background.js content.js inject.js shared/constants.js \
+            background.js content.js inject.js shared/constants.js shared/ua-resolve.js \
             hardware-profiles.js useragents.js popup.js options.js welcome.js \
             popup.html options.html welcome.html popup.css options.css welcome.css \
             manifest.json rules.json

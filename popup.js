@@ -1,6 +1,6 @@
 /**
  * BraveShield Bypass Pro — Cyber-Dark Popup HUD Controller
- * Version: 6.0.1 (Stitch Cyber-Dark Edition)
+ * Version: synced from manifest.json at runtime
  */
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -33,7 +33,20 @@ document.addEventListener('DOMContentLoaded', async () => {
   const toggleUnshortener = document.getElementById('toggle-unshortener');
   const togglePaywall = document.getElementById('toggle-paywall');
   const toggleTimers = document.getElementById('toggle-timers');
+  const toggleGentle = document.getElementById('toggle-gentle');
+  const toggleIgAds = document.getElementById('toggle-igads');
+  const toggleIgScroll = document.getElementById('toggle-igscroll');
+  const toggleShorts = document.getElementById('toggle-shorts');
+  const toggleShortsScroll = document.getElementById('toggle-shortsscroll');
+  const toggleFbReels = document.getElementById('toggle-fbreels');
+  const togglePermission = document.getElementById('toggle-permission');
+  const toggleWorker = document.getElementById('toggle-worker');
   const toggleMedia = document.getElementById('toggle-media');
+
+  // Module Matrix Mode Switch (global / per-site)
+  const matrixGlobal = document.getElementById('matrix-global');
+  const matrixPerSite = document.getElementById('matrix-persite');
+  let matrixMode = 'global';
 
   // Domain & Whitelist Controls
   const statusSite = document.getElementById('status-site');
@@ -46,6 +59,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   const btnSync = document.getElementById('btn-sync-rules');
   const syncIcon = document.getElementById('sync-icon');
   const updateBadge = document.getElementById('update-badge');
+  const btnCopyCleanUrl = document.getElementById('btn-copy-clean-url');
+  const btnEditMatrix = document.getElementById('btn-edit-matrix');
 
   let currentHostname = '';
   let selectedProfileId = 'win-rtx4090';
@@ -143,6 +158,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         statusDot.style.boxShadow = '0 0 8px var(--accent-crimson)';
       }
       if (masterSubtitle) masterSubtitle.textContent = 'Protection Paused';
+      // A11y: keep aria-pressed in sync even when master is off
+      if (btnWhitelist) btnWhitelist.setAttribute('aria-pressed', isCurrentWhitelisted ? 'true' : 'false');
       return;
     }
 
@@ -183,6 +200,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (whitelistText) whitelistText.textContent = 'Guarded';
       if (btnWhitelist) btnWhitelist.classList.remove('whitelisted');
     }
+    // A11y: reflect whitelist state for assistive tech
+    if (btnWhitelist) btnWhitelist.setAttribute('aria-pressed', isCurrentWhitelisted ? 'true' : 'false');
   }
 
   // 5. Initial Storage Load & State Synchronization
@@ -202,17 +221,57 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (toggleUnshortener) toggleUnshortener.checked = res.unshortenerEnabled !== false;
     if (togglePaywall) togglePaywall.checked = res.paywallDefuserEnabled !== false;
     if (toggleTimers) toggleTimers.checked = res.autoBypassTimers !== false;
+    if (toggleGentle) toggleGentle.checked = res.gentleTurboEnabled !== false;
+    if (toggleIgAds) toggleIgAds.checked = res.instagramReelsAdsEnabled !== false;
+    if (toggleIgScroll) toggleIgScroll.checked = res.instagramAutoScrollEnabled === true;
+    if (toggleShorts) toggleShorts.checked = res.youtubeShortsEnabled !== false;
+    if (toggleShortsScroll) toggleShortsScroll.checked = res.youtubeShortsAutoScroll === true;
+    if (toggleFbReels) toggleFbReels.checked = res.facebookReelsEnabled !== false;
+    if (togglePermission) togglePermission.checked = res.permissionAutoDenyEnabled !== false;
+    if (toggleWorker) toggleWorker.checked = res.workerParityEnabled === true;
     if (toggleMedia) toggleMedia.checked = res.youtubeAds !== false;
+
+    // Matrix mode
+    matrixMode = res.moduleMatrixMode === 'perSite' ? 'perSite' : 'global';
+    if (matrixGlobal) {
+      matrixGlobal.classList.toggle('is-active', matrixMode === 'global');
+      matrixGlobal.setAttribute('aria-pressed', matrixMode === 'global' ? 'true' : 'false');
+    }
+    if (matrixPerSite) {
+      matrixPerSite.classList.toggle('is-active', matrixMode === 'perSite');
+      matrixPerSite.setAttribute('aria-pressed', matrixMode === 'perSite' ? 'true' : 'false');
+    }
 
     if (res.deviceProfile) {
       selectedProfileId = res.deviceProfile;
       if (profileSelect) profileSelect.value = selectedProfileId;
     }
 
+    const browserTypeSelect = document.getElementById('browser-type-select');
+    if (browserTypeSelect && res.browserType) browserTypeSelect.value = res.browserType;
+
+    // Per-site override chip (F3)
+    const overrideChip = document.getElementById('site-override-chip');
+    if (overrideChip) {
+      const siteProfiles = (res.siteProfiles && typeof res.siteProfiles === 'object') ? res.siteProfiles : {};
+      const matched = currentHostname && Object.keys(siteProfiles).find(d =>
+        typeof bsDomainMatches === 'function' ? bsDomainMatches(currentHostname, d)
+          : (currentHostname === d || currentHostname.endsWith('.' + d)));
+      if (matched) {
+        overrideChip.hidden = false;
+        const o = siteProfiles[matched] || {};
+        overrideChip.title = `Per-site override active for ${matched}: ` +
+          `profile=${o.deviceProfile || 'global'}, identity=${o.browserType || 'global'}`;
+      } else {
+        overrideChip.hidden = true;
+      }
+    }
+
     // Telemetry counters — real stored values only, never fabricated.
     animateValue(metricTimeSaved, 0, Math.floor(res.timeSavedSeconds || 0));
     animateValue(metricTraps, 0, Math.floor(res.trapsNeutralized || 0));
     animateValue(metricLinks, 0, Math.floor(res.directLinksUnlocked || 0));
+    bsRenderWeeklyTrend(res.timeSavedDaily);
 
     // Whitelist Check — suffix matching, identical to content.js bridge logic
     const whitelist = Array.isArray(res.whitelist) ? res.whitelist : [];
@@ -233,8 +292,13 @@ document.addEventListener('DOMContentLoaded', async () => {
   const BS_MODULE_KEYS = [
     'canvasNoiseEnabled', 'audioNoiseEnabled', 'webglSpoofingEnabled', 'clientHintsEnabled',
     'timerCoarseningEnabled', 'domJitterEnabled', 'webrtcShieldEnabled', 'maskBraveApi',
-    'unshortenerEnabled', 'paywallDefuserEnabled', 'autoBypassTimers',
-    'youtubeAds', 'spotifyUnlocked', 'twitchShieldEnabled'
+    'gpcCloakEnabled', 'workerParityEnabled', 'unshortenerEnabled', 'paywallDefuserEnabled',
+    'autoBypassTimers', 'gentleTurboEnabled',
+    'youtubeAds', 'spotifyUnlocked', 'twitchShieldEnabled',
+    'instagramReelsAdsEnabled', 'instagramAutoScrollEnabled',
+    'youtubeShortsEnabled', 'youtubeShortsAutoScroll', 'facebookReelsEnabled',
+    'permissionAutoDenyEnabled', 'workerParityEnabled', 'domStructureDefuserEnabled',
+    'fontEnsembleEnabled', 'identityRotationEnabled'
   ];
   function countActiveModules(source) {
     if (source.masterEnabled === false) return 0;
@@ -246,6 +310,46 @@ document.addEventListener('DOMContentLoaded', async () => {
     const total = BS_MODULE_KEYS.length;
     if (masterSubtitle && source.masterEnabled !== false && !isCurrentWhitelisted) {
       masterSubtitle.textContent = `${count}/${total} Stealth Modules Armed`;
+    }
+  }
+
+  // Weekly "time saved" sparkline — 7 bars built from real stored daily
+  // buckets (timeSavedDaily). Pure DOM construction, values are textContent.
+  function bsRenderWeeklyTrend(daily) {
+    const wrap = document.getElementById('bs-weekly-trend');
+    const bars = document.getElementById('trend-bars');
+    const trendTotal = document.getElementById('trend-total');
+    if (!wrap || !bars) return;
+    let days;
+    let total = 0;
+    try {
+      days = [];
+      for (let i = 6; i >= 0; i--) {
+        const d = new Date(Date.now() - i * 86400000);
+        const key = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+        const v = Math.floor((daily && typeof daily === 'object' ? Number(daily[key]) : 0) || 0);
+        days.push({ label: d.toLocaleDateString(undefined, { weekday: 'narrow' }), v });
+        total += v;
+      }
+    } catch (_) { return; }
+    const hasAny = total > 0;
+    wrap.hidden = !hasAny;
+    if (trendTotal) trendTotal.textContent = hasAny ? `≈${total}s this week` : '';
+    const max = Math.max.apply(null, days.map(d => d.v).concat([1]));
+    bars.textContent = '';
+    for (const d of days) {
+      const col = document.createElement('div');
+      col.className = 'trend-col';
+      const bar = document.createElement('div');
+      bar.className = d.v > 0 ? 'trend-bar on' : 'trend-bar';
+      bar.style.height = d.v > 0 ? `${Math.max(8, Math.round((d.v / max) * 56))}px` : '3px';
+      bar.title = `${d.label}: ${d.v}s saved`;
+      const lab = document.createElement('span');
+      lab.className = 'trend-day';
+      lab.textContent = d.label;
+      col.appendChild(bar);
+      col.appendChild(lab);
+      bars.appendChild(col);
     }
   }
 
@@ -266,6 +370,26 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (changes.webrtcShieldEnabled !== undefined && toggleWebrtc) toggleWebrtc.checked = changes.webrtcShieldEnabled.newValue !== false;
     if (changes.maskBraveApi !== undefined && toggleBrave) toggleBrave.checked = changes.maskBraveApi.newValue !== false;
 
+    if (changes.instagramReelsAdsEnabled !== undefined && toggleIgAds) toggleIgAds.checked = changes.instagramReelsAdsEnabled.newValue !== false;
+    if (changes.instagramAutoScrollEnabled !== undefined && toggleIgScroll) toggleIgScroll.checked = changes.instagramAutoScrollEnabled.newValue === true;
+    if (changes.youtubeShortsEnabled !== undefined && toggleShorts) toggleShorts.checked = changes.youtubeShortsEnabled.newValue !== false;
+    if (changes.youtubeShortsAutoScroll !== undefined && toggleShortsScroll) toggleShortsScroll.checked = changes.youtubeShortsAutoScroll.newValue === true;
+    if (changes.facebookReelsEnabled !== undefined && toggleFbReels) toggleFbReels.checked = changes.facebookReelsEnabled.newValue !== false;
+    if (changes.permissionAutoDenyEnabled !== undefined && togglePermission) togglePermission.checked = changes.permissionAutoDenyEnabled.newValue !== false;
+    if (changes.workerParityEnabled !== undefined && toggleWorker) toggleWorker.checked = changes.workerParityEnabled.newValue === true;
+
+    if (changes.moduleMatrixMode !== undefined) {
+      matrixMode = changes.moduleMatrixMode.newValue === 'perSite' ? 'perSite' : 'global';
+      if (matrixGlobal) {
+        matrixGlobal.classList.toggle('is-active', matrixMode === 'global');
+        matrixGlobal.setAttribute('aria-pressed', matrixMode === 'global' ? 'true' : 'false');
+      }
+      if (matrixPerSite) {
+        matrixPerSite.classList.toggle('is-active', matrixMode === 'perSite');
+        matrixPerSite.setAttribute('aria-pressed', matrixMode === 'perSite' ? 'true' : 'false');
+      }
+    }
+
     if (changes.whitelist !== undefined) {
       const list = changes.whitelist.newValue || [];
       isCurrentWhitelisted = !!(currentHostname && list.some(d =>
@@ -282,10 +406,11 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (k === 'timeSavedSeconds' || k === 'trapsNeutralized' || k === 'directLinksUnlocked') touchedTelemetry = true;
     }
     if (touchedTelemetry) {
-      chrome.storage.local.get(['timeSavedSeconds', 'trapsNeutralized', 'directLinksUnlocked'], (res) => {
+      chrome.storage.local.get(['timeSavedSeconds', 'trapsNeutralized', 'directLinksUnlocked', 'timeSavedDaily'], (res) => {
         animateValue(metricTimeSaved, Number(metricTimeSaved.textContent.replace(/,/g, '')) || 0, Math.floor(res.timeSavedSeconds || 0));
         animateValue(metricTraps, Number(metricTraps.textContent.replace(/,/g, '')) || 0, Math.floor(res.trapsNeutralized || 0));
         animateValue(metricLinks, Number(metricLinks.textContent.replace(/,/g, '')) || 0, Math.floor(res.directLinksUnlocked || 0));
+        bsRenderWeeklyTrend(res.timeSavedDaily);
       });
     }
     if (BS_MODULE_KEYS.some(k => changes[k] !== undefined)) {
@@ -322,7 +447,31 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (toggleUnshortener) toggleUnshortener.addEventListener('change', () => chrome.storage.local.set({ unshortenerEnabled: toggleUnshortener.checked }));
   if (togglePaywall) togglePaywall.addEventListener('change', () => chrome.storage.local.set({ paywallDefuserEnabled: togglePaywall.checked }));
   if (toggleTimers) toggleTimers.addEventListener('change', () => chrome.storage.local.set({ autoBypassTimers: toggleTimers.checked }));
+  if (toggleGentle) toggleGentle.addEventListener('change', () => chrome.storage.local.set({ gentleTurboEnabled: toggleGentle.checked }));
+  if (toggleIgAds) toggleIgAds.addEventListener('change', () => chrome.storage.local.set({ instagramReelsAdsEnabled: toggleIgAds.checked }));
+  if (toggleIgScroll) toggleIgScroll.addEventListener('change', () => chrome.storage.local.set({ instagramAutoScrollEnabled: toggleIgScroll.checked }));
+  if (toggleShorts) toggleShorts.addEventListener('change', () => chrome.storage.local.set({ youtubeShortsEnabled: toggleShorts.checked }));
+  if (toggleShortsScroll) toggleShortsScroll.addEventListener('change', () => chrome.storage.local.set({ youtubeShortsAutoScroll: toggleShortsScroll.checked }));
+  if (toggleFbReels) toggleFbReels.addEventListener('change', () => chrome.storage.local.set({ facebookReelsEnabled: toggleFbReels.checked }));
+  if (togglePermission) togglePermission.addEventListener('change', () => chrome.storage.local.set({ permissionAutoDenyEnabled: togglePermission.checked }));
+  if (toggleWorker) toggleWorker.addEventListener('change', () => chrome.storage.local.set({ workerParityEnabled: toggleWorker.checked }));
   if (toggleMedia) toggleMedia.addEventListener('change', () => chrome.storage.local.set({ youtubeAds: toggleMedia.checked, spotifyUnlocked: toggleMedia.checked, twitchShieldEnabled: toggleMedia.checked }));
+
+  // Matrix mode handlers
+  function applyMatrixMode(mode) {
+    matrixMode = mode === 'perSite' ? 'perSite' : 'global';
+    if (matrixGlobal) {
+      matrixGlobal.classList.toggle('is-active', matrixMode === 'global');
+      matrixGlobal.setAttribute('aria-pressed', matrixMode === 'global' ? 'true' : 'false');
+    }
+    if (matrixPerSite) {
+      matrixPerSite.classList.toggle('is-active', matrixMode === 'perSite');
+      matrixPerSite.setAttribute('aria-pressed', matrixMode === 'perSite' ? 'true' : 'false');
+    }
+    chrome.storage.local.set({ moduleMatrixMode: matrixMode });
+  }
+  if (matrixGlobal) matrixGlobal.addEventListener('click', () => applyMatrixMode('global'));
+  if (matrixPerSite) matrixPerSite.addEventListener('click', () => applyMatrixMode('perSite'));
 
   // 8. Instant Domain Whitelist Toggle
   if (btnWhitelist) {
@@ -340,6 +489,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         chrome.storage.local.set({ whitelist: list });
         updateHUDVisuals();
       });
+    });
+  }
+
+  // 9b. Browser Type Selection
+  const browserTypeSelect = document.getElementById('browser-type-select');
+  if (browserTypeSelect) {
+    browserTypeSelect.addEventListener('change', () => {
+      chrome.storage.local.set({ browserType: browserTypeSelect.value });
     });
   }
 
@@ -376,6 +533,43 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
+  // Quick-Site Action: copy the current tab's URL with tracking params stripped
+  if (btnCopyCleanUrl) {
+    btnCopyCleanUrl.addEventListener('click', () => {
+      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        const tab = tabs && tabs[0];
+        if (!tab || !tab.url) return;
+        let cleaned = tab.url;
+        try {
+          const u = new URL(tab.url);
+          const params = new URLSearchParams(u.search);
+          const list = (typeof BS_TRACKING_PARAMS !== 'undefined' && Array.isArray(BS_TRACKING_PARAMS)) ? BS_TRACKING_PARAMS : [];
+          for (const p of list) params.delete(p);
+          const qs = params.toString();
+          cleaned = u.origin + u.pathname + (qs ? '?' + qs : '') + u.hash;
+        } catch (_) {}
+        navigator.clipboard.writeText(cleaned).then(() => {
+          btnCopyCleanUrl.title = `✅ Copied: ${cleaned}`;
+          setTimeout(() => { btnCopyCleanUrl.title = 'Copy clean URL (tracking params stripped)'; }, 2500);
+        }).catch(() => {
+          btnCopyCleanUrl.title = 'Clipboard blocked by the browser';
+        });
+      });
+    });
+  }
+
+  // Quick-Site Action: jump straight into the per-site matrix editor
+  if (btnEditMatrix) {
+    btnEditMatrix.addEventListener('click', () => {
+      const target = currentHostname
+        ? chrome.runtime.getURL('options.html#bs-edit-site=' + encodeURIComponent(currentHostname))
+        : chrome.runtime.getURL('options.html');
+      if (chrome.tabs && chrome.tabs.create) chrome.tabs.create({ url: target });
+      else window.open(target, '_blank');
+      window.close();
+    });
+  }
+
   // Dynamic version from manifest — single source of truth
   const verTag = document.getElementById('ver-tag');
   if (verTag) {
@@ -387,4 +581,19 @@ document.addEventListener('DOMContentLoaded', async () => {
       window.open('https://github.com/Nikhil-Sonawane87612/braveshield-anti-detection-extension/releases/latest');
     });
   }
+
+  // ── A11y enhancement: keyboard activation for update badge + focus-visible helper (additive, non-breaking) ──
+  if (updateBadge) {
+    updateBadge.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        updateBadge.click();
+      }
+    });
+  }
+  // Lightweight focus-visible fallback marker for CSS that relies on :focus-visible
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Tab') document.documentElement.classList.add('js-tabbing');
+  });
+  document.addEventListener('mousedown', () => document.documentElement.classList.remove('js-tabbing'));
 });

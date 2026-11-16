@@ -32,12 +32,25 @@
         </label>
       </div>
     </div>
+
+    <!-- Module Matrix Mode Switch -->
+    <div class="studio-matrix-mode" role="group" aria-label="Module matrix mode">
+      <div class="matrix-mode-copy">
+        <div class="matrix-mode-title">Module Matrix Scope</div>
+        <div class="matrix-mode-desc" id="matrix-mode-desc">Global — one set of module toggles applies to every website you visit.</div>
+      </div>
+      <div class="matrix-seg">
+        <button type="button" class="matrix-seg-btn is-active" id="matrix-global" aria-pressed="true">🌐 Global</button>
+        <button type="button" class="matrix-seg-btn" id="matrix-persite" aria-pressed="false">📍 Per-Site</button>
+      </div>
+    </div>
   </header>
 
   <!-- Section Navigation Rail -->
   <nav class="studio-nav" aria-label="Studio sections">
     <a href="#panel-hardware">🎭 Hardware</a>
     <a href="#panel-fingerprint">🔒 Fingerprint</a>
+    <a href="#panel-bravedefense">🛡️ Brave Defense</a>
     <a href="#panel-timers">⚡ Timers</a>
     <a href="#panel-streaming">🎬 Streaming</a>
     <a href="#panel-audit">🩺 Audit</a>
@@ -90,6 +103,20 @@
         </div>
       </div>
       <div class="panel-body">
+        <div class="profile-selection-box">
+          <div class="setting-meta">
+            <div class="setting-title">Browser Detection Type</div>
+            <div class="setting-desc">Sites that block Brave/Firefox will see the selected browser. Spoofs UA, Client Hints, vendor &amp; chrome API consistently.</div>
+          </div>
+          <div class="profile-inputs-row">
+            <select id="opt-browsertype" class="cyber-select">
+              <option value="brave">Brave (default)</option>
+              <option value="chrome">Chrome</option>
+              <option value="firefox">Firefox</option>
+              <option value="safari">Safari</option>
+            </select>
+          </div>
+        </div>
         <div class="profile-selection-box">
           <div class="setting-meta">
             <div class="setting-title">Select Active Hardware Identity Preset</div>
@@ -306,6 +333,26 @@
 
         <div class="setting-row">
           <div class="setting-meta">
+            <div class="setting-title">Font Ensemble Spoofing</div>
+            <div class="setting-desc">Serves a realistic per-identity system font list — document.fonts.check, queryLocalFonts and cross-font width ratios all agree with the spoofed platform</div>
+          </div>
+          <label class="cyber-switch"><input type="checkbox" id="opt-fontensemble" checked><span class="cyber-slider"></span></label>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-meta">
+            <div class="setting-title">Identity Rotation</div>
+            <div class="setting-desc">Auto-shuffles the hardware profile within the same platform family every N hours (deterministic — same window, same identity; UA &amp; headers stay coherent). Per-site overrides stay pinned.</div>
+          </div>
+          <div style="display:flex;gap:10px;align-items:center;">
+            <input type="number" id="opt-rotation-hours" class="cyber-input" min="1" max="720" value="24" style="width:88px;" title="Rotation period (hours)" aria-label="Rotation period in hours">
+            <span style="color:#718096;font-size:11px;">hrs</span>
+            <label class="cyber-switch"><input type="checkbox" id="opt-rotation"><span class="cyber-slider"></span></label>
+          </div>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-meta">
             <div class="setting-title">High-Resolution Timer Coarsening</div>
             <div class="setting-desc">Clamps performance.now to 20ms resolution against Spectre CPU cache attacks</div>
           </div>
@@ -314,10 +361,18 @@
 
         <div class="setting-row">
           <div class="setting-meta">
-            <div class="setting-title">Battery &amp; Network Info Cloak</div>
-            <div class="setting-desc">Mocks Battery API (100% charging) and Network Information (4G 10Mbps)</div>
+            <div class="setting-title">Battery API Cloak</div>
+            <div class="setting-desc">Mocks Battery API (100% charging) — hides a real hardware/power signal</div>
           </div>
           <label class="cyber-switch"><input type="checkbox" id="opt-battery" checked><span class="cyber-slider"></span></label>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-meta">
+            <div class="setting-title">Network Information Cloak</div>
+            <div class="setting-desc">Mocks navigator.connection (4G, 10Mbps, 50ms RTT) — off restores the native value</div>
+          </div>
+          <label class="cyber-switch"><input type="checkbox" id="opt-networkinfo" checked><span class="cyber-slider"></span></label>
         </div>
 
         <div class="setting-row">
@@ -326,6 +381,55 @@
             <div class="setting-desc">Aligns Intl, Date math and navigator.languages with the zone picked below — closes the #1 CreepJS platform/clock mismatch</div>
           </div>
           <label class="cyber-switch"><input type="checkbox" id="opt-tzspoof"><span class="cyber-slider"></span></label>
+        </div>
+      </div>
+    </div>
+
+    <!-- Brave-Detection Defense: the group of counter-measures aimed at
+         lockers and shields that fingerprint Brave specifically -->
+    <div class="cyber-panel" id="panel-bravedefense">
+      <div class="panel-header">
+        <div class="panel-tag">
+          <span class="tag-beacon"></span>
+          BRAVE-DETECTION DEFENSE
+        </div>
+      </div>
+      <div class="panel-body">
+        <div class="setting-row">
+          <div class="setting-meta">
+            <div class="setting-title">Global Privacy Control Cloak</div>
+            <div class="setting-desc">Brave reports navigator.globalPrivacyControl = true — Chrome and Firefox do not implement it at all (undefined). While a non-Brave identity is claimed this probe answers the Chrome truth. Applies on every read, no reload needed</div>
+          </div>
+          <label class="cyber-switch"><input type="checkbox" id="opt-gpc" checked><span class="cyber-slider"></span></label>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-meta">
+            <div class="setting-title">Structural Shell Defuser</div>
+            <div class="setting-desc">Second blanket-blocker pass beyond the phrase list: a fixed, top-layer, click-through-walled full-viewport shell that survives 8 honest seconds is defused even when its wording is unknown. Per-site toggle lives in the Fingerprint panel's matrix</div>
+          </div>
+          <label class="cyber-switch"><input type="checkbox" id="opt-domdef" checked><span class="cyber-slider"></span></label>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-meta">
+            <div class="setting-title">Always-On Core Probes</div>
+            <div class="setting-desc">✅ Error-stack wrapping (8 built-in classes + DOMException) · ✅ chrome.runtime sendMessage/connect parity stubs · ✅ Function.toJSON/toString native-camouflage — load-bearing, install at document_start</div>
+          </div>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-meta">
+            <div class="setting-title">Identity API Trim</div>
+            <div class="setting-desc">When a Firefox/Safari identity is active, Chromium-only surfaces (bluetooth, usb, hid, serial, keyboard, ink, xr, SpeechRecognition) are removed from the page — restored the moment you switch back. Follows the Browser identity control above</div>
+          </div>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-meta">
+            <div class="setting-title">Adblock Modal Defuser (Brave Phrases)</div>
+            <div class="setting-desc">"Disable Brave Shields", "switch to Chrome" and friends are annihilated automatically — see the Ad Block Trap Defuser row in the Streaming panel</div>
+          </div>
         </div>
       </div>
     </div>
@@ -347,18 +451,44 @@
           <label class="cyber-switch"><input type="checkbox" id="opt-unshortener" checked><span class="cyber-slider"></span></label>
         </div>
 
+        <div class="setting-row" style="flex-direction:column;align-items:stretch;">
+          <div class="setting-meta">
+            <div class="setting-title">Custom Resolver Rules</div>
+            <div class="setting-desc">Teach the resolver new lockers yourself. Per host-pattern (<code>*.example.com</code>, <code>example.com</code>, <code>*</code>): <strong>click</strong> auto-clicks a CSS selector once per element, <strong>redirect</strong> decodes the destination from a query param and jumps, <strong>turbo</strong> treats the host as a 50x countdown locker. Max 20 rules.</div>
+          </div>
+          <div class="whitelist-input-row" style="margin-top:8px;">
+            <input type="text" id="rule-pattern" placeholder="*.example.com" class="cyber-input" style="flex:1.1;" aria-label="Host pattern">
+            <select id="rule-action" class="cyber-select" style="width:112px;" aria-label="Rule action">
+              <option value="click">click</option>
+              <option value="redirect">redirect</option>
+              <option value="turbo">turbo</option>
+            </select>
+            <input type="text" id="rule-value" placeholder="#btn-get-link / param name" class="cyber-input" style="flex:1;" aria-label="Rule value">
+            <button class="cyber-btn btn-primary" id="btn-add-rule">Add Rule</button>
+          </div>
+          <div class="whitelist-tags" id="rule-tags" style="margin-top:8px;"></div>
+        </div>
+
         <div class="setting-row">
           <div class="setting-meta">
-            <div class="setting-title">50x Countdown Fast-Forward</div>
-            <div class="setting-desc">Accelerates setTimeout/setInterval loops on link-shortener hosts to unlock buttons safely</div>
+            <div class="setting-title">50x Countdown Fast-Forward (>5s)</div>
+            <div class="setting-desc">Accelerates long setTimeout/setInterval loops on link-shortener hosts to unlock buttons safely</div>
           </div>
           <label class="cyber-switch"><input type="checkbox" id="opt-timers" checked><span class="cyber-slider"></span></label>
         </div>
 
         <div class="setting-row">
           <div class="setting-meta">
+            <div class="setting-title">1.9x Gentle Turbo (≤5s timers)</div>
+            <div class="setting-desc">Soft-accelerates short timers (surajitlinks-safe) — 5s → 2.6s. Turn off for Bad Request–sensitive sites.</div>
+          </div>
+          <label class="cyber-switch"><input type="checkbox" id="opt-gentle" checked><span class="cyber-slider"></span></label>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-meta">
             <div class="setting-title">Aggressive Turbo (All Sites)</div>
-            <div class="setting-desc">Extends 50x acceleration to every website — faster unlocks, but may rush autosave/animation timers. Off = shortener hosts only.</div>
+            <div class="setting-desc">Extends 50x/1.9x acceleration to every website — faster unlocks, but may rush autosave/animation timers. Off = shortener hosts only.</div>
           </div>
           <label class="cyber-switch"><input type="checkbox" id="opt-aggressivetimers"><span class="cyber-slider"></span></label>
         </div>
@@ -424,6 +554,73 @@
 
         <div class="setting-row">
           <div class="setting-meta">
+            <div class="setting-title">Instagram Reels Ad Skip</div>
+            <div class="setting-desc">Detects Sponsored reels and in-feed ads, turbo-skips them 16x + mute, auto-clicks Skip Ad, hides ad cards</div>
+          </div>
+          <label class="cyber-switch"><input type="checkbox" id="opt-igads" checked><span class="cyber-slider"></span></label>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-meta">
+            <div class="setting-title">Reels Auto-Scroll (Next on End)</div>
+            <div class="setting-desc">Automatically advances to the next Reel the moment the current one finishes. Independent from ad skipping.</div>
+          </div>
+          <label class="cyber-switch"><input type="checkbox" id="opt-igscroll"><span class="cyber-slider"></span></label>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-meta">
+            <div class="setting-title">YouTube Shorts Ad Skip</div>
+            <div class="setting-desc">Detects sponsored Shorts, turbo-skips at 16x, unlocks blocked clips and clicks Skip</div>
+          </div>
+          <label class="cyber-switch"><input type="checkbox" id="opt-shorts" checked><span class="cyber-slider"></span></label>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-meta">
+            <div class="setting-title">Shorts Auto-Scroll (Next on End)</div>
+            <div class="setting-desc">Automatically advances to the next Short when the current one finishes</div>
+          </div>
+          <label class="cyber-switch"><input type="checkbox" id="opt-shortsscroll"><span class="cyber-slider"></span></label>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-meta">
+            <div class="setting-title">Reels &amp; Shorts Auto-Pilot</div>
+            <div class="setting-desc">Fine-tunes auto-scroll: minimum seconds to dwell on each reel (0–10) and the total auto-advance budget in seconds (0 = unlimited — the clock only runs while auto-advancing fires).</div>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <input type="number" id="opt-reeldwell" class="cyber-input" min="0" max="10" value="1" style="width:74px;" title="Dwell seconds per reel" aria-label="Dwell seconds per reel">
+            <input type="number" id="opt-reelmaxauto" class="cyber-input" min="0" max="86400" value="0" style="width:92px;" title="Auto-advance budget in seconds (0 = unlimited)" aria-label="Auto-advance budget seconds">
+          </div>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-meta">
+            <div class="setting-title">Facebook Reels Shield</div>
+            <div class="setting-desc">Skips sponsored Facebook Reels and hides promoted feed posts</div>
+          </div>
+          <label class="cyber-switch"><input type="checkbox" id="opt-fbreels" checked><span class="cyber-slider"></span></label>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-meta">
+            <div class="setting-title">Permission Auto-Deny</div>
+            <div class="setting-desc">Auto-denies notification, camera, microphone, location and Bluetooth permission prompts</div>
+          </div>
+          <label class="cyber-switch"><input type="checkbox" id="opt-permission" checked><span class="cyber-slider"></span></label>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-meta">
+            <div class="setting-title">Worker Stealth Parity</div>
+            <div class="setting-desc">Applies the same identity spoofing inside Web Workers and OffscreenCanvas. CSP-sensitive — off by default.</div>
+          </div>
+          <label class="cyber-switch"><input type="checkbox" id="opt-worker"><span class="cyber-slider"></span></label>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-meta">
             <div class="setting-title">Universal Right-Click &amp; Copy</div>
             <div class="setting-desc">Restores contextmenu and text selection on restricted websites</div>
           </div>
@@ -452,10 +649,11 @@
         <div class="audit-intro-row">
           <div class="setting-meta">
             <div class="setting-title">Self-Test Your Stealth</div>
-            <div class="setting-desc">Runs real probes inside your most recent website tab (MAIN world): webdriver, Brave leaks, UA/platform parity, WebGL masking, canvas farbling determinism, timer coarsening and timezone reporting.</div>
+            <div class="setting-desc">Runs real probes inside your most recent website tab (MAIN world): webdriver, Brave leaks, UA/platform parity, WebGL/WebGPU masking, canvas &amp; font farbling determinism, timer coarsening, DOM jitter stability, timezone reporting and identity consistency.</div>
           </div>
           <button class="cyber-btn btn-primary" id="btn-run-audit">🩺 Run Audit</button>
         </div>
+        <div id="audit-score" hidden style="margin:6px 0 10px 0;"></div>
         <div id="audit-results" class="audit-results"></div>
       </div>
     </div>
@@ -478,6 +676,49 @@
         </div>
 
         <div class="whitelist-section">
+          <div class="whitelist-title">Per-Site Profile Overrides</div>
+          <div class="setting-desc" style="margin-bottom:8px;">Pin a different hardware profile and/or browser identity to specific websites — applied automatically on visit, no reload needed. Leave a selector on "global" to inherit.</div>
+          <div class="whitelist-input-row">
+            <input type="text" id="site-profile-domain" placeholder="e.g. example.com" class="cyber-input">
+            <select id="site-profile-select" class="cyber-select" title="Hardware profile for this site">
+              <option value="">Global profile</option>
+            </select>
+            <select id="site-browsertype" class="cyber-select" title="Browser identity for this site">
+              <option value="">Global identity</option>
+              <option value="brave">Brave</option>
+              <option value="chrome">Chrome</option>
+              <option value="firefox">Firefox</option>
+              <option value="safari">Safari</option>
+            </select>
+            <button class="cyber-btn btn-primary" id="btn-add-site-profile">Add Override</button>
+          </div>
+          <div class="whitelist-tags" id="site-profile-tags">
+            <!-- Override tags injected via JS -->
+          </div>
+        </div>
+
+        <!-- Per-Site Module Matrix Editor (only used when scope = Per-Site) -->
+        <div class="whitelist-section" id="site-matrix-editor">
+          <div class="whitelist-title">Per-Site Module Matrix</div>
+          <div class="setting-desc" style="margin-bottom:8px;">
+            Only applies when the scope above is set to <strong>Per-Site</strong>. Add the site with the
+            <em>Add Override</em> row above first (profile/identity are optional — a matrix-only override is valid),
+            then pick it below and toggle modules. Anything left on follows the global setting; anything switched
+            off is disabled on that site only. The 🧩 badge on a site tag above jumps straight here.
+          </div>
+          <div class="whitelist-input-row">
+            <select id="matrix-site-picker" class="cyber-select" title="Select a site to edit">
+              <option value="">— select a site —</option>
+            </select>
+            <button class="cyber-btn btn-secondary" id="btn-matrix-copy-global">Copy Global To Site</button>
+            <button class="cyber-btn btn-crimson" id="btn-matrix-clear">Clear Site Matrix</button>
+          </div>
+          <div class="matrix-module-grid" id="matrix-module-grid">
+            <!-- Module checkboxes injected via JS -->
+          </div>
+        </div>
+
+        <div class="whitelist-section">
           <div class="whitelist-title">Custom Whitelisted Domains</div>
           <div class="whitelist-input-row">
             <input type="text" id="whitelist-input" placeholder="e.g. example.com" class="cyber-input">
@@ -486,6 +727,16 @@
           <div class="whitelist-tags" id="whitelist-tags">
             <!-- Domain tags injected via JS -->
           </div>
+        </div>
+
+        <div class="whitelist-section">
+          <div class="whitelist-title">Protected Sites (Never Bypass)</div>
+          <div class="setting-desc" style="margin-bottom:8px;">On these hosts every bypass/behavior module is disabled — no turbo, no modal defusing, no button unlocking, no auto-clicking — while full stealth keeps running. For banking, support portals and anything a defuse could break. Unlike the whitelist, BraveShield itself stays armed here.</div>
+          <div class="whitelist-input-row">
+            <input type="text" id="protected-input" placeholder="e.g. mybank.com" class="cyber-input">
+            <button class="cyber-btn btn-crimson" id="btn-add-protected">Protect Site</button>
+          </div>
+          <div class="whitelist-tags" id="protected-tags"></div>
         </div>
 
         <!-- JSON Backup Studio -->
@@ -508,6 +759,7 @@
 </div>
 
 <script src="shared/constants.js"></script>
+<script src="shared/import-sanitize.js"></script>
 <script src="hardware-profiles.js"></script>
 <script src="options.js"></script>
 </body>

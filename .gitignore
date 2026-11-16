@@ -48,3 +48,6 @@ dist/
 scripts/hermes-*
 scripts/tg-*
 braveshield-mobile.user.js.meta
+
+# CRX signing key (private — never commit, never ship)
+keys/

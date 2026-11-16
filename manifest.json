@@ -1,7 +1,8 @@
 {
   "manifest_version": 3,
   "name": "BraveShield Bypass Pro — Enterprise Stealth & Anti-Fingerprinting",
-  "version": "6.2.1",
+  "version": "6.6.0",
+  "minimum_chrome_version": "121",
   "description": "Enterprise Manifest V3 anti-fingerprinting suite with unforgeable native wrappers, session-seeded canvas/audio noise, WebGL GPU cloaking, UA-CH client hints sync, and WebRTC leak protection.",
   "author": "Nikhil Sonawane",
   "icons": {
@@ -29,6 +30,15 @@
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
+      "exclude_matches": [
+        "*://challenges.cloudflare.com/*",
+        "*://*.recaptcha.net/*",
+        "*://*.hcaptcha.com/*",
+        "*://*.arkoselabs.com/*",
+        "*://*.funcaptcha.com/*",
+        "*://*.gstatic.com/recaptcha/*",
+        "*://*.google.com/recaptcha/*"
+      ],
       "js": ["shared/constants.js", "content.js"],
       "run_at": "document_start",
       "all_frames": true,
@@ -36,16 +46,19 @@
     },
     {
       "matches": ["<all_urls>"],
+      "exclude_matches": [
+        "*://challenges.cloudflare.com/*",
+        "*://*.recaptcha.net/*",
+        "*://*.hcaptcha.com/*",
+        "*://*.arkoselabs.com/*",
+        "*://*.funcaptcha.com/*",
+        "*://*.gstatic.com/recaptcha/*",
+        "*://*.google.com/recaptcha/*"
+      ],
       "js": ["shared/constants.js", "hardware-profiles.js", "inject.js"],
       "run_at": "document_start",
       "all_frames": true,
       "world": "MAIN"
-    }
-  ],
-  "web_accessible_resources": [
-    {
-      "resources": ["inject.js", "rules.json", "hardware-profiles.js"],
-      "matches": ["<all_urls>"]
     }
   ],
   "action": {

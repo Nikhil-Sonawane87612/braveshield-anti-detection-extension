@@ -1,9 +1,17 @@
 # 📌 Project State
 
-## 🚀 Active Release Target: `v6.1.0` (Kill-Switch Architecture, Stealth Parity & Release Engineering)
+## 🚀 Active Release Target: `v6.6.0` (Six-Feature Release, 2026-11-16)
 - **Branch**: `main`
-- **Execution Stage**: Shipped — live config bridge, UA/timezone/WebGPU parity, local-first sync, audit panel, build.ps1 packaging
+- **Execution Stage (v6.6.0)**: all six user-picked features shipped — ① Custom Resolver Rules (click/redirect/turbo, `bsRuleHostMatch` glob, sanitized `customResolvers`), ② Identity Rotation (background-owned, deterministic per period, family-coherent, override-pinned, `BRAVESHIELD_IDENTITY_ROTATE` 20-min alarm), ③ Font Ensemble Spoofing (per-platform realistic font sets, `document.fonts.check` gate, `queryLocalFonts` ensemble wrapper + Firefox/Safari strip, per-(font,text) measureText seeding closing the ratio leak), ④ Protected Sites (deny-list, 20 bypass keys force-off after matrix merge, stealth armed, all content sweeps + inject turbo gated), ⑤ Reels/Shorts Auto-Pilot (`reelDwellSeconds` 0–10 + `reelMaxAutoSeconds` 0=unlimited budget clock), ⑥ Popup Quick-Site Actions (🔗 copy clean URL, 🧩 edit-site matrix deep-link with hash-jump preselect). **51/51 tests green**, mobile userscript regenerated (312,294 B), manifest + update.xml → 6.6.0, README refreshed.
+- **Release process (2026-11-16, user-approved git)**: single-purpose commits → push to `main` (existing credentials only, no automation-abuse patterns) → GitHub Release `v6.6.0` with `BraveShield-v6.6.0.zip` + signed `braveshield.crx`.
 - **Compliance**: Chrome Extension Manifest V3 (`world: "MAIN"`, `run_at: "document_start"`), CWS remote-hosted-code safe
+
+---
+
+## 🔮 NEXT SESSION CANDIDATES
+1. **Manual smoke list (user device)**: bot.sannysoft.com, CreepJS (error/worker vectors), pixelsscan.net, browserleaks.com/canvas, a live shortener (turbo), a known Brave-blocker site (structural defuser), IG Reels + YT Shorts auto-scroll on-device, import→export roundtrip in Options.
+2. **DNR override rule-id audit**: if per-site overrides ever exceed 499, re-check collision math vs the locale slot (base 424242, locale 424242+900); add a dedicated test if caps change.
+3. **Panel polish**: `panel-bravedefense` could later host the worker-cloak control (`workerParityEnabled`, currently in Fingerprint panel).
 
 ---
 

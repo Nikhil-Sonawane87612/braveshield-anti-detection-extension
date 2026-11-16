@@ -5,7 +5,7 @@
 # 🛡️ BraveShield Bypass Pro — Enterprise Anti-Fingerprinting Suite
 ### Manifest V3 Stealth Engine • CreepJS & BrowserLeaks Evasion • Multi-Device Hardware Spoofer
 
-[![Version](https://img.shields.io/badge/version-v6.2.1-00f076?style=for-the-badge&logo=semver&logoColor=black)](https://github.com/Nikhil-Sonawane87612/braveshield-anti-detection-extension/releases/latest)
+[![Version](https://img.shields.io/badge/version-v6.6.0-00f076?style=for-the-badge&logo=semver&logoColor=black)](https://github.com/Nikhil-Sonawane87612/braveshield-anti-detection-extension/releases/latest)
 [![Manifest](https://img.shields.io/badge/manifest-v3-10b981?style=for-the-badge&logo=googlechrome&logoColor=white)](#-desktop-installation)
 [![CreepJS Evasion](https://img.shields.io/badge/CreepJS-A%2B%20Evasion-8b5cf6?style=for-the-badge&logo=shield&logoColor=white)](#-the-creepjs--browserleaks-evasion-pack)
 [![Hardware Presets](https://img.shields.io/badge/Hardware%20Profiles-110%2B%20Presets-3b82f6?style=for-the-badge&logo=nvidia&logoColor=white)](#-multi-device-hardware-studio)
@@ -32,7 +32,7 @@ Modern websites, streaming platforms, and bot-detection engines (Cloudflare, Dat
 5. **Client Hints Mismatches**: Checking discrepancies between `navigator.userAgent` and `navigator.userAgentData.getHighEntropyValues()`.
 6. **WebRTC Private IP Leaks**: Probing STUN/TURN servers to discover internal LAN IPs behind VPNs.
 
-**BraveShield Bypass Pro v6.0.0** solves this comprehensively by injecting an unforgeable, mathematically robust stealth layer directly at `document_start` in the `MAIN` execution world.
+**BraveShield Bypass Pro v6.6.0** solves this comprehensively by injecting an unforgeable, mathematically robust stealth layer directly at `document_start` in the `MAIN` execution world.
 
 ---
 
@@ -100,6 +100,21 @@ graph TD
 
 ---
 
+## 🆕 What's New in v6.6.0
+
+| Feature | What it does |
+|---------|--------------|
+| **🧩 Custom Resolver Rules** | Teach the resolver new lockers yourself — per host pattern (`*.example.com`, `example.com`, `*`): **click** auto-clicks a CSS selector once per element, **redirect** decodes the destination URL from a query param and jumps (loop-guarded), **turbo** treats the host as a 50x countdown locker. Max 20 rules, toggle/disable inline, survives JSON backup (shape-validated). |
+| **🔄 Identity Rotation** | Auto-shuffles the hardware profile **within the same platform family** (win/mac/linux/android/ios) every N hours (1–720, default 24). Fully deterministic — the same rotation window always yields the same identity, so UA, Sec-CH-UA headers and hardware stay coherent. Per-site overrides stay pinned; `custom` profiles never rotate. A 20-minute alarm watches for window rollovers. |
+| **🔤 Font Ensemble Spoofing** | Replaces plain enumeration masking with a **realistic per-identity font list** (Windows/macOS/Linux/Android/iOS sets): `document.fonts.check` is ensemble-gated (known-system-but-not-yours → `false`, webfonts pass through untouched), `window.queryLocalFonts` returns the ensemble (with spec-correct `NotAllowedError` without user activation), and `measureText` jitter is now seeded per **(font, text)** so cross-font width ratios no longer leak installed fonts. `queryLocalFonts` is also stripped under Firefox/Safari identities. |
+| **🛡 Protected Sites** | A deny-list (max 300 hosts) where **every bypass/behavior module is force-disabled** — no turbo, no modal defusing, no button unlocking, no auto-clicking, no reels automation — while **full stealth keeps running** (canvas/audio/webgl/webgpu/fonts/UA/clock). Perfect for banking and support portals where a defuse could break real flows. |
+| **🎬 Reels & Shorts Auto-Pilot** | Two knobs in the Streaming panel: **dwell seconds** per reel (0–10, default 1 — minimum seconds before advancing) and the **auto-advance budget** (0 = unlimited; the clock only runs while auto-advancing actually fires, not while you watch manually). Wired into the shared `bsReelKit` loop-boundary engine. |
+| **⚡ Popup Quick-Site Actions** | The popup footer gains two one-click actions: **🔗 Copy clean URL** (active tab URL with all tracking params stripped) and **🧩 Edit this site's matrix** — deep-links into the per-site module matrix editor (`options.html#bs-edit-site=<domain>`), prefilling the override row when the site isn't pinned yet. |
+
+Plus everything from v6.5.0: deep-node React event dispatch for IG Reels / YT Shorts auto-advance (synthetic `ArrowDown` fired at the reel's `<video>` with `keyCode` patched to 40 — events fired on `document` never reach React's delegated handlers), verified escalation cascades, loop-boundary detection, and popup→background sync fixes.
+
+---
+
 ## 🎛️ Multi-Device Hardware Studio (110+ Presets)
 
 The Options Studio features over 110 real-world device profiles and a custom hardware builder:
@@ -114,7 +129,7 @@ The Options Studio features over 110 real-world device profiles and a custom har
 ## 💻 Desktop Installation (Chrome / Brave / Edge / Opera)
 
 ### Option A — Release ZIP (recommended)
-1. Download **`BraveShield-vX.Y.Z.zip`** from the [**Releases page**](https://github.com/Nikhil-Sonawane87612/braveshield-anti-detection-extension/releases).
+1. Download **`BraveShield-v6.6.0.zip`** from the [**Releases page**](https://github.com/Nikhil-Sonawane87612/braveshield-anti-detection-extension/releases).
 2. Extract it — all extension files sit at the **root** of the extracted folder (`manifest.json` is immediately visible).
 3. Open your browser's extensions page:
    - **Brave**: `brave://extensions`
@@ -123,6 +138,13 @@ The Options Studio features over 110 real-world device profiles and a custom har
 4. Toggle **Developer mode** ON (top-right corner).
 5. Click **"Load unpacked"** and select the **extracted folder itself** (the one containing `manifest.json`).
 6. 🎉 **All stealth modules are armed and active!**
+
+### Option A2 — Signed CRX (one drag-and-drop)
+Download **`braveshield.crx`** from the Releases page, then:
+1. Open `chrome://extensions` (Developer mode ON).
+2. Drag the `.crx` file onto the page and confirm the install prompt (Chromium may gate drag-installed CRXes on some channels — if the install is refused, use the ZIP route above).
+
+> Auto-updates: `update.xml` at the repo root points Chromium's enterprise/extension-update flow at the latest release CRX.
 
 > Build your own ZIP any time with one command: `powershell -File build.ps1` → outputs `dist/BraveShield-v<version>.zip`.
 
@@ -145,17 +167,26 @@ git clone https://github.com/Nikhil-Sonawane87612/braveshield-anti-detection-ext
 
 ```
 braveshield-anti-detection-extension/
-├── manifest.json                 # Manifest V3 configuration
-├── background.js                 # Service worker: defaults, WebRTC policy, update checker
-├── content.js                    # ISOLATED world: LIVE config bridge (instant toggles) + HUD + DOM defense
-├── inject.js                     # MAIN world stealth engine — hooks consult live BS_CONFIG at call-time
+├── manifest.json                 # Manifest V3 configuration (single source of truth for version)
+├── update.xml                    # Chromium CRX auto-update manifest → latest release CRX
+├── background.js                 # Service worker: defaults, Identity Rotation engine, UA/DNR sync, update checker
+├── content.js                    # ISOLATED world: LIVE config bridge (instant toggles) + Protected-Sites gates + HUD + DOM defense
+├── inject.js                     # MAIN world stealth engine + Font Ensemble + Custom Resolver Rules + bsReelKit Auto-Pilot
 ├── shared/constants.js           # Shared hosts/params/helpers loaded in BOTH worlds + pages
-├── hardware-profiles.js          # Catalog of 110+ authentic hardware presets (MAIN world)
+├── shared/ua-resolve.js          # UA resolver (unit-tested, dependency-free)
+├── shared/dnr-rules.js           # DNR rule builders: UA-CH header parity (unit-tested)
+├── shared/import-sanitize.js     # Backup-import sanitizer: allowlists, clamps, caps (unit-tested)
+├── hardware-profiles.js          # Catalog of 110+ authentic hardware presets (DOM-free → SW + MAIN + pages)
 ├── useragents.js                 # UA database used to resolve per-profile User-Agents
+├── tests/                        # node:test suite (51 tests across 4 shared-core modules)
 ├── build.ps1                     # Release packager -> root-level load-ready ZIP
+├── build-mobile-full.mjs         # Bundles the ~312 KB Tampermonkey userscript from the extension core
+├── braveshield-mobile.user.js    # Generated Android userscript (stealth-only, 20 device profiles)
 ├── rules.json                    # Declarative Net Request tracking parameter rules
-├── popup.html / .css / .js        # Glassmorphic Popup Dashboard with honest live counters
-├── options.html / .css / .js      # Full-page Hardware Studio & Custom Builder
+├── filters/rules.txt             # AdGuard-compatible filter list
+├── scripts/check-mojibake.cjs    # Encoding-hygiene gate for all shipped text
+├── popup.html / .css / .js        # Glassmorphic Popup Dashboard + Quick-Site Actions (clean URL / edit matrix)
+├── options.html / .css / .js      # Full-page Hardware Studio, Resolver Rules, Protected Sites & Custom Builder
 ├── memory/                       # Obsidian-compatible Context & Architecture Vault
 │   ├── INDEX.md                  # Vault index and navigation
 │   ├── project_state.md          # Active state, backlog, and release target

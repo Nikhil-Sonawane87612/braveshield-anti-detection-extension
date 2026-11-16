@@ -1,5 +1,129 @@
 # 📦 Semantic Version Changelog
 
+## [v6.6.0] - 2026-11-16 (Six-Feature Release: Extensible Resolver, Rotating Identity, Font Ensemble, Protected Sites, Auto-Pilot, Quick-Site Actions)
+
+### ① Custom Resolver Rules — user-extensible bypass engine
+- New `customResolvers` storage array (≤20 rules, shape-validated in `shared/import-sanitize.js`: pattern ≤200, value ≤300, action whitelist `click|redirect|turbo`, non-string value ⇒ rule dropped; missing value OK for turbo).
+- `bsRuleHostMatch(pattern, host)` glob helper (top-scope inject.js): `example.com` = apex+subdomains, `*.example.com` = subdomains only, `*` = everywhere; scheme/path stripped.
+- **click**: `sweepUnshortenLinks` now also runs click-rules — matched hosts auto-click the user's CSS selector once per element (`_bsRuleClicked` one-shot).
+- **redirect**: `bsTryCustomRedirect` (via `bsOnConfigReady`) — a configured query param carrying an `http(s)` destination is decoded and `location.replace`d once; `sessionStorage` marker prevents bounce-back loops.
+- **turbo**: `bsTurboFactor` treats matched hosts as 50x lockers (same tier as known shorteners).
+- Options UI: rule builder row (pattern + action select + value) in the Bypass panel with toggle (▶/⏸) + delete tags; fully backup-compatible.
+
+### ② Identity Rotation — background-owned, deterministic, coherent
+- Rotation happens in **background.js** (it owns UA + DNR resolution — hardware, UA string and Sec-CH headers stay coherent end-to-end); `hardware-profiles.js` is DOM-free and now `importScripts`-safe in the worker.
+- `bsStrSeed` (FNV-1a) + `bsRotationPeriodIndex(periodHours)` + `bsPickRotatedProfile`: **deterministic per window** (`periodIndex = floor(now / periodMs)`) — same window always yields the same profile, no churn across service-worker restarts; rotates ONLY within the same family prefix (win 45 / mac 20 / linux 10 / android 20 / ios 15).
+- Skipped for `custom` profiles and never applied to per-site overrides (pinned identities stay pinned). `rotatedDeviceProfile` + `rotatedPeriodIndex` stored only on window rollover.
+- `content.js` pushes `config.deviceProfile = rotatedDeviceProfile` BEFORE the override merge (override always wins); inject resolves hardware from it as usual.
+- New alarm `BRAVESHIELD_IDENTITY_ROTATE` (20 min) re-resolves only when enabled; storage.onChanged triggers on `identityRotationEnabled`/`identityRotationPeriodHours`.
+- Options UI: Identity Rotation switch + period input (1–720 h) in the Fingerprint panel.
+
+### ③ Font Ensemble Spoofing — the missing font module
+- Discovery: `fontEnumMaskingEnabled` had **no font hook at all** — only `measureText` width jitter seeded by text length, which is CONSTANT across fonts ⇒ cross-font width *ratios* still leaked the installed font list.
+- New Module 1.6b in inject.js: realistic per-platform ensembles (win/mac/linux/android/ios sets), deterministic per-identity rotation+trim of the platform list (seed = platform|deviceProfile|browserType hash).
+- `document.fonts.check` ensemble gate: true for ensemble members, **false for known-system-but-not-in-ensemble fonts**, passthrough for webfonts/generics (legit `@font-face` feature detection untouched).
+- `window.queryLocalFonts` wrapper: rejects `NotAllowedError` without user activation (spec-correct), returns the ensemble on activation (real results filtered+deduped, synthetic PostScript-style entries if the native call fails).
+- `measureText` jitter re-seeded per **(font, text)** — ratio leak closed.
+- `queryLocalFonts` added to the Firefox/Safari identity strip (`BS_API_STRIP_WIN`) — Chromium-only API must not exist under those identities.
+
+### ④ Protected Sites — zero-touch deny-list, full stealth
+- `protectedSites` domain list (≤300, sanitized like whitelist).
+- `content.js` computes `siteProtected` (never disabled by it — stealth stays armed), force-offs 20 BYPASS/behavior keys AFTER the matrix/override merge (even a per-site matrix cannot re-enable), pushes `config.siteProtected` to MAIN world.
+- All 8 content-side bypass sweeps (anti-adblock annihilator, invisible-overlay purge, shell defuser, paywall defuser, fast-pass buttons, countdown fast-forward, fast-image click, consent dismissal) now guard on `bsGate.protected`.
+- inject.js side: `bsTurboAllowed` hard-off (kills short-timer 1.9x too), `bsTurboFactor` → 1, unshortener sweep off.
+- Options UI: Protected Sites section in the Sync panel (🛡 tags, 🛡-crimson add button).
+
+### ⑤ Reels & Shorts Auto-Pilot — real controls
+- `reelDwellSeconds` (0–10, default 1): minimum seconds on a reel before auto-advance.
+- `reelMaxAutoSeconds` (0 = unlimited, default 0): auto-advance budget — the clock starts at the FIRST fired advance, manual watching never consumes it.
+- Wired into `bsReelKit.bindLoopAdvance` (both timeupdate loop-boundary and `ended` paths).
+- Options UI: two number inputs in the Streaming panel next to Shorts Auto-Scroll.
+
+### ⑥ Popup Quick-Site Actions
+- Popup footer: **🔗 Copy clean URL** (active tab URL, `BS_TRACKING_PARAMS` stripped, clipboard + tooltip feedback) and **🧩 Edit this site's matrix** (deep-link `options.html#bs-edit-site=<host>` → options preselects/scrolls to the matrix editor, prefills the Add-Override row for unpinned sites; hash cleared after use).
+- `BS_MODULE_KEYS` += `fontEnsembleEnabled`, `identityRotationEnabled` (popup module counter updated).
+
+### Infra
+- `build-mobile-full.mjs`: `bsGMGetAll` keys + `BS_DEFAULTS` += new keys (font ensemble, auto-pilot, resolvers, siteProtected/siteOverrideActive); userscript regenerated (312,294 B), syntax-clean, all new modules verified inside the slice.
+- **Tests: 51/51 green** (was 47): +4 cases for feature booleans, range-clamped numbers, protectedSites sanitize/cap, customResolvers shape rules (caps, truncation, malformed drop, non-string value rejection).
+- manifest.json + update.xml → **6.6.0**; README refreshed (v6.6.0 feature table, CRX install path, updated architecture tree).
+
+---
+
+## [v6.5.0] - 2026-11-02 (Roadmap Execution Day — 10/10 Items + Auto-Scroll Hotfix)
+
+### Phase 1 — inject.js quick wins
+- **Visibility-gated turbo (item 5)**: ordinary-site 4x/50x acceleration stops when `document.visibilityState === 'hidden'` (factor 1 = original delay); shorteners/lockers, wait-pages and Turbo-All-Sites stay boosted (those countdowns never run hidden). Short-timer 1.9x path gated too. `bsWaitCache` invalidated when a tab becomes visible again.
+- **`Object.prototype.stack` shadow hardening (item 4)**: `DOMException` joins the wrapped-error roster (Chromium instances always carry `.stack`); every wrapped class now guarantees an own cleaned `stack`, so a CreepJS-style prototype `stack` poison can never leak `chrome-extension://` frames.
+
+### Phase 2 — Mobile identity model parity
+- **`Sec-CH-UA-Model` live (item 2)**: new shared `bsDeriveUaModel()` derives the device model FROM the UA string itself (Android 3rd parenthesis component, iOS/iPadOS family) — header/UA coherence by construction, zero per-entry data drift. Empty model ⇒ the DNR layer REMOVES the header (desktop, Android "K" withholding, Firefox mobile are all header-less in real Chrome).
+- background.js: mobile + real model → SET; otherwise REMOVE. inject.js `getHighEntropyValues` serves the same derived model (was hard-coded `''`).
+
+### Phase 3 — Mobile userscript pipeline
+- `build-mobile-full.mjs` ships `shared/ua-resolve.js` verbatim — the stale 30-line inline resolver (old iPad→Mac Safari bug, old brand logic) is deleted.
+- UA catalog = real `useragents.js` (was 6 hardcoded `chrome_131_*` entries).
+- Shim: 8 missing booleans added to `bsGMGetAll()` + `BS_DEFAULTS`; `bsFindSiteOverride` now honors modules-only per-site overrides.
+- `build-mobile.mjs` stale dead snippet pruned. Artifact regenerated (293,877 B), syntax-clean, feature-verified.
+
+### Phase 4 — UX & panels
+- **Whitelist toggle (item 3)**: verified already-working (`storage.onChanged → pushConfigToMainWorld()`); no code change needed.
+- **Brave-Detection Defense panel (item 7)**: new options panel + nav entry with GPC cloak switch (default ON, new `gpcCloakEnabled` — defaults, import allowlist, module counters) and status rows for always-on core probes, identity API trim, Brave-phrase defuser.
+- **GPC → Chrome-truth**: probe now returns `undefined` (real Chrome/Firefox don't implement the property; a `false` answer was itself a "something is faking here" hit), re-evaluated per read — toggles apply live.
+- **Sites manager (item 9)**: override tags show type badges (`identity` / `matrix Nm` / `full Nm`), 🧩 button jumps straight into the per-site matrix editor, delete re-syncs the picker, modules-only overrides documented in the editor hint.
+- **Weekly trend (item 8)**: `timeSavedDaily` buckets (YYYY-MM-DD, pruned to 30 days) recorded in the telemetry incrementor; popup renders a real 7-bar chart + "≈Ns this week", live-refreshing, hidden until data exists.
+
+### Phase 5 — Structural defuser & test lockdown
+- **Structural Shell Defuser (item 6)**: second blanket-blocker pass `bsNeutralizeBlockingShells()` — fixed-position, ≥92%×≥92% viewport, z≥999, text-bearing, NO click affordance, no consent wording, persisting ≥8 s (WeakMap dwell) → defused + `trapsNeutralized`. Captcha/auth hosts, JSON pages and no-automation hosts stay zero-touch. New `domStructureDefuserEnabled` (default ON) across gates, matrix editor, import allowlist, options row and popup module count.
+- **Extraction (item 10)**: `bsSanitizeImport` → `shared/import-sanitize.js` (pure, module.exports; the modules-matrix allowlist is INJECTED by options.js — no third copy of the key list; `deviceProfile`'s documented 64-cap is now actually enforced); DNR rule builders + rule-ID layout + captcha exclusion lists → `shared/dnr-rules.js` (`importScripts` in background.js).
+- **Tests: 47/47 green** (was 25): new `tests/import-sanitize.test.mjs` (hostile inputs, prototype-pollution keys, type/length/clamp/cap enforcement, matrix injection failure-safe behavior) and `tests/dnr-rules.test.mjs` (rule-ID layout, Chrome header parity incl. Model set/remove truth, Firefox full CH removal, captcha-exclusion merge invariant, locale format + rejection), plus 6 new ua-resolve cases (catalog-key edges, version pick, hostile model inputs, re-base parity).
+
+### Bonus hotfix — Reels & Shorts auto-scroll (user report: "doesn't work")
+- **Root cause 1 (Shorts)**: next-pick searched the *first* sibling ≠ current ≡ the short ABOVE — the module bounced between the topmost shorts instead of advancing. Now: YT's own `#navigation-button-down` chevron → synthetic ArrowDown (native Shorts key nav) → DOM-order next renderer via `is-active`/on-screen detection; last short respected.
+- **Root cause 2 (IG Reels)**: auto-scroll was gated on `bsOn('youtubeAds')` — the *YouTube* master silently killed IG auto-scroll when that toggle was off. Now gated only by its own opt-in. Advance order: IG next-chevron (aria-label `Next…` with svg) → ArrowDown → existing `bsNextReel()` scroll math.
+- **Root cause 3 (both)**: reels and shorts auto-REPLAY — the `ended` event essentially never fires and the old near-end poll juggling double-fired. New shared `bsReelKit`: per-video `timeupdate` loop-boundary binding (tail→top jump = "finished"), `ended` fallback, 1.5 s global advance debounce, live gate re-check at fire time.
+- **Layer 2 (IG report after first attempt still "not working")**: the ArrowDown was fired on `document.activeElement`/`document` — on a React app events fired *there* never descend into the app tree, so IG's delegated handlers saw nothing; also the `KeyboardEvent` init dict IGNORES `keyCode`/`which` (stayed 0). Fix: `(bsReelKit.key)` now dispatches at the reel's `<video>` (bubbled through React root container → document → window), with `keyCode`/`which` defined to 40; IG advance is a verified cascade — chevron → deep key → (700 ms receipt check: same reel still connected?) → deep wheel → container-scroll fallback. YT deep-key dispatch upgraded the same way. Fresh Event object per dispatch (a poisoned reused event can kill the second hop via stopPropagation).
+
+---
+
+## [v6.4.0] - 2026-11-01 (Stealth Repair Wave & Brave-Detection Suite)
+
+### 🩹 Core Engine Repairs (inject.js — MAIN world)
+- **Dead Modules C/D/E revived**: all three referenced Module-1's private `bsHardware` closed over inside a sibling IIFE → `ReferenceError`, silently disabling matchMedia coherence, `performance.memory`/`storage.estimate` parity, and Worker cloak parity. Hardware baseline hoisted via `bsGetHardwareSafe()` with a static fallback.
+- **Module C (matchMedia)** rewritten: real min/max resolution & device-pixel-ratio parsing, `pointer: fine/coarse` and `hover: hover/none` splits — the old version collapsed every hover query to "isMobile".
+- **Module D values made realistic**: Chromium envelope heap limit (1 G / 2.17 G / 4.29 G by RAM tier), ~278 GiB storage quota with plausible usage breakdown (old stubs emitted used>limit, an instant tell).
+- **Module E (Worker parity)**: async wrapper previously returned a Promise from `new Worker()` — breaking every postMessage-too-early site. Blob sources now read via synchronous XHR so the constructor stays synchronous; install is config-gated through `bsOnConfigReady` (the old document_start gate ran before the config ever arrived — module was doubly dead).
+- **`navigator.bluetooth`/`usb`/`hid`/`serial` cloak fixed**: `getAvailability()` now resolves `false` (boolean) — the old `{ value: false }` object was TRUTHY and advertised devices as available. Same accessors now cover `keyboard.getLayoutMap` and `xr.isSessionSupported`.
+
+### 🛡️ Detection-Leak Closures (stealth parity)
+- Every previously bare getter is now `makeNative`-wrapped (`navigator.brave`, `webdriver`, UA-CH `platform`/`brands`, per-key `screen` instance getters, all `chrome.*` stub methods) — `descriptor.get.toString()` probes return `[native code]`.
+- 8 built-in Error constructors wrapped: own-instance `stack` (V8 installs it as an own property, so prototype accessors never fired) gets cleaned; `new.target` handled so `class E extends Error` keeps `instanceof E`.
+- `chrome.runtime.sendMessage`/`connect` stubs added — their absence on real Chrome pages is a first-order tell.
+- `maxTouchPoints` now platform-aware (5 mobile / 0 desktop); `globalPrivacyControl` forced false when masked.
+- Chromium-only APIs (`bluetooth/usb/hid/serial/keyboard/virtualKeyboard/ink/xr`, `SpeechRecognition`) stripped under Firefox/Safari identities with full restore support; iPhone/iPad UA-CH platform now reports `iOS`.
+
+### 🌐 DNR / Header Parity (background.js)
+- **`Sec-CH-UA-Full-Version-List` + `Sec-CH-UA-Platform-Version` now SET for chrome-like identities** (built from the resolved catalog brands/platformVersion) — real Chrome always sends them; a missing header was detectable. Firefox/Safari identities REMOVE all 7 Client Hint headers instead of just 4.
+- **`Accept-Language` parity**: `spoofLocale` now drives a DNR set-header rule (`loc,loc-base;q=0.8,en;q=0.7`), re-applied on every storage change.
+- Duplicate `chrome.runtime.onInstalled` listeners merged (defaults + context-menu tree + alarms in one).
+
+### 🧶 Feature/UI Fixes
+- **Turbo factor wired**: `turboAllSites` previously did nothing. Lockers/shorteners + wait-page heuristic (2.5 s cached innerText sweep) get 50×, ordinary sites a safe 4×, short timers keep 1.9× gentle turbo.
+- **YouTube ad restore**: playbackRate/mute are reset after the ad passes (the 16× rate used to leak into the real video).
+- **Right-click enabler moved to capture phase** (bubble-phase listeners lose to handlers that ran first). `copy`/`cut` deliberately NOT neutralized — breaking legitimate clipboardData writers; `selectstart`/`dragstart` only.
+- **Plugin mock parity**: named lookups (`navigator.plugins['PDF Viewer']`, `[type]['application/pdf']`), index-based `item()`, and MIME `enabledPlugin` back-links.
+- **UA resolver**: iPad profiles under a Safari identity now use the iPad template instead of silently falling back to Mac.
+
+### 🧱 Defuser Suite (content.js)
+- **Brave-detection modal phrases** added to the annihilator regex ("disable Brave Shields", "switch to Chrome", "use Chrome to continue", "we detected Brave", "shields detected", …).
+- Trap scanner/MutationObserver lifetime extended 60 s → 150 s (lazy-injected SPA lockers landed outside the old window).
+
+### 🗄️ Settings & Data Integrity
+- **Backup restore no longer drops data**: 8 missing boolean keys added to the import allowlist and **per-site `modules` matrices are now preserved & validated** on restore (validated against the matrix catalog; modules-only overrides kept).
+- `minimum_chrome_version: 121` pinned (UA-CH Full-Version-List DNR support), version bumped 6.3.0 → 6.4.0.
+
+---
+
 ## [v6.2.1] - 2026-08-25 (Encoding Hotfix)
 
 ### 🩹 Fixes

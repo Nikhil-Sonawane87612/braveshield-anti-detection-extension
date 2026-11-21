@@ -63,6 +63,7 @@
     'youtubeShortsEnabled', 'youtubeShortsAutoScroll', 'facebookReelsEnabled',
     'permissionAutoDenyEnabled', 'workerParityEnabled', 'gpcCloakEnabled', 'domStructureDefuserEnabled',
     'fontEnsembleEnabled', 'identityRotationEnabled', 'identityRotationPeriodHours',
+    'devtoolsDefuseEnabled',
     'reelDwellSeconds', 'reelMaxAutoSeconds', 'customResolvers', 'rotatedDeviceProfile',
     'moduleMatrixMode',
     'deviceProfile', 'customHardwareProfile', 'resolvedUA', 'spoofTimezone', 'spoofLocale', 'browserType'
@@ -78,7 +79,8 @@
     'youtubeAds', 'spotifyUnlocked', 'twitchShieldEnabled',
     'instagramReelsAdsEnabled', 'instagramAutoScrollEnabled',
     'youtubeShortsEnabled', 'youtubeShortsAutoScroll', 'facebookReelsEnabled',
-    'permissionAutoDenyEnabled'
+    'permissionAutoDenyEnabled',
+    'devtoolsDefuseEnabled'
   ];
 
   // Modules that can be overridden per-site in "perSite" matrix mode.
@@ -92,7 +94,8 @@
     'youtubeAds', 'spotifyUnlocked', 'twitchShieldEnabled',
     'instagramReelsAdsEnabled', 'instagramAutoScrollEnabled',
     'youtubeShortsEnabled', 'youtubeShortsAutoScroll', 'facebookReelsEnabled',
-    'permissionAutoDenyEnabled', 'domStructureDefuserEnabled'
+    'permissionAutoDenyEnabled', 'domStructureDefuserEnabled',
+    'devtoolsDefuseEnabled'
   ];
   const BS_MATRIX_SET = new Set(BS_MATRIX_MODULES);
 

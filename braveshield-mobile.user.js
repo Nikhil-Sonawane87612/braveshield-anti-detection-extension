@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         BraveShield Mobile — Android Stealth + Adblock + Video Turbo + Spotify + Audio Booster
 // @namespace    https://github.com/Nikhil-Sonawane87612/braveshield-anti-detection-extension
-// @version      6.5.0
+// @version      6.6.0
 // @description  Minimal Android build (20 profiles) — desktop adblocker, video adblocker (YouTube/Twitch/Spotify), 50x timer turbo & utilities (clean URL, right-click, video speed, auto-skip), fingerprint stealth, plus Spotify adblock & audio booster. No stream sniffer. Works in AdGuard (covers Brave), Via, Firefox+Violentmonkey, Edge Canary/Quetta.
 // @author       Nikhil Sonawane
 // @match        *://*/*
@@ -31,7 +31,7 @@
   const BS_GM = (typeof GM_getValue !== 'undefined' && typeof GM_setValue !== 'undefined') ? { get: GM_getValue, set: GM_setValue } : null;
   function bsGMGet(k, d){ try{ if(BS_GM) return BS_GM.get(k,d); const v=WIN.localStorage.getItem('bs_'+k); return v==null?d:JSON.parse(v);}catch(_){ return d; } }
   function bsGMSet(k,v){ try{ if(BS_GM) return BS_GM.set(k,v); WIN.localStorage.setItem('bs_'+k, JSON.stringify(v)); }catch(_){} }
-  function bsGMGetAll(){ const keys=['masterEnabled','enabled','unshortenerEnabled','autoBypassTimers','gentleTurboEnabled','turboAllSites','paywallDefuserEnabled','bypassAdblockDetection','workerParityEnabled','maskBraveApi','clientHintsEnabled','webglSpoofingEnabled','canvasNoiseEnabled','audioNoiseEnabled','webrtcShieldEnabled','domJitterEnabled','timerCoarseningEnabled','mediaDevicesSanitizeEnabled','speechVoicesSanitizeEnabled','batteryMaskEnabled','networkInfoMaskEnabled','screenNormalizationEnabled','uaSpoofingEnabled','timezoneSpoofingEnabled','webgpuMaskingEnabled','fontEnumMaskingEnabled','fontEnsembleEnabled','cleanUrlEnabled','rightClickEnabled','videoSpeedEnabled','autoSkipIntrosEnabled','youtubeAds','spotifyUnlocked','twitchShieldEnabled','instagramReelsAdsEnabled','instagramAutoScrollEnabled','youtubeShortsEnabled','youtubeShortsAutoScroll','facebookReelsEnabled','permissionAutoDenyEnabled','deviceProfile','customHardwareProfile','browserType','spoofTimezone','spoofLocale','whitelist','siteProfiles','reelDwellSeconds','reelMaxAutoSeconds','customResolvers']; const out={}; for(const k of keys){ const v=bsGMGet(k, undefined); if(v!==undefined) out[k]=v; } return out; }
+  function bsGMGetAll(){ const keys=['masterEnabled','enabled','unshortenerEnabled','autoBypassTimers','gentleTurboEnabled','turboAllSites','paywallDefuserEnabled','bypassAdblockDetection','workerParityEnabled','maskBraveApi','clientHintsEnabled','webglSpoofingEnabled','canvasNoiseEnabled','audioNoiseEnabled','webrtcShieldEnabled','domJitterEnabled','timerCoarseningEnabled','mediaDevicesSanitizeEnabled','speechVoicesSanitizeEnabled','batteryMaskEnabled','networkInfoMaskEnabled','screenNormalizationEnabled','uaSpoofingEnabled','timezoneSpoofingEnabled','webgpuMaskingEnabled','fontEnumMaskingEnabled','fontEnsembleEnabled','devtoolsDefuseEnabled','cleanUrlEnabled','rightClickEnabled','videoSpeedEnabled','autoSkipIntrosEnabled','youtubeAds','spotifyUnlocked','twitchShieldEnabled','instagramReelsAdsEnabled','instagramAutoScrollEnabled','youtubeShortsEnabled','youtubeShortsAutoScroll','facebookReelsEnabled','permissionAutoDenyEnabled','deviceProfile','customHardwareProfile','browserType','spoofTimezone','spoofLocale','whitelist','siteProfiles','reelDwellSeconds','reelMaxAutoSeconds','customResolvers']; const out={}; for(const k of keys){ const v=bsGMGet(k, undefined); if(v!==undefined) out[k]=v; } return out; }
 
   // Constants
   /**
@@ -2173,7 +2173,7 @@ if (typeof module !== 'undefined') module.exports = USER_AGENTS;
     webglSpoofingEnabled: true, canvasNoiseEnabled: true, audioNoiseEnabled: true, webrtcShieldEnabled: true,
     domJitterEnabled: true, timerCoarseningEnabled: true, mediaDevicesSanitizeEnabled: true, speechVoicesSanitizeEnabled: true,
     batteryMaskEnabled: true, networkInfoMaskEnabled: true, screenNormalizationEnabled: true, uaSpoofingEnabled: true,
-    timezoneSpoofingEnabled: false, webgpuMaskingEnabled: true, fontEnumMaskingEnabled: true, fontEnsembleEnabled: true,
+    timezoneSpoofingEnabled: false, webgpuMaskingEnabled: true, fontEnumMaskingEnabled: true, fontEnsembleEnabled: true, devtoolsDefuseEnabled: true,
     cleanUrlEnabled: true, rightClickEnabled: true, videoSpeedEnabled: true, autoSkipIntrosEnabled: true,
     youtubeAds: true, spotifyUnlocked: true, twitchShieldEnabled: true,
     instagramReelsAdsEnabled: true, instagramAutoScrollEnabled: false,
@@ -4270,6 +4270,86 @@ let bsSiteDisabled = false;   // master off OR domain whitelisted
         try { Object.defineProperty(Navigator.prototype, 'plugins', { get: makeNative(function() { return []; }, 'get plugins', 0), configurable: true, enumerable: true }); } catch (_) {}
         try { Object.defineProperty(Navigator.prototype, 'mimeTypes', { get: makeNative(function() { return []; }, 'get mimeTypes', 0), configurable: true, enumerable: true }); } catch (_) {}
         try { Object.defineProperty(Navigator.prototype, 'pdfViewerEnabled', { get: makeNative(function() { return false; }, 'get pdfViewerEnabled', 0), configurable: true, enumerable: true }); } catch (_) {}
+      }
+    } catch (_) {}
+  })();
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Module 1.8: DevTools Detection Defuser (LIVE-GATED)
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Defeats the "Developer Tools Detected" pause-overlay family before it can
+  // ever arm, via three independent signals:
+  //   (1) outerWidth/outerHeight clamp — outer−inner is capped at 150px
+  //       (devtools-detect threshold is 160px; genuine browser chrome is
+  //       ≈80–110px, a docked console is ≈300–400px). Wraps the screen-
+  //       normalization getters installed earlier in this file, which also
+  //       kills the false positive normalization itself creates (profile
+  //       width 1920 vs real inner 1400 = a 520px delta with nothing open).
+  //   (2) __devtoolsDetected pinned false — non-configurable accessor: plain
+  //       assignment is swallowed by the setter and the library's own
+  //       defineProperty redefinition fails outright.
+  //   (3) devtools-change / devtoolschange swallowed at capture phase on
+  //       window + document before any site listener can run.
+  // The debugger-statement timing vector is already killed by the 20ms timer
+  // coarsening in Module 1.4. Skips captcha hosts like every other module.
+  // ─────────────────────────────────────────────────────────────────────────────
+  (() => {
+    const DEVTOOLS_DEFUSE_KEY = 'devtoolsDefuseEnabled';
+    const MAX_OUTER_DELTA = 150; // detector threshold is 160px
+
+    // (1) Dimension clamp — wraps whatever getter currently sits on
+    // window.outerWidth/outerHeight (the screen-normalization module ran
+    // first), so both modules stay live-gated and compose.
+    try {
+      const clampOuter = (prop, innerProp) => {
+        const desc = Object.getOwnPropertyDescriptor(window, prop);
+        if (!desc || typeof desc.get !== 'function') return;
+        const origGet = desc.get;
+        Object.defineProperty(window, prop, {
+          get: makeNative(function () {
+            const reported = origGet.call(window);
+            if (isCaptchaHost || !bsOn(DEVTOOLS_DEFUSE_KEY)) return reported;
+            const inner = window[innerProp];
+            if (typeof inner !== 'number' || typeof reported !== 'number') return reported;
+            return (reported - inner) > MAX_OUTER_DELTA ? inner + MAX_OUTER_DELTA : reported;
+          }, 'get ' + prop, 0),
+          configurable: true,
+          enumerable: true
+        });
+      };
+      clampOuter('outerWidth', 'innerWidth');
+      clampOuter('outerHeight', 'innerHeight');
+    } catch (_) {}
+
+    // (2) __devtoolsDetected pinned to false. Non-configurable on purpose:
+    // the site's Object.defineProperty redefinition throws, while plain
+    // assignment lands in the swallowing setter. Live-gated — on a protected
+    // site (defuse force-off) reads fall through to the last written value.
+    try {
+      let lastWritten = false;
+      Object.defineProperty(window, '__devtoolsDetected', {
+        get: makeNative(function () {
+          return bsOn(DEVTOOLS_DEFUSE_KEY) ? false : lastWritten;
+        }, 'get __devtoolsDetected', 0),
+        set: makeNative(function (value) {
+          lastWritten = value === true;
+        }, 'set __devtoolsDetected', 1),
+        configurable: false,
+        enumerable: true
+      });
+    } catch (_) {}
+
+    // (3) Capture-phase event swallow — we register at document_start, so our
+    // listener runs before any site listener on both spellings of the event.
+    try {
+      const swallowDevtoolsChange = (e) => {
+        if (!bsOn(DEVTOOLS_DEFUSE_KEY)) return;
+        try { e.stopImmediatePropagation(); } catch (_) {}
+      };
+      const devtoolsEvents = ['devtools-change', 'devtoolschange'];
+      for (let i = 0; i < devtoolsEvents.length; i++) {
+        window.addEventListener(devtoolsEvents[i], swallowDevtoolsChange, true);
+        document.addEventListener(devtoolsEvents[i], swallowDevtoolsChange, true);
       }
     } catch (_) {}
   })();
@@ -6651,5 +6731,5 @@ let bsSiteDisabled = false;   // master off OR domain whitelisted
   // GM menu
   try{ if(typeof GM_registerMenuCommand!=='undefined') GM_registerMenuCommand('BraveShield: Toggle panel', ()=>{ const p=DOC.getElementById('bs-panel'); if(p) p.style.display=p.style.display==='none'?'block':'none'; }); }catch(_){}
 
-  console.log('[BraveShield Mobile] v6.5.0 armed — 20 Android profiles, adblock+video+turbo+utils, Spotify, audio booster (no sniffer). AdGuard covers Brave.');
+  console.log('[BraveShield Mobile] v6.6.0 armed — 20 Android profiles, adblock+video+turbo+utils, Spotify, audio booster (no sniffer). AdGuard covers Brave.');
 })();

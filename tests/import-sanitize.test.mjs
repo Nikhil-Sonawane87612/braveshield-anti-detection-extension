@@ -173,12 +173,13 @@ test('bsSanitizeImport: customHardwareProfileMalformed input does not poison the
 
 // ── v6.6.0 feature keys ──────────────────────────────────────────────────────
 
-test('bsSanitizeImport: new feature booleans (font ensemble, identity rotation) pass through', () => {
+test('bsSanitizeImport: new feature booleans (font ensemble, identity rotation, devtools defuser) pass through', () => {
   assert.ok(BS_IMPORT_BOOLEANS.has('fontEnsembleEnabled'));
   assert.ok(BS_IMPORT_BOOLEANS.has('identityRotationEnabled'));
+  assert.ok(BS_IMPORT_BOOLEANS.has('devtoolsDefuseEnabled'));
   assert.deepEqual(
-    bsSanitizeImport({ fontEnsembleEnabled: false, identityRotationEnabled: true, reelDwellSeconds: 'x' }),
-    { fontEnsembleEnabled: false, identityRotationEnabled: true }
+    bsSanitizeImport({ fontEnsembleEnabled: false, identityRotationEnabled: true, devtoolsDefuseEnabled: false, reelDwellSeconds: 'x' }),
+    { fontEnsembleEnabled: false, identityRotationEnabled: true, devtoolsDefuseEnabled: false }
   );
 });
 
@@ -194,6 +195,14 @@ test('bsSanitizeImport: Auto-Pilot + rotation numbers are range-clamped', () => 
   // Non-numbers are dropped outright
   assert.deepEqual(bsSanitizeImport({ reelDwellSeconds: '5' }), {});
   assert.deepEqual(bsSanitizeImport({ reelMaxAutoSeconds: Infinity }), {});
+});
+
+test('bsSanitizeImport: devtoolsDefuseEnabled accepts booleans only', () => {
+  assert.deepEqual(bsSanitizeImport({ devtoolsDefuseEnabled: true }), { devtoolsDefuseEnabled: true });
+  assert.deepEqual(bsSanitizeImport({ devtoolsDefuseEnabled: false }), { devtoolsDefuseEnabled: false });
+  // Non-boolean smuggled values are dropped, the rest of the import survives
+  assert.deepEqual(bsSanitizeImport({ devtoolsDefuseEnabled: 'true', canvasNoiseEnabled: true }), { canvasNoiseEnabled: true });
+  assert.deepEqual(bsSanitizeImport({ devtoolsDefuseEnabled: 1 }), {});
 });
 
 test('bsSanitizeImport: protectedSites deduped, validated, capped at 300', () => {

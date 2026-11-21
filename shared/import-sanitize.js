@@ -34,7 +34,8 @@ const BS_IMPORT_BOOLEANS = new Set([
   'gpcCloakEnabled', 'domStructureDefuserEnabled',
   'instagramReelsAdsEnabled', 'instagramAutoScrollEnabled',
   'youtubeShortsEnabled', 'youtubeShortsAutoScroll', 'facebookReelsEnabled',
-  'permissionAutoDenyEnabled', 'fontEnsembleEnabled', 'identityRotationEnabled'
+  'permissionAutoDenyEnabled', 'fontEnsembleEnabled', 'identityRotationEnabled',
+  'devtoolsDefuseEnabled'
 ]);
 const BS_IMPORT_NUMBERS = new Set(['timeSavedSeconds', 'trapsNeutralized', 'directLinksUnlocked']);
 // Live-behavior numeric settings carry much stricter ranges than telemetry

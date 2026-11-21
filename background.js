@@ -187,6 +187,7 @@ chrome.runtime.onInstalled.addListener((details) => {
       maskClientHints: true,
       gpcCloakEnabled: true,
       fontEnsembleEnabled: true,
+      devtoolsDefuseEnabled: true,
       identityRotationEnabled: false,
       identityRotationPeriodHours: 24,
       reelDwellSeconds: 1,

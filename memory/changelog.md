@@ -1,5 +1,27 @@
 # 📦 Semantic Version Changelog
 
+## [v6.7.0] - 2026-11-16 (DevTools Detection Defuser)
+
+### Module 1.8 — defeats the "Developer Tools Detected" pause overlay
+Three independent signals, installed by inject.js at `document_start` (before any site script can read them), all live-gated on the new `devtoolsDefuseEnabled` key (default ON):
+
+1. **Dimension clamp (`outerWidth` / `outerHeight`)** — the getters are re-wrapped around whatever the screen-normalization module installed earlier (both modules compose; each stays independently live-gated). The reported value is capped at `inner + 150` whenever `outer − inner > 150`, so:
+   - real browser chrome (≈80–110px delta) passes through untouched,
+   - a docked DevTools console (≈300–400px delta) can never cross the 160px `devtools-detect` threshold,
+   - the **false positive normalization itself creates** is also killed: a 1920px profile `outerWidth` vs a 1400px real `innerWidth` is a 520px delta with nothing open at all — this was very likely the actual trigger on Animerulz.
+   Wrapped getters go through `makeNative(..., 'get outerWidth', 0)` so `Function.prototype.toString` still reads native. Skips captcha hosts.
+2. **`window.__devtoolsDetected` pinned to `false`** — a **non-configurable** accessor pair: the getter answers `false` while the module is enabled (falls through to the last written value when force-off), plain assignment lands in a swallowing setter, and the library's own `Object.defineProperty` redefinition fails outright.
+3. **Event swallow** — `devtools-change` **and** `devtoolschange` (both spellings in the wild) are `stopImmediatePropagation`ed at **capture phase** on `window` + `document`, registered before any site listener can exist.
+
+The debugger-statement timing vector was already dead: Module 1.4's 20ms timer coarsening caps `performance.now()` resolution.
+
+### Wiring
+- `devtoolsDefuseEnabled: true` added to: inject `BS_CONFIG` defaults (merge allowlist), `background.js` defaults seed, `content.js` `BS_SYNC_KEYS` + `BS_MATRIX_MODULES` + `BS_PROTECTED_OFF_KEYS` (protected sites force it off — zero behavioral touch there), `shared/import-sanitize.js` `BS_IMPORT_BOOLEANS`, options Defense-panel row (`#opt-devtoolsdef`) + matrix editor + restore + `storage.onChanged`, popup `BS_MODULE_KEYS` counter, mobile `bsGMGetAll` + `BS_DEFAULTS`.
+- **Tests: 52/52 green** (+1: boolean-only acceptance — `true`/`false` pass, `'true'`/`1` dropped without poisoning the rest of the import).
+- manifest.json + update.xml → **6.7.0** (CRX re-packed with the archived `keys/braveshield.pem` → extension ID stays `acdlacfmopkbpknfeajakplnjiiieemn`).
+
+---
+
 ## [v6.6.0] - 2026-11-16 (Six-Feature Release: Extensible Resolver, Rotating Identity, Font Ensemble, Protected Sites, Auto-Pilot, Quick-Site Actions)
 
 ### ① Custom Resolver Rules — user-extensible bypass engine

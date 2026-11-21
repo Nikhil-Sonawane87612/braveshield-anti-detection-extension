@@ -5,7 +5,7 @@
 # 🛡️ BraveShield Bypass Pro — Enterprise Anti-Fingerprinting Suite
 ### Manifest V3 Stealth Engine • CreepJS & BrowserLeaks Evasion • Multi-Device Hardware Spoofer
 
-[![Version](https://img.shields.io/badge/version-v6.6.0-00f076?style=for-the-badge&logo=semver&logoColor=black)](https://github.com/Nikhil-Sonawane87612/braveshield-anti-detection-extension/releases/latest)
+[![Version](https://img.shields.io/badge/version-v6.7.0-00f076?style=for-the-badge&logo=semver&logoColor=black)](https://github.com/Nikhil-Sonawane87612/braveshield-anti-detection-extension/releases/latest)
 [![Manifest](https://img.shields.io/badge/manifest-v3-10b981?style=for-the-badge&logo=googlechrome&logoColor=white)](#-desktop-installation)
 [![CreepJS Evasion](https://img.shields.io/badge/CreepJS-A%2B%20Evasion-8b5cf6?style=for-the-badge&logo=shield&logoColor=white)](#-the-creepjs--browserleaks-evasion-pack)
 [![Hardware Presets](https://img.shields.io/badge/Hardware%20Profiles-110%2B%20Presets-3b82f6?style=for-the-badge&logo=nvidia&logoColor=white)](#-multi-device-hardware-studio)
@@ -32,7 +32,7 @@ Modern websites, streaming platforms, and bot-detection engines (Cloudflare, Dat
 5. **Client Hints Mismatches**: Checking discrepancies between `navigator.userAgent` and `navigator.userAgentData.getHighEntropyValues()`.
 6. **WebRTC Private IP Leaks**: Probing STUN/TURN servers to discover internal LAN IPs behind VPNs.
 
-**BraveShield Bypass Pro v6.6.0** solves this comprehensively by injecting an unforgeable, mathematically robust stealth layer directly at `document_start` in the `MAIN` execution world.
+**BraveShield Bypass Pro v6.7.0** solves this comprehensively by injecting an unforgeable, mathematically robust stealth layer directly at `document_start` in the `MAIN` execution world.
 
 ---
 
@@ -99,6 +99,14 @@ graph TD
 - Automatically strips `utm_*`, `fbclid`, `gclid`, `mc_eid`, `igshid`, `msclkid`, and `yclid` query parameters via high-performance DNR rules.
 
 ---
+
+## 🆕 What's New in v6.7.0
+
+| Feature | What it does |
+|---------|--------------|
+| **🖥️ DevTools Detection Defuser** | Kills the "Developer Tools Detected" pause-overlay family (Animerulz & friends) before it can arm — three independent signals at `document_start`: **① dimension clamp** — `outerWidth`/`outerHeight` getters are wrapped so `outer − inner` never crosses the 160px detector threshold (real browser chrome ≈100px passes, a docked ≈300px console is clamped; also kills the false positive screen-normalization itself creates, where a 1920px profile vs a 1400px viewport reads as a 520px delta with nothing open); **② `__devtoolsDetected` pinned to `false`** — a non-configurable accessor swallows plain assignment and makes the library's own `defineProperty` redefinition fail; **③ `devtools-change` / `devtoolschange` swallowed** at capture phase on `window` + `document` before any site listener runs. Debugger-timing vectors stay dead under the existing 20ms timer coarsening. Per-site toggle in the Fingerprint matrix, force-off on Protected Sites, default ON. |
+
+Plus everything from v6.6.0: user-extensible Custom Resolver Rules (click/redirect/turbo), deterministic family-coherent Identity Rotation, Font Ensemble Spoofing, Protected Sites, Reels/Shorts Auto-Pilot knobs, and Popup Quick-Site Actions.
 
 ## 🆕 What's New in v6.6.0
 
@@ -178,7 +186,7 @@ braveshield-anti-detection-extension/
 ├── shared/import-sanitize.js     # Backup-import sanitizer: allowlists, clamps, caps (unit-tested)
 ├── hardware-profiles.js          # Catalog of 110+ authentic hardware presets (DOM-free → SW + MAIN + pages)
 ├── useragents.js                 # UA database used to resolve per-profile User-Agents
-├── tests/                        # node:test suite (51 tests across 4 shared-core modules)
+├── tests/                        # node:test suite (52 tests across 4 shared-core modules)
 ├── build.ps1                     # Release packager -> root-level load-ready ZIP
 ├── build-mobile-full.mjs         # Bundles the ~312 KB Tampermonkey userscript from the extension core
 ├── braveshield-mobile.user.js    # Generated Android userscript (stealth-only, 20 device profiles)

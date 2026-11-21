@@ -413,6 +413,14 @@
 
         <div class="setting-row">
           <div class="setting-meta">
+            <div class="setting-title">DevTools Detection Defuser</div>
+            <div class="setting-desc">Neutralizes "Developer Tools Detected" pause overlays before they can fire: outerWidth/outerHeight are clamped so outer−inner never crosses the 160px detector threshold (also kills the false positive screen-normalization itself creates), <code>__devtoolsDetected</code> is pinned to false, and <code>devtools-change</code> events are swallowed at capture. Per-site toggle in the Fingerprint matrix; force-off on Protected Sites</div>
+          </div>
+          <label class="cyber-switch"><input type="checkbox" id="opt-devtoolsdef" checked><span class="cyber-slider"></span></label>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-meta">
             <div class="setting-title">Always-On Core Probes</div>
             <div class="setting-desc">✅ Error-stack wrapping (8 built-in classes + DOMException) · ✅ chrome.runtime sendMessage/connect parity stubs · ✅ Function.toJSON/toString native-camouflage — load-bearing, install at document_start</div>
           </div>

@@ -298,6 +298,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     'instagramReelsAdsEnabled', 'instagramAutoScrollEnabled',
     'youtubeShortsEnabled', 'youtubeShortsAutoScroll', 'facebookReelsEnabled',
     'permissionAutoDenyEnabled', 'workerParityEnabled', 'domStructureDefuserEnabled',
+    'devtoolsDefuseEnabled',
     'fontEnsembleEnabled', 'identityRotationEnabled'
   ];
   function countActiveModules(source) {

@@ -22,6 +22,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const optBrave = document.getElementById('opt-brave');
   const optGpc = document.getElementById('opt-gpc');
   const optDomdef = document.getElementById('opt-domdef');
+  const optDevtoolsDef = document.getElementById('opt-devtoolsdef');
   const optHints = document.getElementById('opt-hints');
   const optBrowsertype = document.getElementById('opt-browsertype');
   const optNetworkinfo = document.getElementById('opt-networkinfo');
@@ -98,7 +99,8 @@ document.addEventListener('DOMContentLoaded', () => {
     ['youtubeShortsAutoScroll', 'Shorts Auto-Scroll'],
     ['facebookReelsEnabled', 'Facebook Reels Shield'],
     ['permissionAutoDenyEnabled', 'Permission Auto-Deny'],
-    ['domStructureDefuserEnabled', 'Structural Shell Defuser']
+    ['domStructureDefuserEnabled', 'Structural Shell Defuser'],
+    ['devtoolsDefuseEnabled', 'DevTools Detection Defuser']
   ];
   const BS_MATRIX_SET = new Set(BS_MATRIX_MODULES.map(m => m[0]));
   let matrixMode = 'global';
@@ -466,6 +468,7 @@ document.addEventListener('DOMContentLoaded', () => {
     optBrave.checked = res.maskBraveApi !== false;
     if (optGpc) optGpc.checked = res.gpcCloakEnabled !== false;
     if (optDomdef) optDomdef.checked = res.domStructureDefuserEnabled !== false;
+    if (optDevtoolsDef) optDevtoolsDef.checked = res.devtoolsDefuseEnabled !== false;
     optHints.checked = res.maskClientHints !== false;
     if (optUa) optUa.checked = res.uaSpoofingEnabled !== false;
     optUnshortener.checked = res.unshortenerEnabled !== false;
@@ -590,6 +593,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (changes.protectedSites !== undefined) renderProtectedSites(changes.protectedSites.newValue || []);
       if (changes.customResolvers !== undefined) renderCustomResolvers(changes.customResolvers.newValue || []);
       if (changes.fontEnsembleEnabled !== undefined && optFontEnsemble) optFontEnsemble.checked = changes.fontEnsembleEnabled.newValue !== false;
+      if (changes.devtoolsDefuseEnabled !== undefined && optDevtoolsDef) optDevtoolsDef.checked = changes.devtoolsDefuseEnabled.newValue !== false;
       if (changes.identityRotationEnabled !== undefined && optRotation) optRotation.checked = changes.identityRotationEnabled.newValue === true;
       if (changes.siteProfiles !== undefined) { renderSiteOverrides(changes.siteProfiles.newValue || {}); renderMatrixSitePicker(changes.siteProfiles.newValue || {}); renderMatrixModules(); }
       if (changes.timeSavedSeconds !== undefined && statTimeSaved) {
@@ -654,6 +658,7 @@ document.addEventListener('DOMContentLoaded', () => {
   optBrave.addEventListener('change', () => chrome.storage.local.set({ maskBraveApi: optBrave.checked }));
   if (optGpc) optGpc.addEventListener('change', () => chrome.storage.local.set({ gpcCloakEnabled: optGpc.checked }));
   if (optDomdef) optDomdef.addEventListener('change', () => chrome.storage.local.set({ domStructureDefuserEnabled: optDomdef.checked }));
+  if (optDevtoolsDef) optDevtoolsDef.addEventListener('change', () => chrome.storage.local.set({ devtoolsDefuseEnabled: optDevtoolsDef.checked }));
   optHints.addEventListener('change', () => chrome.storage.local.set({ clientHintsEnabled: optHints.checked, maskClientHints: optHints.checked }));
   if (optUa) optUa.addEventListener('change', () => chrome.storage.local.set({ uaSpoofingEnabled: optUa.checked }));
   optUnshortener.addEventListener('change', () => chrome.storage.local.set({ unshortenerEnabled: optUnshortener.checked }));
